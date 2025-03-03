@@ -11,6 +11,24 @@
   "supports": {
     "interactivity": true
   },
+  "attributes": {
+    "columns": {
+      "type": "number",
+      "default": 3
+    },
+    "autoplay": {
+      "type": "boolean",
+      "default": false
+    },
+    "loop": {
+      "type": "boolean",
+      "default": false
+    },
+    "scroll": {
+      "type": "number",
+      "default": 1
+    }
+  },
   "textdomain": "demo-carousel",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",

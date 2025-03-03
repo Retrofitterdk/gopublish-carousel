@@ -1,54 +1,91 @@
 <?php
-/**
- * PHP file to use when rendering the block type on the server to show on the front end.
- *
- * The following variables are exposed to the file:
- *     $attributes (array): The block attributes.
- *     $content (string): The block default content.
- *     $block (WP_Block): The block instance.
- *
- * @see https://github.com/WordPress/gutenberg/blob/trunk/docs/reference-guides/block-api/block-metadata.md#render
- */
+// Calculate unique ID for this carousel instance
+$carousel_id = 'carousel-' . uniqid();
 
-$context = array(
-	'transform'    => 'translateX(0%)',
-	'itemsTotal'   => 9,
-	'itemsPerView' => 3,
-	'currentIndex' => 0,
-);
-$style   = sprintf( '--items-per-view: %d', $context['itemsPerView'] );
+// Determine number of real slides and columns.
+$realSlides = count($block->parsed_block['innerBlocks']);
+$columns    = $attributes['columns'] ?? 3;
+$scroll     = $attributes['scroll'] ?? 1;
+$loop       = $attributes['loop'] ?? false;
+
+// Pass configuration via data-wp-context
+$wrapper_attributes = get_block_wrapper_attributes([
+  'id' => $carousel_id,
+  'data-wp-interactive' => 'squareonesoftware', // Must match your store name in view.js
+  'data-wp-context' => wp_json_encode([
+    'currentIndex' => 0,             // Initial index (JS will override if loop is enabled)
+    'itemsPerView' => $columns,      // Number of columns/slides per view
+    'scroll'       => $scroll,       // Number of slides to scroll per click
+    'autoplay'     => $attributes['autoplay'] ?? false,
+    'loop'         => $loop,         // Loop enabled or not
+    'itemsTotal'   => $realSlides    // Total real slides
+  ])
+]);
+
+$slide_width = (100 / $columns) . '%';
+
+// Optional debug info – hidden in HTML comments
+$debug_info = [
+  'columns'          => $columns,
+  'scroll'           => $scroll,
+  'loop'             => $loop,
+  'slides'           => $realSlides
+];
+
+var_dump($debug_info);
 ?>
+<div <?php echo $wrapper_attributes; ?>>
+  <!-- Debug info hidden in HTML comment -->
+  <!-- <?php echo json_encode($debug_info); ?> -->
+  
+  <div class="carousel-container">
+    <!-- The transform style will be controlled by JavaScript -->
+    <div class="carousel-track" data-wp-bind--style="transform: ${state.transform}">
+      <?php 
+      // Output only the real slides
+      foreach ($block->parsed_block['innerBlocks'] as $index => $inner_block) : ?>
+        <div class="carousel-slide"
+             data-slide-index="<?php echo $index; ?>"
+             style="width: <?php echo $slide_width; ?>">
+          <?php echo render_block($inner_block); ?>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    
+    <!-- Buttons trigger actions defined in view.js -->
+    <button class="carousel-prev" data-carousel-id="<?php echo $carousel_id; ?>" data-wp-on--click="actions.moveBack">←</button>
+    <button class="carousel-next" data-carousel-id="<?php echo $carousel_id; ?>" data-wp-on--click="actions.moveForward">→</button>
+  </div>
 
-<div
-	<?php echo get_block_wrapper_attributes(); ?>
-	data-wp-interactive="squareonesoftware"
-	style="<?php echo esc_attr( $style ); ?>"
-	<?php echo wp_interactivity_data_wp_context( $context ); ?>
->
-
-	<div class="carousel-navigation">
-
-		<svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" data-wp-on--click="actions.moveBack">
-		<path d="M11 9L8 12M8 12L11 15M8 12H16M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-		</svg>
-	
-		<svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"  data-wp-on--click="actions.moveForward">
-		<path d="M13 15L16 12M16 12L13 9M16 12H8M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-		</svg>
-
-	</div>	
-
-	<div class="carousel-wrapper">
-		<div data-wp-style--transform="context.transform" class="carousel-container">
-			<div class="carousel-items">1</div>
-			<div class="carousel-items">2</div>
-			<div class="carousel-items">3</div>
-			<div class="carousel-items">4</div>
-			<div class="carousel-items">5</div>
-			<div class="carousel-items">6</div>
-			<div class="carousel-items">7</div>
-			<div class="carousel-items">8</div>
-			<div class="carousel-items">9</div>
-		</div>
-	</div>
+  <!-- Fallback script remains unchanged -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Fallback script for carousel: <?php echo $carousel_id; ?>');
+      
+      setTimeout(function() {
+        const prevBtn = document.querySelector('#<?php echo $carousel_id; ?> .carousel-prev');
+        const nextBtn = document.querySelector('#<?php echo $carousel_id; ?> .carousel-next');
+        
+        if (prevBtn && !prevBtn.hasEventListeners) {
+          console.log('Adding fallback click handler to prev button');
+          prevBtn.addEventListener('click', function() {
+            console.log('Fallback prev button clicked');
+            if (window.rpCarouselFallback) {
+              window.rpCarouselFallback.prevSlide('<?php echo $carousel_id; ?>');
+            }
+          });
+        }
+        
+        if (nextBtn && !nextBtn.hasEventListeners) {
+          console.log('Adding fallback click handler to next button');
+          nextBtn.addEventListener('click', function() {
+            console.log('Fallback next button clicked');
+            if (window.rpCarouselFallback) {
+              window.rpCarouselFallback.nextSlide('<?php echo $carousel_id; ?>');
+            }
+          });
+        }
+      }, 1000);
+    });
+  </script>
 </div>

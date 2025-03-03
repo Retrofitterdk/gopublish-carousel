@@ -7,22 +7,33 @@
  *
  * Replace them with your own styles or remove the file completely.
  */
-.wp-block-squareonesoftware-demo-carousel {
-  background-color: blue;
-}
-.wp-block-squareonesoftware-demo-carousel .carousel-wrapper {
+.wp-block-squareonesoftware-demo-carousel .carousel-container {
   overflow: hidden;
+  position: relative;
   width: 100%;
 }
-.wp-block-squareonesoftware-demo-carousel .carousel-wrapper .carousel-container {
+.wp-block-squareonesoftware-demo-carousel .carousel-track {
   display: flex;
-  transition: all 0.5s ease-in-out;
+  transition: transform 0.5s ease;
 }
-.wp-block-squareonesoftware-demo-carousel .carousel-wrapper .carousel-container .carousel-items {
-  background-color: lightblue;
-  display: flex;
-  min-height: 300px;
-  flex: 0 0 calc(100% / var(--items-per-view));
-  justify-content: space-around;
-  align-items: center;
+.wp-block-squareonesoftware-demo-carousel .carousel-slide {
+  flex: 0 0 auto;
+  width: calc(100% / var(--columns, 3)); /* Fallback to 3 columns */
+}
+.wp-block-squareonesoftware-demo-carousel .carousel-prev,
+.wp-block-squareonesoftware-demo-carousel .carousel-next {
+  position: absolute;
+  top: 5%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+.wp-block-squareonesoftware-demo-carousel .carousel-prev {
+  right: 0.5rem;
+}
+.wp-block-squareonesoftware-demo-carousel .carousel-next {
+  left: 0.5rem;
 }

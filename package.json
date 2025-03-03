@@ -1,7 +1,7 @@
 {
 	"name": "demo-carousel",
 	"version": "0.1.0",
-	"description": "An interactive block with the Interactivity API.",
+	"description": "An interactive block with the Interactivity API..",
 	"author": "The WordPress Contributors",
 	"license": "GPL-2.0-or-later",
 	"main": "build/index.js",

@@ -1,36 +1,49 @@
-/**
- * Retrieves the translation of text.
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-i18n/
- */
-import { __ } from "@wordpress/i18n";
+import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
+import { PanelBody, ToggleControl, RangeControl } from '@wordpress/components';
 
-/**
- * React hook that is used to mark the block wrapper element.
- * It provides all the necessary props like the class name.
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
- */
-import { useBlockProps } from "@wordpress/block-editor";
-
-/**
- * The edit function describes the structure of your block in the context of the
- * editor. This represents what the editor will render when the block is used.
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
- *
- * @param {Object}   props               Properties passed to the function.
- * @param {Object}   props.attributes    Available block attributes.
- * @param {Function} props.setAttributes Function that updates individual attributes.
- *
- * @return {Element} Element to render.
- */
 export default function Edit({ attributes, setAttributes }) {
-	const blockProps = useBlockProps();
+  const { columns, autoplay, loop, scroll } = attributes;
+  const blockProps = useBlockProps();
 
-	return (
-		<p {...blockProps}>
-			{__("Demo Carousel – hello from the editor!", "demo-carousel")}
-		</p>
-	);
+  return (
+    <div {...blockProps}>
+      <InspectorControls>
+        <PanelBody title="Carousel Settings">
+          <RangeControl
+            label="Columns"
+            value={columns}
+            onChange={(value) => setAttributes({ columns: value })}
+            min={1}
+            max={6}
+          />
+          <RangeControl
+            label="Slides to Scroll"
+            value={scroll}
+            onChange={(value) => setAttributes({ scroll: value })}
+            min={1}
+            max={columns}
+          />
+          <ToggleControl
+            label="Autoplay"
+            checked={autoplay}
+            onChange={(value) => setAttributes({ autoplay: value })}
+          />
+          <ToggleControl
+            label="Infinite Loop"
+            checked={loop}
+            onChange={(value) => setAttributes({ loop: value })}
+          />
+        </PanelBody>
+      </InspectorControls>
+      
+      <div className="carousel-container">
+        <InnerBlocks
+          allowedBlocks={['core/group']}
+          template={[['core/group', {}]]}
+          templateLock={false}
+          orientation="horizontal"
+        />
+      </div>
+    </div>
+  );
 }

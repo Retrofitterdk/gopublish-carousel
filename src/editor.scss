@@ -1,12 +1,37 @@
-/**
- * The following styles get applied inside the editor only.
- *
- * Replace them with your own styles or remove the file completely.
- */
-
-.wp-block-squareonesoftware-demo-carousel input[type="text"] {
-	font-size: 1em;
-	color: inherit;
-	background: inherit;
-	border: 0;
-}
+// Editor specific styles
+.wp-block-create-block-rp-carousel-slider {
+	.carousel-container {
+		position: relative;
+		overflow: visible; // Show all slides in editor
+	  }
+	
+	  .carousel-track {
+		display: flex;
+		gap: 1rem;
+		padding: 1rem 0;
+	  }
+	
+	  .carousel-slide {
+		flex: 0 0 calc(100% / var(--columns, 3));
+		min-width: 0;
+		transition: none; // Disable transitions in editor
+		opacity: 1 !important; // Force visible in editor
+	  }
+	
+	  .carousel-prev,
+	  .carousel-next {
+		display: none; // Hide navigation in editor
+	  }
+	
+	  // Show column count helper
+	  &::after {
+		content: "Columns: " var(--columns, 3);
+		position: absolute;
+		top: 0;
+		right: 0;
+		background: rgba(0,0,0,0.8);
+		color: white;
+		padding: 0.25rem 0.5rem;
+		font-size: 0.8em;
+	  }
+  }
