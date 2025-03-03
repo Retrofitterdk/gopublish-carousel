@@ -8,7 +8,8 @@
  * Replace them with your own styles or remove the file completely.
  */
 .wp-block-squareonesoftware-demo-carousel {
-  /* Style for cloned slides - useful for debugging */
+  /* Basic carousel styling */
+  /* Optional: style for cloned slides */
   /* Navigation buttons */
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-container {
@@ -26,9 +27,8 @@
   padding: 0 10px;
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-clone {
-  /* Optional: add a slight visual indicator for clones during development */
-  /* border-left: 1px dashed rgba(0, 0, 0, 0.1); */
-  /* border-right: 1px dashed rgba(0, 0, 0, 0.1); */
+  /* Uncomment the following line for visual debugging */
+  /* border: 1px dashed #aaa; */
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-prev,
 .wp-block-squareonesoftware-demo-carousel .carousel-next {
@@ -58,4 +58,9 @@
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-next {
   left: 10px;
+}
+.wp-block-squareonesoftware-demo-carousel .carousel-prev:disabled,
+.wp-block-squareonesoftware-demo-carousel .carousel-next:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

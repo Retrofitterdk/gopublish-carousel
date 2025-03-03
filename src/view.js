@@ -26,13 +26,16 @@ document.addEventListener('DOMContentLoaded', function() {
     itemsPerView: 3,
     clonesCount: 0,
     scroll: 1,
-    loop: false
+    loop: false,
+    isTransitioning: false
   }, phpContext);
 
   // Initialize the store with our merged state
   const { state } = store('squareonesoftware', {
     actions: {
       moveForward() {
+        if (state.isTransitioning) return;
+        
         const total = state.itemsTotal;
         const clones = state.clonesCount;
         const perView = state.itemsPerView;
@@ -46,22 +49,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Increase index by scroll amount
-        state.currentIndex = state.currentIndex + scroll;
+        state.currentIndex += scroll;
+        state.isTransitioning = true;
 
-        if (state.loop && state.currentIndex >= total + clones) {
+        if (state.loop && state.currentIndex >= total) {
+          // Calculate the actual visual position
           state.transform = `translateX(-${state.currentIndex * (100 / perView)}%)`;
           updateCarouselTrack();
 
           const carouselTrack = document.querySelector('.carousel-track');
           carouselTrack.addEventListener('transitionend', function handler() {
+            // Disable transition for immediate jump
             carouselTrack.style.transition = 'none';
-            const jumpToIndex = state.currentIndex - total;
-            state.currentIndex = jumpToIndex;
+            
+            // Jump to the equivalent position at the beginning (after clones)
+            state.currentIndex = clones + (state.currentIndex - total);
             state.transform = `translateX(-${state.currentIndex * (100 / perView)}%)`;
             carouselTrack.style.transform = state.transform;
+            
             // Force reflow
             carouselTrack.offsetHeight;
-            carouselTrack.style.transition = '';
+            
+            // Re-enable transition
+            setTimeout(() => {
+              carouselTrack.style.transition = 'transform 0.3s ease-out';
+              state.isTransitioning = false;
+            }, 20);
+            
             carouselTrack.removeEventListener('transitionend', handler);
             console.log("Looped to corresponding real slide:", {
               jumpedTo: state.currentIndex,
@@ -71,7 +85,15 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           state.transform = `translateX(-${state.currentIndex * (100 / perView)}%)`;
           updateCarouselTrack();
+          
+          // Reset the transitioning state after animation completes
+          const carouselTrack = document.querySelector('.carousel-track');
+          carouselTrack.addEventListener('transitionend', function handler() {
+            state.isTransitioning = false;
+            carouselTrack.removeEventListener('transitionend', handler);
+          });
         }
+        
         console.log("After moveForward:", {
           currentIndex: state.currentIndex,
           transform: state.transform
@@ -79,6 +101,8 @@ document.addEventListener('DOMContentLoaded', function() {
       },
 
       moveBack() {
+        if (state.isTransitioning) return;
+        
         const total = state.itemsTotal;
         const clones = state.clonesCount;
         const perView = state.itemsPerView;
@@ -92,22 +116,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Decrease index by scroll amount
-        state.currentIndex = state.currentIndex - scroll;
+        state.currentIndex -= scroll;
+        state.isTransitioning = true;
 
         if (state.loop && state.currentIndex < clones) {
+          // Normal movement before looping jump
           state.transform = `translateX(-${state.currentIndex * (100 / perView)}%)`;
           updateCarouselTrack();
 
           const carouselTrack = document.querySelector('.carousel-track');
           carouselTrack.addEventListener('transitionend', function handler() {
+            // Disable transition for immediate jump
             carouselTrack.style.transition = 'none';
-            const jumpToIndex = state.currentIndex + total;
-            state.currentIndex = jumpToIndex;
+            
+            // Jump to the equivalent position at the end
+            state.currentIndex = total + state.currentIndex;
             state.transform = `translateX(-${state.currentIndex * (100 / perView)}%)`;
             carouselTrack.style.transform = state.transform;
+            
             // Force reflow
             carouselTrack.offsetHeight;
-            carouselTrack.style.transition = '';
+            
+            // Re-enable transition
+            setTimeout(() => {
+              carouselTrack.style.transition = 'transform 0.3s ease-out';
+              state.isTransitioning = false;
+            }, 20);
+            
             carouselTrack.removeEventListener('transitionend', handler);
             console.log("Looped to corresponding real slide:", {
               jumpedTo: state.currentIndex,
@@ -117,7 +152,15 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           state.transform = `translateX(-${state.currentIndex * (100 / perView)}%)`;
           updateCarouselTrack();
+          
+          // Reset the transitioning state after animation completes
+          const carouselTrack = document.querySelector('.carousel-track');
+          carouselTrack.addEventListener('transitionend', function handler() {
+            state.isTransitioning = false;
+            carouselTrack.removeEventListener('transitionend', handler);
+          });
         }
+        
         console.log("After moveBack:", {
           currentIndex: state.currentIndex,
           transform: state.transform
@@ -143,10 +186,18 @@ document.addEventListener('DOMContentLoaded', function() {
   const carouselTrack = document.querySelector('.carousel-track');
   if (carouselTrack) {
     if (state.loop) {
+      // Start at the first real slide (after clones)
       state.currentIndex = state.clonesCount;
     }
+    // Disable transition on load to avoid auto-scroll flicker
+    carouselTrack.style.transition = 'none';
     state.transform = `translateX(-${state.currentIndex * (100 / state.itemsPerView)}%)`;
     carouselTrack.style.transform = state.transform;
+    carouselTrack.offsetHeight; // Force reflow
+    // Re-enable transition after initial load
+    setTimeout(() => {
+      carouselTrack.style.transition = 'transform 0.3s ease-out';
+    }, 50);
     console.log("Initial carousel track transform set to:", state.transform, "currentIndex:", state.currentIndex);
   } else {
     console.warn("Carousel track element not found on initial load.");

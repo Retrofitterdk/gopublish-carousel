@@ -6,61 +6,67 @@
  */
 
 .wp-block-squareonesoftware-demo-carousel {
-	.carousel-container {
-		position: relative;
-		overflow: hidden;
-		width: 100%;
-	  }
-	  
-	  .carousel-track {
-		display: flex;
-		transition: transform 0.3s ease-out;
-	  }
-	  
-	  .carousel-slide {
-		flex-shrink: 0;
-		box-sizing: border-box;
-		padding: 0 10px;
-	  }
-	  
-	  /* Style for cloned slides - useful for debugging */
-	  .carousel-clone {
-		/* Optional: add a slight visual indicator for clones during development */
-		/* border-left: 1px dashed rgba(0, 0, 0, 0.1); */
-		/* border-right: 1px dashed rgba(0, 0, 0, 0.1); */
-	  }
-	  
-	  /* Navigation buttons */
-	  .carousel-prev,
-	  .carousel-next {
-		position: absolute;
-		top: 50%;
-		transform: translateY(-50%);
-		z-index: 10;
-		background: rgba(255, 255, 255, 0.8);
-		border: 1px solid #ddd;
-		border-radius: 50%;
-		width: 40px;
-		height: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		font-size: 18px;
-		opacity: 0.8;
-		transition: opacity 0.2s;
-	  }
-	  
-	  .carousel-prev:hover,
-	  .carousel-next:hover {
-		opacity: 1;
-	  }
-	  
-	  .carousel-prev {
-		left: 10px;
-	  }
-	  
-	  .carousel-next {
-		right: 10px;
-	  }
+/* Basic carousel styling */
+.carousel-container {
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+  }
+  
+  .carousel-track {
+	display: flex;
+	transition: transform 0.3s ease-out;
+  }
+  
+  .carousel-slide {
+	flex-shrink: 0;
+	box-sizing: border-box;
+	padding: 0 10px;
+  }
+  
+  /* Optional: style for cloned slides */
+  .carousel-clone {
+	/* Uncomment the following line for visual debugging */
+	/* border: 1px dashed #aaa; */
+  }
+  
+  /* Navigation buttons */
+  .carousel-prev,
+  .carousel-next {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 10;
+	background: rgba(255, 255, 255, 0.8);
+	border: 1px solid #ddd;
+	border-radius: 50%;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	font-size: 18px;
+	opacity: 0.8;
+	transition: opacity 0.2s;
+  }
+  
+  .carousel-prev:hover,
+  .carousel-next:hover {
+	opacity: 1;
+  }
+  
+  .carousel-prev {
+	left: 10px;
+  }
+  
+  .carousel-next {
+	right: 10px;
+  }
+  
+  .carousel-prev:disabled,
+  .carousel-next:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+  }
 }

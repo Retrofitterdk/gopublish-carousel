@@ -12,24 +12,25 @@ $loop       = $attributes['loop'] ?? true;
 $wrapper_attributes = get_block_wrapper_attributes([
   'id' => $carousel_id,
   'data-wp-interactive' => 'squareonesoftware', // Must match your store name in view.js
-  'data-wp-context' => wp_json_encode([
-    'currentIndex' => 0,             // Initial index (JS will reposition for looping)
-    'itemsPerView' => $columns,      // Number of columns/slides per view
-    'scroll'       => $scroll,       // Number of slides to scroll per click
-    'autoplay'     => $attributes['autoplay'] ?? false,
-    'loop'         => $loop,         // Loop enabled or not
-    'itemsTotal'   => $realSlides    // Total real slides
-  ])
+'data-wp-context' => wp_json_encode([
+  'currentIndex' => 0,
+  'itemsPerView' => $columns,
+  'scroll'       => $scroll,
+  'autoplay'     => $attributes['autoplay'] ?? false,
+  'loop'         => $loop,
+  'itemsTotal'   => $realSlides,
+  'clonesCount'  => $columns  // Added this line!
+])
 ]);
 
 $slide_width = (100 / $columns) . '%';
 
 // Optional debug info
 $debug_info = [
-  'columns'          => $columns,
-  'scroll'           => $scroll,
-  'loop'             => $loop,
-  'slides'           => $realSlides
+  'columns' => $columns,
+  'scroll'  => $scroll,
+  'loop'    => $loop,
+  'slides'  => $realSlides
 ];
 
 var_dump($debug_info);
@@ -38,18 +39,44 @@ var_dump($debug_info);
   <!-- Debug info hidden in HTML comment -->
   <!-- <?php echo json_encode($debug_info); ?> -->
   
-  <div class="carousel-container">
+  <div class="carousel-container" id="<?php echo $carousel_id; ?>">
     <!-- The transform style will be controlled by JavaScript -->
     <div class="carousel-track" data-wp-bind--style="transform: ${state.transform}">
       <?php 
-      // Output only the real slides - JavaScript will handle cloning for infinite loop
+      // If looping, clone the last "columns" slides at the beginning.
+      if ( $loop && $realSlides > 0 ) :
+          $start = max(0, $realSlides - $columns);
+          for ($i = $start; $i < $realSlides; $i++) : ?>
+            <div class="carousel-slide carousel-clone"
+                 data-slide-index="<?php echo $i; ?>"
+                 style="width: <?php echo $slide_width; ?>">
+              <?php echo render_block($block->parsed_block['innerBlocks'][$i]); ?>
+            </div>
+      <?php 
+          endfor;
+      endif;
+      
+      // Output the real slides.
       foreach ($block->parsed_block['innerBlocks'] as $index => $inner_block) : ?>
         <div class="carousel-slide"
              data-slide-index="<?php echo $index; ?>"
              style="width: <?php echo $slide_width; ?>">
           <?php echo render_block($inner_block); ?>
         </div>
-      <?php endforeach; ?>
+      <?php endforeach; 
+      
+      // If looping, clone the first "columns" slides at the end.
+      if ( $loop && $realSlides > 0 ) :
+          for ($i = 0; $i < $columns; $i++) : ?>
+            <div class="carousel-slide carousel-clone"
+                 data-slide-index="<?php echo $i; ?>"
+                 style="width: <?php echo $slide_width; ?>">
+              <?php echo render_block($block->parsed_block['innerBlocks'][$i]); ?>
+            </div>
+      <?php 
+          endfor;
+      endif;
+      ?>
     </div>
     
     <!-- Buttons trigger actions defined in view.js -->
@@ -62,66 +89,6 @@ var_dump($debug_info);
             data-wp-on--click="actions.moveForward" 
             data-wp-bind--disabled="state.isTransitioning">→</button>
   </div>
-
-  <style>
-    /* Basic carousel styling */
-    #<?php echo $carousel_id; ?> .carousel-container {
-      position: relative;
-      overflow: hidden;
-      width: 100%;
-    }
-    
-    #<?php echo $carousel_id; ?> .carousel-track {
-      display: flex;
-      transition: transform 0.3s ease-out;
-    }
-    
-    #<?php echo $carousel_id; ?> .carousel-slide {
-      flex-shrink: 0;
-      box-sizing: border-box;
-      padding: 0 10px;
-    }
-    
-    /* Navigation buttons */
-    #<?php echo $carousel_id; ?> .carousel-prev,
-    #<?php echo $carousel_id; ?> .carousel-next {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid #ddd;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 18px;
-      opacity: 0.8;
-      transition: opacity 0.2s;
-    }
-    
-    #<?php echo $carousel_id; ?> .carousel-prev:hover,
-    #<?php echo $carousel_id; ?> .carousel-next:hover {
-      opacity: 1;
-    }
-    
-    #<?php echo $carousel_id; ?> .carousel-prev {
-      left: 10px;
-    }
-    
-    #<?php echo $carousel_id; ?> .carousel-next {
-      right: 10px;
-    }
-    
-    #<?php echo $carousel_id; ?> .carousel-prev:disabled,
-    #<?php echo $carousel_id; ?> .carousel-next:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  </style>
 
   <!-- Fallback script for non-interactivity environments -->
   <script>
