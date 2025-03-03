@@ -6,7 +6,7 @@ $carousel_id = 'carousel-' . uniqid();
 $realSlides = count($block->parsed_block['innerBlocks']);
 $columns    = $attributes['columns'] ?? 3;
 $scroll     = $attributes['scroll'] ?? 1;
-$loop       = $attributes['loop'] ?? true;
+$loop       = true;
 
 // Pass configuration via data-wp-context
 $wrapper_attributes = get_block_wrapper_attributes([
@@ -36,8 +36,6 @@ $debug_info = [
 var_dump($debug_info);
 ?>
 <div <?php echo $wrapper_attributes; ?>>
-  <!-- Debug info hidden in HTML comment -->
-  <!-- <?php echo json_encode($debug_info); ?> -->
   
   <div class="carousel-container" id="<?php echo $carousel_id; ?>">
     <!-- The transform style will be controlled by JavaScript -->

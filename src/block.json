@@ -20,10 +20,6 @@
 		  "type": "boolean",
 		  "default": false
 		},
-		"loop": {
-		  "type": "boolean",
-		  "default": false
-		},
 		"scroll": {
 		  "type": "number",
 		  "default": 1

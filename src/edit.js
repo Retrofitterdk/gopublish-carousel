@@ -28,11 +28,6 @@ export default function Edit({ attributes, setAttributes }) {
             checked={autoplay}
             onChange={(value) => setAttributes({ autoplay: value })}
           />
-          <ToggleControl
-            label="Infinite Loop"
-            checked={loop}
-            onChange={(value) => setAttributes({ loop: value })}
-          />
         </PanelBody>
       </InspectorControls>
       

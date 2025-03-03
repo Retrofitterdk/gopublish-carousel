@@ -6,21 +6,21 @@ $carousel_id = 'carousel-' . uniqid();
 $realSlides = count($block->parsed_block['innerBlocks']);
 $columns    = $attributes['columns'] ?? 3;
 $scroll     = $attributes['scroll'] ?? 1;
-$loop       = $attributes['loop'] ?? true;
+$loop       = true;
 
 // Pass configuration via data-wp-context
 $wrapper_attributes = get_block_wrapper_attributes([
   'id' => $carousel_id,
   'data-wp-interactive' => 'squareonesoftware', // Must match your store name in view.js
-'data-wp-context' => wp_json_encode([
-  'currentIndex' => 0,
-  'itemsPerView' => $columns,
-  'scroll'       => $scroll,
-  'autoplay'     => $attributes['autoplay'] ?? false,
-  'loop'         => $loop,
-  'itemsTotal'   => $realSlides,
-  'clonesCount'  => $columns  // Added this line!
-])
+  'data-wp-context' => wp_json_encode([
+    'currentIndex' => 0,
+    'itemsPerView' => $columns,
+    'scroll'       => $scroll,
+    'autoplay'     => $attributes['autoplay'] ?? false,
+    'loop'         => $loop,
+    'itemsTotal'   => $realSlides,
+    'clonesCount'  => $columns  // Added this line!
+  ])
 ]);
 
 $slide_width = (100 / $columns) . '%';
@@ -36,8 +36,6 @@ $debug_info = [
 var_dump($debug_info);
 ?>
 <div <?php echo $wrapper_attributes; ?>>
-  <!-- Debug info hidden in HTML comment -->
-  <!-- <?php echo json_encode($debug_info); ?> -->
   
   <div class="carousel-container" id="<?php echo $carousel_id; ?>">
     <!-- The transform style will be controlled by JavaScript -->
