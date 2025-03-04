@@ -1,8 +1,9 @@
 // Editor specific styles
-.wp-block-create-block-rp-carousel-slider {
+.wp-block-squareonesoftware-demo-carousel {
 	.carousel-container {
 		position: relative;
 		overflow: visible; // Show all slides in editor
+		max-width: 100% !important;
 	  }
 	
 	  .carousel-track {

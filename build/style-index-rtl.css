@@ -6,6 +6,7 @@
 }
 .wp-block-squareonesoftware-demo-carousel .navigation-container {
   padding: 10px;
+  padding-left: 0;
   text-align: left;
   position: absolute;
   top: -80px;
@@ -72,4 +73,31 @@
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-slide .wp-block-group p:last-of-type {
   margin-top: auto;
+}
+
+#editor .wp-block-squareonesoftware-demo-carousel .carousel-container {
+  position: relative;
+  overflow: visible;
+  max-width: 100% !important;
+  padding: 20px;
+  border: 1px solid;
+}
+#editor .wp-block-squareonesoftware-demo-carousel .block-editor-block-list__block {
+  margin-bottom: 10px;
+}
+
+@media (max-width: 760px) {
+  .wp-block-squareonesoftware-demo-carousel .carousel-slide {
+    width: 74.0740740741% !important;
+    -moz-user-select: none;
+         user-select: none;
+    -webkit-user-select: none;
+    cursor: grab;
+  }
+  .wp-block-squareonesoftware-demo-carousel .carousel-slide:active {
+    cursor: grabbing;
+  }
+  .wp-block-squareonesoftware-demo-carousel .navigation-container {
+    display: none;
+  }
 }

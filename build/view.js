@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       phpContext = JSON.parse(contextElem.getAttribute('data-wp-context'));
     } catch (e) {
-      console.error("Error parsing PHP context:", e);
+      console.error('Error parsing PHP context:', e);
     }
   }
   const initialState = Object.assign({
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clonesCount: 0,
     itemsPerView: 3,
     scroll: 1,
-    loop: false,
+    loop: true,
     slideWidth: null
   }, phpContext);
   const totalSlides = initialState.itemsTotal + initialState.clonesCount * 2;
@@ -86,8 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (initialState.loop) {
     initialState.currentIndex = initialState.clonesCount;
   }
+
+  // Note we're destructuring both { state, actions }
   const {
-    state
+    state,
+    actions
   } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('squareonesoftware', {
     actions: {
       moveForward() {
@@ -105,31 +108,21 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     state: initialState
   });
-
-  // Grab the track element
   const carouselTrack = document.querySelector('.carousel-track');
-
-  // Listen for transition end to handle "cloned" slides jump
+  const carouselContainer = document.querySelector('.carousel-container');
   carouselTrack?.addEventListener('transitionend', () => {
     state.isTransitioning = false;
 
     // If we've slid to the cloned slides at the end, jump back to real slides
     if (state.currentIndex >= state.itemsTotal + state.clonesCount) {
-      // Instant jump, no transition
       carouselTrack.style.transition = 'none';
-
-      // E.g. if currentIndex = itemsTotal + clonesCount, 
-      // we move back to clonesCount
       state.currentIndex = state.currentIndex - state.itemsTotal;
       doTransform();
-
-      // Force reflow, then restore smooth transition
       requestAnimationFrame(() => {
         carouselTrack.offsetHeight;
         carouselTrack.style.transition = 'transform 0.3s ease-out';
       });
     }
-
     // If we've slid to the cloned slides at the start, jump forward
     else if (state.currentIndex < state.clonesCount) {
       carouselTrack.style.transition = 'none';
@@ -142,12 +135,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   function doTransform() {
-    // Calculate offset to ensure left slide always aligns
-    const slideWidthPercent = state.slideWidth ? parseFloat(state.slideWidth) : 100 / state.itemsPerView;
-    const offsetPercentage = slideWidthPercent * state.currentIndex;
-    carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
-    console.log("Carousel transform:", state.currentIndex, offsetPercentage);
+    // Check if we're in mobile view
+    const isMobile = window.innerWidth <= 760;
+
+    // Calculate slide width and offset
+    if (isMobile) {
+      // Mobile-specific calculations
+      const slideWidthPercent = 74.0740740741;
+      const offsetPercentage = slideWidthPercent * state.currentIndex;
+      carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
+      carouselContainer.classList.add('mobile-partial-view');
+    } else {
+      // Desktop calculations
+      const slideWidthPercent = 100 / (state.itemsPerView - 0.3);
+      const offsetPercentage = slideWidthPercent * state.currentIndex;
+      carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
+      carouselContainer.classList.remove('mobile-partial-view');
+    }
   }
+
+  // Initial transform and transition setup
   if (carouselTrack) {
     carouselTrack.style.transition = 'none';
     doTransform();
@@ -156,6 +163,75 @@ document.addEventListener('DOMContentLoaded', () => {
       carouselTrack.style.transition = 'transform 0.3s ease-out';
     }, 50);
   }
+
+  // Resize event
+  window.addEventListener('resize', doTransform);
+
+  // -----------------------------------------------
+  // TOUCH SWIPE LOGIC
+  // -----------------------------------------------
+  let startX = 0;
+  let currentX = 0;
+  let isSwiping = false;
+  const swipeThreshold = 50; // Min px distance for valid swipe
+
+  carouselTrack.addEventListener('touchstart', e => {
+    if (!e.touches || !e.touches.length) return;
+    startX = e.touches[0].clientX;
+    currentX = startX;
+    isSwiping = true;
+  });
+  carouselTrack.addEventListener('touchmove', e => {
+    if (!isSwiping || !e.touches || !e.touches.length) return;
+    currentX = e.touches[0].clientX;
+    // Optional: real-time drag transform
+  });
+  carouselTrack.addEventListener('touchend', () => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    const deltaX = currentX - startX;
+    if (Math.abs(deltaX) > swipeThreshold) {
+      if (deltaX < 0) {
+        // Swiped left => move forward
+        actions.moveForward();
+      } else {
+        // Swiped right => move back
+        actions.moveBack();
+      }
+    }
+  });
+
+  // -----------------------------------------------
+  // MOUSE DRAG SWIPE LOGIC
+  // -----------------------------------------------
+  let isDragging = false;
+  let mouseStartX = 0;
+  let mouseCurrentX = 0;
+  const dragThreshold = 50;
+  carouselTrack.addEventListener('mousedown', e => {
+    // Prevent text selection
+    e.preventDefault();
+    isDragging = true;
+    mouseStartX = e.clientX;
+    mouseCurrentX = mouseStartX;
+  });
+  carouselTrack.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    mouseCurrentX = e.clientX;
+    // Optional: real-time drag transform
+  });
+  carouselTrack.addEventListener('mouseup', e => {
+    if (!isDragging) return;
+    isDragging = false;
+    const deltaX = mouseCurrentX - mouseStartX;
+    if (Math.abs(deltaX) > dragThreshold) {
+      if (deltaX < 0) {
+        actions.moveForward();
+      } else {
+        actions.moveBack();
+      }
+    }
+  });
 });
 })();
 

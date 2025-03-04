@@ -27,7 +27,6 @@ export default function Edit({ attributes, setAttributes }) {
       </InspectorControls>
       
       <div className="carousel-container">
-        <p>Testing</p>
         <InnerBlocks
           allowedBlocks={['core/group']}
           template={[['core/group', {}]]}
