@@ -6,7 +6,7 @@ $carousel_id = 'carousel-' . uniqid();
 $realSlides = count($block->parsed_block['innerBlocks']);
 $columns    = $attributes['columns'] ?? 3;
 $scroll     = $attributes['scroll'] ?? 1;
-$loop       = false;
+$loop       = true;
 
 // Pass configuration via data-wp-context
 $wrapper_attributes = get_block_wrapper_attributes([

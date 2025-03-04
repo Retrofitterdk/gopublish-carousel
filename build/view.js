@@ -59,94 +59,114 @@ var __webpack_exports__ = {};
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/interactivity */ "@wordpress/interactivity");
 
-document.addEventListener('DOMContentLoaded', function () {
-  // Target the carousel element
+document.addEventListener('DOMContentLoaded', () => {
   const contextElem = document.querySelector('[data-wp-interactive="squareonesoftware"][data-wp-context]');
   let phpContext = {};
   if (contextElem) {
-    const contextData = contextElem.getAttribute('data-wp-context');
     try {
-      phpContext = JSON.parse(contextData);
+      phpContext = JSON.parse(contextElem.getAttribute('data-wp-context'));
     } catch (e) {
       console.error("Error parsing PHP context:", e);
     }
-  } else {
-    console.warn("No carousel element with data-wp-interactive and data-wp-context found.");
   }
 
-  // Merge PHP context into default state values
+  // We expect: 
+  //   itemsTotal = number of *real* slides
+  //   clonesCount = number of cloned slides at each end (usually == columns)
+  //   loop = true|false
+  // etc.
   const initialState = Object.assign({
     currentIndex: 0,
     transform: 'translateX(0%)',
+    isTransitioning: false,
     itemsTotal: 0,
+    // real slides
+    clonesCount: 0,
+    // # of clones on each side
     itemsPerView: 3,
     scroll: 1,
-    // <— The key property for how many items to move
-    isTransitioning: false
+    loop: false
   }, phpContext);
+  const totalSlides = initialState.itemsTotal + initialState.clonesCount * 2;
+
+  // If looping, start in the "first real slide" range
+  if (initialState.loop) {
+    initialState.currentIndex = initialState.clonesCount;
+  }
   const {
     state
   } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('squareonesoftware', {
     actions: {
       moveForward() {
         if (state.isTransitioning) return;
-        const {
-          itemsTotal,
-          itemsPerView,
-          scroll
-        } = state;
-
-        // Shift backward by `scroll` items
-        state.currentIndex = (state.currentIndex + scroll) % itemsTotal;
-
-        // Translate using itemsPerView to figure out the offset width
-        state.transform = `translateX(-${state.currentIndex * (100 / itemsPerView)}%)`;
-        updateCarouselTrack();
+        state.isTransitioning = true;
+        state.currentIndex += state.scroll;
+        doTransform();
       },
       moveBack() {
         if (state.isTransitioning) return;
-        const {
-          itemsTotal,
-          itemsPerView,
-          scroll
-        } = state;
-
-        // Shift forward by `scroll` items
-        // add itemsTotal before % to avoid negative modulus
-        state.currentIndex = (state.currentIndex - scroll + itemsTotal) % itemsTotal;
-
-        // Translate using itemsPerView for width offset
-        state.transform = `translateX(-${state.currentIndex * (100 / itemsPerView)}%)`;
-        updateCarouselTrack();
+        state.isTransitioning = true;
+        state.currentIndex -= state.scroll;
+        doTransform();
       }
     },
     state: initialState
   });
 
-  // Expose state for debugging
-  window.carouselState = state;
-  function updateCarouselTrack() {
-    const carouselTrack = document.querySelector('.carousel-track');
-    if (carouselTrack) {
-      carouselTrack.style.transform = state.transform;
-      console.log("Carousel track updated to:", state.transform);
+  // Grab the track element
+  const carouselTrack = document.querySelector('.carousel-track');
+
+  // Listen for transition end to handle "cloned" slides jump
+  carouselTrack?.addEventListener('transitionend', () => {
+    state.isTransitioning = false;
+
+    // If we’ve slid to the cloned slides at the end, jump back to real slides
+    if (state.currentIndex >= state.itemsTotal + state.clonesCount) {
+      // Instant jump, no transition
+      carouselTrack.style.transition = 'none';
+
+      // E.g. if currentIndex = itemsTotal + clonesCount, 
+      // we move back to clonesCount
+      state.currentIndex = state.currentIndex - state.itemsTotal;
+      doTransform();
+
+      // Force reflow, then restore smooth transition
+      requestAnimationFrame(() => {
+        carouselTrack.offsetHeight;
+        carouselTrack.style.transition = 'transform 0.3s ease-out';
+      });
     }
+
+    // If we’ve slid to the cloned slides at the start, jump forward
+    else if (state.currentIndex < state.clonesCount) {
+      carouselTrack.style.transition = 'none';
+      state.currentIndex = state.currentIndex + state.itemsTotal;
+      doTransform();
+      requestAnimationFrame(() => {
+        carouselTrack.offsetHeight;
+        carouselTrack.style.transition = 'transform 0.3s ease-out';
+      });
+    }
+  });
+  function doTransform() {
+    // Wrap index within total slides if you want, but usually we let
+    // transitionend do the actual wrap logic
+    // e.g. state.currentIndex = Math.max(0, Math.min(state.currentIndex, totalSlides - 1));
+
+    const offsetPercentage = 100 / state.itemsPerView * state.currentIndex;
+    carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
+    console.log("Carousel transform:", state.currentIndex, offsetPercentage);
   }
 
-  // Initialize the carousel track transform
-  const carouselTrack = document.querySelector('.carousel-track');
+  // Initialize transform without transition
   if (carouselTrack) {
-    // Disable transition on load
     carouselTrack.style.transition = 'none';
-    state.transform = `translateX(-${state.currentIndex * (100 / state.itemsPerView)}%)`;
-    carouselTrack.style.transform = state.transform;
+    doTransform();
     carouselTrack.offsetHeight; // Force reflow
-
+    // Re-enable transition
     setTimeout(() => {
       carouselTrack.style.transition = 'transform 0.3s ease-out';
     }, 50);
-  } else {
-    console.warn("Carousel track element not found on initial load.");
   }
 });
 })();
