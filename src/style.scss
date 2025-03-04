@@ -1,43 +1,44 @@
-/**
- * The following styles get applied both on the front of your site
- * and in the editor.
- *
- * Replace them with your own styles or remove the file completely.
- */
-
-.wp-block-squareonesoftware-demo-carousel {
-/* Basic carousel styling */
-.carousel-container {
-	position: relative;
-	overflow: hidden;
-	width: 100%;
-  }
-  
-  .carousel-track {
-	display: flex;
-	align-items: stretch;
-	transition: transform 0.3s ease-out;
-  }
-  
-  .carousel-slide {
-	display: flex;
-	flex-shrink: 0;
-	box-sizing: border-box;
-	padding: 0 10px;
-	.wp-block-group {
+ 
+ 
+ .wp-block-squareonesoftware-demo-carousel {
+	.carousel-container {
+	  position: relative;
+	  overflow-x: clip;;
+	  width: 100%;
+	}
+	
+	.carousel-track {
+	  display: flex;
+	  align-items: stretch;
+	  transition: transform 0.3s ease-out;
+	}
+	
+	.carousel-slide {
+	  display: flex;
+	  flex-shrink: 0;
+	  box-sizing: border-box;
+	  padding: 0 10px;
+	  
+	  .wp-block-group {
 		display: flex;
 		flex-direction: column;
+		
 		p:last-of-type {
-			margin-top: auto;
+		  margin-top: auto;
 		}
+	  }
 	}
-  }
 
-  .navigation-container {
-	padding: 10px;
-	text-align: right;
-	.carousel-prev,
-	.carousel-next {
+  
+	.navigation-container {
+		padding: 10px;
+		text-align: right;
+		position: absolute;
+		top: -80px;
+		right: 0;
+	  
+	  .carousel-prev,
+	  .carousel-next {
 		position: relative;
 		background: #022C22;
 		width: 52px; 
@@ -45,20 +46,28 @@
 		border-radius: 20px;
 		border: none;
 		cursor: pointer;
-		svg {
-			margin: 0 auto;
-		}
-	}
-	.carousel-prev {
-		svg {
-			transform: rotate(-180deg);
-		}
-	}
-  }
   
-  .carousel-prev:disabled,
-  .carousel-next:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
+		svg {
+		  margin: 0 auto;
+		}
+	  }
+	  
+	  .carousel-prev {
+		svg {
+		  transform: rotate(-180deg);
+		}
+	  }
+	}
+	
+	/**
+	 * Disable the button in code, but don't show it visually.
+	 * This way, the button won't be clickable again until transition ends,
+	 * yet the user won't see it fade or get a "not-allowed" cursor.
+	 */
+	.carousel-prev:disabled,
+	.carousel-next:disabled {
+	  opacity: 1;             /* Keeps the same look */
+	  cursor: pointer;           /* Removes the "not-allowed" cursor */
+	  pointer-events: none;   /* Still prevents clicks */
+	}
   }
-}

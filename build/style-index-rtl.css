@@ -1,18 +1,16 @@
 /*!***************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[4].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[4].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[4].use[3]!./src/style.scss ***!
   \***************************************************************************************************************************************************************************************************************************************/
-/**
- * The following styles get applied both on the front of your site
- * and in the editor.
- *
- * Replace them with your own styles or remove the file completely.
- */
 .wp-block-squareonesoftware-demo-carousel {
-  /* Basic carousel styling */
+  /**
+   * Disable the button in code, but don't show it visually.
+   * This way, the button won't be clickable again until transition ends,
+   * yet the user won't see it fade or get a "not-allowed" cursor.
+   */
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-container {
   position: relative;
-  overflow: hidden;
+  overflow-x: clip;
   width: 100%;
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-track {
@@ -36,6 +34,9 @@
 .wp-block-squareonesoftware-demo-carousel .navigation-container {
   padding: 10px;
   text-align: left;
+  position: absolute;
+  top: -80px;
+  left: 0;
 }
 .wp-block-squareonesoftware-demo-carousel .navigation-container .carousel-prev,
 .wp-block-squareonesoftware-demo-carousel .navigation-container .carousel-next {
@@ -56,6 +57,7 @@
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-prev:disabled,
 .wp-block-squareonesoftware-demo-carousel .carousel-next:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+  opacity: 1; /* Keeps the same look */
+  cursor: pointer; /* Removes the "not-allowed" cursor */
+  pointer-events: none; /* Still prevents clicks */
 }

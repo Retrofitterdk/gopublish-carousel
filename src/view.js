@@ -15,21 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // We expect: 
-    //   itemsTotal = number of *real* slides
-    //   clonesCount = number of cloned slides at each end (usually == columns)
-    //   loop = true|false
-    // etc.
     const initialState = Object.assign(
         {
             currentIndex: 0,
             transform: 'translateX(0%)',
             isTransitioning: false,
-            itemsTotal: 0,      // real slides
-            clonesCount: 0,     // # of clones on each side
+            itemsTotal: 0,     
+            clonesCount: 0,    
             itemsPerView: 3,
             scroll: 1,
-            loop: false
+            loop: false,
+            slideWidth: null
         },
         phpContext
     );
@@ -68,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     carouselTrack?.addEventListener('transitionend', () => {
         state.isTransitioning = false;
 
-        // If we’ve slid to the cloned slides at the end, jump back to real slides
+        // If we've slid to the cloned slides at the end, jump back to real slides
         if (state.currentIndex >= (state.itemsTotal + state.clonesCount)) {
             // Instant jump, no transition
             carouselTrack.style.transition = 'none';
@@ -85,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // If we’ve slid to the cloned slides at the start, jump forward
+        // If we've slid to the cloned slides at the start, jump forward
         else if (state.currentIndex < state.clonesCount) {
             carouselTrack.style.transition = 'none';
             state.currentIndex = state.currentIndex + state.itemsTotal;
@@ -98,21 +94,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function doTransform() {
-        // Wrap index within total slides if you want, but usually we let
-        // transitionend do the actual wrap logic
-        // e.g. state.currentIndex = Math.max(0, Math.min(state.currentIndex, totalSlides - 1));
-
-        const offsetPercentage = (100 / state.itemsPerView) * state.currentIndex;
+        // Calculate offset to ensure left slide always aligns
+        const slideWidthPercent = state.slideWidth 
+            ? parseFloat(state.slideWidth) 
+            : (100 / state.itemsPerView);
+        
+        const offsetPercentage = slideWidthPercent * state.currentIndex;
+        
         carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
         console.log("Carousel transform:", state.currentIndex, offsetPercentage);
     }
 
-    // Initialize transform without transition
     if (carouselTrack) {
         carouselTrack.style.transition = 'none';
         doTransform();
-        carouselTrack.offsetHeight; // Force reflow
-        // Re-enable transition
+        carouselTrack.offsetHeight; 
         setTimeout(() => {
             carouselTrack.style.transition = 'transform 0.3s ease-out';
         }, 50);
