@@ -15,53 +15,45 @@
   
   .carousel-track {
 	display: flex;
+	align-items: stretch;
 	transition: transform 0.3s ease-out;
   }
   
   .carousel-slide {
+	display: flex;
 	flex-shrink: 0;
 	box-sizing: border-box;
 	padding: 0 10px;
+	.wp-block-group {
+		display: flex;
+		flex-direction: column;
+		p:last-of-type {
+			margin-top: auto;
+		}
+	}
   }
-  
-  /* Optional: style for cloned slides */
-  .carousel-clone {
-	/* Uncomment the following line for visual debugging */
-	/* border: 1px dashed #aaa; */
-  }
-  
-  /* Navigation buttons */
-  .carousel-prev,
-  .carousel-next {
-	position: absolute;
-	top: 50%;
-	transform: translateY(-50%);
-	z-index: 10;
-	background: rgba(255, 255, 255, 0.8);
-	border: 1px solid #ddd;
-	border-radius: 50%;
-	width: 40px;
-	height: 40px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	font-size: 18px;
-	opacity: 0.8;
-	transition: opacity 0.2s;
-  }
-  
-  .carousel-prev:hover,
-  .carousel-next:hover {
-	opacity: 1;
-  }
-  
-  .carousel-prev {
-	left: 10px;
-  }
-  
-  .carousel-next {
-	right: 10px;
+
+  .navigation-container {
+	padding: 10px;
+	text-align: right;
+	.carousel-prev,
+	.carousel-next {
+		position: relative;
+		background: #022C22;
+		width: 52px; 
+		height: 32px;
+		border-radius: 20px;
+		border: none;
+		cursor: pointer;
+		svg {
+			margin: 0 auto;
+		}
+	}
+	.carousel-prev {
+		svg {
+			transform: rotate(-180deg);
+		}
+	}
   }
   
   .carousel-prev:disabled,

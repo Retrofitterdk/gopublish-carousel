@@ -6,12 +6,12 @@ $carousel_id = 'carousel-' . uniqid();
 $realSlides = count($block->parsed_block['innerBlocks']);
 $columns    = $attributes['columns'] ?? 3;
 $scroll     = $attributes['scroll'] ?? 1;
-$loop       = true;
+$loop       = false;
 
 // Pass configuration via data-wp-context
 $wrapper_attributes = get_block_wrapper_attributes([
   'id' => $carousel_id,
-  'data-wp-interactive' => 'squareonesoftware', // Must match your store name in view.js
+  'data-wp-interactive' => 'squareonesoftware', 
   'data-wp-context' => wp_json_encode([
     'currentIndex' => 0,
     'itemsPerView' => $columns,
@@ -19,7 +19,7 @@ $wrapper_attributes = get_block_wrapper_attributes([
     'autoplay'     => $attributes['autoplay'] ?? false,
     'loop'         => $loop,
     'itemsTotal'   => $realSlides,
-    'clonesCount'  => $columns  // Added this line!
+    'clonesCount'  => $columns  
   ])
 ]);
 
@@ -33,11 +33,30 @@ $debug_info = [
   'slides'  => $realSlides
 ];
 
-var_dump($debug_info);
 ?>
 <div <?php echo $wrapper_attributes; ?>>
   
   <div class="carousel-container" id="<?php echo $carousel_id; ?>">
+      <!-- Buttons trigger actions defined in view.js -->
+       <div class="navigation-container">
+        <button class="carousel-prev" 
+            data-carousel-id="<?php echo $carousel_id; ?>" 
+            data-wp-on--click="actions.moveBack" 
+            data-wp-bind--disabled="state.isTransitioning">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>  
+        </button>
+        <button class="carousel-next" 
+            data-carousel-id="<?php echo $carousel_id; ?>" 
+            data-wp-on--click="actions.moveForward" 
+            data-wp-bind--disabled="state.isTransitioning">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>  
+          </button>
+      </div>
+
     <!-- The transform style will be controlled by JavaScript -->
     <div class="carousel-track" data-wp-bind--style="transform: ${state.transform}">
       <?php 
@@ -76,47 +95,5 @@ var_dump($debug_info);
       endif;
       ?>
     </div>
-    
-    <!-- Buttons trigger actions defined in view.js -->
-    <button class="carousel-prev" 
-            data-carousel-id="<?php echo $carousel_id; ?>" 
-            data-wp-on--click="actions.moveBack" 
-            data-wp-bind--disabled="state.isTransitioning">←</button>
-    <button class="carousel-next" 
-            data-carousel-id="<?php echo $carousel_id; ?>" 
-            data-wp-on--click="actions.moveForward" 
-            data-wp-bind--disabled="state.isTransitioning">→</button>
   </div>
-
-  <!-- Fallback script for non-interactivity environments -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('Fallback script for carousel: <?php echo $carousel_id; ?>');
-      
-      setTimeout(function() {
-        const prevBtn = document.querySelector('#<?php echo $carousel_id; ?> .carousel-prev');
-        const nextBtn = document.querySelector('#<?php echo $carousel_id; ?> .carousel-next');
-        
-        if (prevBtn && !prevBtn.hasAttribute('data-wp-on--click')) {
-          console.log('Adding fallback click handler to prev button');
-          prevBtn.addEventListener('click', function() {
-            console.log('Fallback prev button clicked');
-            if (window.rpCarouselFallback) {
-              window.rpCarouselFallback.prevSlide('<?php echo $carousel_id; ?>');
-            }
-          });
-        }
-        
-        if (nextBtn && !nextBtn.hasAttribute('data-wp-on--click')) {
-          console.log('Adding fallback click handler to next button');
-          nextBtn.addEventListener('click', function() {
-            console.log('Fallback next button clicked');
-            if (window.rpCarouselFallback) {
-              window.rpCarouselFallback.nextSlide('<?php echo $carousel_id; ?>');
-            }
-          });
-        }
-      }, 1000);
-    });
-  </script>
 </div>

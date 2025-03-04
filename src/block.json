@@ -3,10 +3,10 @@
 	"apiVersion": 3,
 	"name": "squareonesoftware/demo-carousel",
 	"version": "0.1.0",
-	"title": "Demo Carousel",
+	"title": "Carousel",
 	"category": "widgets",
 	"icon": "media-interactive",
-	"description": "An interactive block with the Interactivity API.",
+	"description": "A carousel block using the Interactivity API.",
 	"example": {},
 	"supports": {
 		"interactivity": true

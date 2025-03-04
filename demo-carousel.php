@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       Demo Carousel
+ * Plugin Name:       Carousel Slider - Be2Green
  * Description:       An interactive block with the Interactivity API.
  * Version:           0.1.0
  * Requires at least: 6.6

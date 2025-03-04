@@ -53,22 +53,18 @@ function Edit({
           }),
           min: 1,
           max: columns
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.ToggleControl, {
-          label: "Autoplay",
-          checked: autoplay,
-          onChange: value => setAttributes({
-            autoplay: value
-          })
         })]
       })
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("div", {
       className: "carousel-container",
-      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.InnerBlocks, {
+      children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("p", {
+        children: "Testing"
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.InnerBlocks, {
         allowedBlocks: ['core/group'],
         template: [['core/group', {}]],
         templateLock: false,
         orientation: "horizontal"
-      })
+      })]
     })]
   });
 }
@@ -215,7 +211,7 @@ module.exports = window["wp"]["components"];
   \************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"squareonesoftware/demo-carousel","version":"0.1.0","title":"Demo Carousel","category":"widgets","icon":"media-interactive","description":"An interactive block with the Interactivity API.","example":{},"supports":{"interactivity":true},"attributes":{"columns":{"type":"number","default":3},"autoplay":{"type":"boolean","default":false},"scroll":{"type":"number","default":1}},"textdomain":"demo-carousel","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","render":"file:./render.php","viewScriptModule":"file:./view.js"}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"squareonesoftware/demo-carousel","version":"0.1.0","title":"Carousel","category":"widgets","icon":"media-interactive","description":"A carousel block using the Interactivity API.","example":{},"supports":{"interactivity":true},"attributes":{"columns":{"type":"number","default":3},"autoplay":{"type":"boolean","default":false},"scroll":{"type":"number","default":1}},"textdomain":"demo-carousel","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","render":"file:./render.php","viewScriptModule":"file:./view.js"}');
 
 /***/ })
 

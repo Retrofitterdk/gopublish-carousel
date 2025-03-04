@@ -23,15 +23,11 @@ export default function Edit({ attributes, setAttributes }) {
             min={1}
             max={columns}
           />
-          <ToggleControl
-            label="Autoplay"
-            checked={autoplay}
-            onChange={(value) => setAttributes({ autoplay: value })}
-          />
         </PanelBody>
       </InspectorControls>
       
       <div className="carousel-container">
+        <p>Testing</p>
         <InnerBlocks
           allowedBlocks={['core/group']}
           template={[['core/group', {}]]}
