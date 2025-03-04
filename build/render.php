@@ -43,26 +43,27 @@ $debug_info = [
 
 ?>
 <div <?php echo $wrapper_attributes; ?>>
+  <div class="navigation-container">
+    <button class="carousel-prev"
+      data-carousel-id="<?php echo $carousel_id; ?>"
+      data-wp-on--click="actions.moveBack"
+      data-wp-bind--disabled="state.isTransitioning">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button class="carousel-next"
+      data-carousel-id="<?php echo $carousel_id; ?>"
+      data-wp-on--click="actions.moveForward"
+      data-wp-bind--disabled="state.isTransitioning">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
   <div class="carousel-container" id="<?php echo $carousel_id; ?>">
     <!-- Navigation buttons remain the same -->
-    <div class="navigation-container">
-      <button class="carousel-prev"
-        data-carousel-id="<?php echo $carousel_id; ?>"
-        data-wp-on--click="actions.moveBack"
-        data-wp-bind--disabled="state.isTransitioning">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <button class="carousel-next"
-        data-carousel-id="<?php echo $carousel_id; ?>"
-        data-wp-on--click="actions.moveForward"
-        data-wp-bind--disabled="state.isTransitioning">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
+
 
     <!-- The transform style is controlled by JavaScript for sliding -->
     <div class="carousel-track" data-wp-bind--style="transform: ${state.transform}">

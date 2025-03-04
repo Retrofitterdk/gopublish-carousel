@@ -1,10 +1,61 @@
- 
- 
- .wp-block-squareonesoftware-demo-carousel {
+.wp-block-squareonesoftware-demo-carousel {
+	position: relative;
+	
+	.navigation-container {
+		padding: 10px;
+		text-align: right;
+		position: absolute;
+		top: -80px;
+		right: 0;
+	  
+		.carousel-prev,
+		.carousel-next {
+		  position: relative;
+		  background: #CCD5D3;
+		  width: 52px; 
+		  height: 32px;
+		  border-radius: 20px;
+		  border: none;
+		  cursor: pointer;
+		  transition: background 0.3s ease;
+		
+		  &:hover {
+			background: #022C22;
+		
+			svg path {
+			  stroke: rgb(217, 249, 157); 
+			}
+		  }
+		
+		  svg {
+			margin: 0 auto;
+		
+			path {
+			  stroke: #F7FEEB;
+			  transition: stroke 0.3s ease; // ensures the stroke change is animated
+			}
+		  }
+		}
+	  
+	  .carousel-prev {
+		svg {
+		  transform: rotate(-180deg);
+		}
+	  }
+	}
+	
+	.carousel-prev:disabled,
+	.carousel-next:disabled {
+	  opacity: 1;
+	  cursor: pointer;
+	  pointer-events: none;
+	}
 	.carousel-container {
-	  position: relative;
-	  overflow-x: clip;;
-	  width: 100%;
+		position: relative;
+		width: calc(100vw - ((100vw - 101%) / 2));
+		max-width: 3840px;
+		margin-left: -1%;
+		overflow-x: clip;
 	}
 	
 	.carousel-track {
@@ -28,46 +79,4 @@
 		}
 	  }
 	}
-
-  
-	.navigation-container {
-		padding: 10px;
-		text-align: right;
-		position: absolute;
-		top: -80px;
-		right: 0;
-	  
-	  .carousel-prev,
-	  .carousel-next {
-		position: relative;
-		background: #022C22;
-		width: 52px; 
-		height: 32px;
-		border-radius: 20px;
-		border: none;
-		cursor: pointer;
-  
-		svg {
-		  margin: 0 auto;
-		}
-	  }
-	  
-	  .carousel-prev {
-		svg {
-		  transform: rotate(-180deg);
-		}
-	  }
-	}
-	
-	/**
-	 * Disable the button in code, but don't show it visually.
-	 * This way, the button won't be clickable again until transition ends,
-	 * yet the user won't see it fade or get a "not-allowed" cursor.
-	 */
-	.carousel-prev:disabled,
-	.carousel-next:disabled {
-	  opacity: 1;             /* Keeps the same look */
-	  cursor: pointer;           /* Removes the "not-allowed" cursor */
-	  pointer-events: none;   /* Still prevents clicks */
-	}
-  }
+}
