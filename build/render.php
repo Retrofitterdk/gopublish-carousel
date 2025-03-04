@@ -1,8 +1,7 @@
 <?php
 /**
- * This template creates the markup for our looping carousel:
- * 1) Clones the last N (columns) slides at the beginning and the first N slides at the end. 
- * 2) JavaScript will handle the seamless infinite loop by jumping between the clones and the real slides.
+ * Carousel Block Template
+ * Creates a responsive, looping carousel with configurable columns and scrolling
  */
 
 // Calculate unique ID for this carousel instance
@@ -33,14 +32,6 @@ $wrapper_attributes = get_block_wrapper_attributes([
   ])
 ]);
 
-// Optional debug info
-$debug_info = [
-  'columns' => $columns,
-  'scroll'  => $scroll,
-  'loop'    => $loop,
-  'slides'  => $realSlides,
-];
-
 ?>
 <div <?php echo $wrapper_attributes; ?>>
   <div class="navigation-container">
@@ -62,13 +53,9 @@ $debug_info = [
     </button>
   </div>
   <div class="carousel-container" id="<?php echo $carousel_id; ?>">
-    <!-- Navigation buttons remain the same -->
-
-
-    <!-- The transform style is controlled by JavaScript for sliding -->
     <div class="carousel-track" data-wp-bind--style="transform: ${state.transform}">
       <?php 
-      // If looping, clone the last "columns" slides at the beginning
+      // Clone last slides at the beginning for seamless looping
       if ( $loop && $realSlides > 0 ) :
         $start = max(0, $realSlides - $columns);
         for ($i = $start; $i < $realSlides; $i++) : ?>
@@ -80,7 +67,7 @@ $debug_info = [
         <?php endfor; 
       endif;
       
-      // Output the real slides
+      // Render actual slides
       foreach ($block->parsed_block['innerBlocks'] as $index => $inner_block) : ?>
         <div class="carousel-slide"
              data-slide-index="<?php echo $index; ?>"
@@ -89,7 +76,7 @@ $debug_info = [
         </div>
       <?php endforeach; 
       
-      // If looping, clone the first "columns" slides at the end
+      // Clone first slides at the end for seamless looping
       if ( $loop && $realSlides > 0 ) :
         for ($i = 0; $i < $columns; $i++) : ?>
           <div class="carousel-slide carousel-clone"

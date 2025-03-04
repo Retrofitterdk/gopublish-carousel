@@ -1,6 +1,7 @@
 import { store } from '@wordpress/interactivity';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Find and parse the carousel context from PHP
     const contextElem = document.querySelector(
         '[data-wp-interactive="squareonesoftware"][data-wp-context]'
     );
@@ -14,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Initialize carousel state with default and PHP-provided values
     const initialState = Object.assign(
         {
             currentIndex: 0,
@@ -31,12 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const totalSlides = initialState.itemsTotal + initialState.clonesCount * 2;
 
-    // If looping, start in the "first real slide" range
+    // Adjust initial index for looping
     if (initialState.loop) {
         initialState.currentIndex = initialState.clonesCount;
     }
 
-    // Note we're destructuring both { state, actions }
+    // Create interactive store with carousel actions
     const { state, actions } = store('squareonesoftware', {
         actions: {
             moveForward() {
@@ -60,10 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const carouselTrack = document.querySelector('.carousel-track');
     const carouselContainer = document.querySelector('.carousel-container');
 
+    // Handle seamless looping after transition
     carouselTrack?.addEventListener('transitionend', () => {
         state.isTransitioning = false;
 
-        // If we've slid to the cloned slides at the end, jump back to real slides
+        // Reset position for end of slides
         if (state.currentIndex >= state.itemsTotal + state.clonesCount) {
             carouselTrack.style.transition = 'none';
             state.currentIndex = state.currentIndex - state.itemsTotal;
@@ -73,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 carouselTrack.style.transition = 'transform 0.3s ease-out';
             });
         }
-        // If we've slid to the cloned slides at the start, jump forward
+        // Reset position for start of slides
         else if (state.currentIndex < state.clonesCount) {
             carouselTrack.style.transition = 'none';
             state.currentIndex = state.currentIndex + state.itemsTotal;
@@ -85,20 +88,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Calculate and apply carousel transform
     function doTransform() {
-        // Check if we're in mobile view
         const isMobile = window.innerWidth <= 760;
         
-        // Calculate slide width and offset
         if (isMobile) {
-            // Mobile-specific calculations
+            // Mobile view calculations
             const slideWidthPercent = 74.0740740741;
             const offsetPercentage = slideWidthPercent * state.currentIndex;
             
             carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
             carouselContainer.classList.add('mobile-partial-view');
         } else {
-            // Desktop calculations
+            // Desktop view calculations
             const slideWidthPercent = 100 / (state.itemsPerView - 0.3);
             const offsetPercentage = slideWidthPercent * state.currentIndex;
             
@@ -107,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Initial transform and transition setup
+    // Initial carousel setup
     if (carouselTrack) {
         carouselTrack.style.transition = 'none';
         doTransform();
@@ -117,16 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 50);
     }
 
-    // Resize event
+    // Responsive resize handling
     window.addEventListener('resize', doTransform);
 
-    // -----------------------------------------------
-    // TOUCH SWIPE LOGIC
-    // -----------------------------------------------
+    // Touch swipe navigation
     let startX = 0;
     let currentX = 0;
     let isSwiping = false;
-    const swipeThreshold = 50; // Min px distance for valid swipe
+    const swipeThreshold = 50;
 
     carouselTrack.addEventListener('touchstart', (e) => {
         if (!e.touches || !e.touches.length) return;
@@ -138,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     carouselTrack.addEventListener('touchmove', (e) => {
         if (!isSwiping || !e.touches || !e.touches.length) return;
         currentX = e.touches[0].clientX;
-        // Optional: real-time drag transform
     });
 
     carouselTrack.addEventListener('touchend', () => {
@@ -148,25 +147,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const deltaX = currentX - startX;
         if (Math.abs(deltaX) > swipeThreshold) {
             if (deltaX < 0) {
-                // Swiped left => move forward
                 actions.moveForward();
             } else {
-                // Swiped right => move back
                 actions.moveBack();
             }
         }
     });
 
-    // -----------------------------------------------
-    // MOUSE DRAG SWIPE LOGIC
-    // -----------------------------------------------
+    // Mouse drag navigation
     let isDragging = false;
     let mouseStartX = 0;
     let mouseCurrentX = 0;
     const dragThreshold = 50;
 
     carouselTrack.addEventListener('mousedown', (e) => {
-        // Prevent text selection
         e.preventDefault();
         isDragging = true;
         mouseStartX = e.clientX;
@@ -176,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
     carouselTrack.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         mouseCurrentX = e.clientX;
-        // Optional: real-time drag transform
     });
 
     carouselTrack.addEventListener('mouseup', (e) => {
