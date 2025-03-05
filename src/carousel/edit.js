@@ -1,8 +1,8 @@
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { PanelBody, ToggleControl, RangeControl } from '@wordpress/components';
+import { PanelBody, RangeControl } from '@wordpress/components';
 
 export default function Edit({ attributes, setAttributes }) {
-  const { columns, autoplay, loop, scroll } = attributes;
+  const { columns, autoplay, scroll } = attributes;
   const blockProps = useBlockProps();
 
   return (
@@ -27,13 +27,12 @@ export default function Edit({ attributes, setAttributes }) {
       </InspectorControls>
       
       <div className="carousel-container">
-
-        <InnerBlocks
-          allowedBlocks={['core/group']}
-          template={[['core/group', {}]]}
-          templateLock={false}
-          orientation="horizontal"
-        />
+      <InnerBlocks
+        allowedBlocks={['squareonesoftware/rp-carousel-slide']}
+        template={[['squareonesoftware/rp-carousel-slide', {}]]}
+        templateLock={false}
+        orientation="horizontal"
+      />
       </div>
     </div>
   );

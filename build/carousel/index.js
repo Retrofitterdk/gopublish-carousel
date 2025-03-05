@@ -2,10 +2,10 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./src/edit.js":
-/*!*********************!*\
-  !*** ./src/edit.js ***!
-  \*********************/
+/***/ "./src/carousel/edit.js":
+/*!******************************!*\
+  !*** ./src/carousel/edit.js ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -68,19 +68,19 @@ function Edit({
 
 /***/ }),
 
-/***/ "./src/index.js":
-/*!**********************!*\
-  !*** ./src/index.js ***!
-  \**********************/
+/***/ "./src/carousel/index.js":
+/*!*******************************!*\
+  !*** ./src/carousel/index.js ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/blocks */ "@wordpress/blocks");
 /* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./style.scss */ "./src/style.scss");
-/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./edit */ "./src/edit.js");
-/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./save */ "./src/save.js");
-/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./block.json */ "./src/block.json");
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./style.scss */ "./src/carousel/style.scss");
+/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./edit */ "./src/carousel/edit.js");
+/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./save */ "./src/carousel/save.js");
+/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./block.json */ "./src/carousel/block.json");
 
 
 
@@ -137,10 +137,10 @@ try {
 
 /***/ }),
 
-/***/ "./src/save.js":
-/*!*********************!*\
-  !*** ./src/save.js ***!
-  \*********************/
+/***/ "./src/carousel/save.js":
+/*!******************************!*\
+  !*** ./src/carousel/save.js ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -165,10 +165,10 @@ function Save({
 
 /***/ }),
 
-/***/ "./src/style.scss":
-/*!************************!*\
-  !*** ./src/style.scss ***!
-  \************************/
+/***/ "./src/carousel/style.scss":
+/*!*********************************!*\
+  !*** ./src/carousel/style.scss ***!
+  \*********************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -217,10 +217,10 @@ module.exports = window["wp"]["components"];
 
 /***/ }),
 
-/***/ "./src/block.json":
-/*!************************!*\
-  !*** ./src/block.json ***!
-  \************************/
+/***/ "./src/carousel/block.json":
+/*!*********************************!*\
+  !*** ./src/carousel/block.json ***!
+  \*********************************/
 /***/ ((module) => {
 
 module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"squareonesoftware/demo-carousel","version":"0.1.0","title":"Carousel","category":"widgets","icon":"media-interactive","description":"A carousel block using the Interactivity API.","example":{},"supports":{"interactivity":true},"attributes":{"columns":{"type":"number","default":3},"autoplay":{"type":"boolean","default":false},"scroll":{"type":"number","default":1}},"textdomain":"demo-carousel","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","render":"file:./render.php","viewScriptModule":"file:./view.js"}');
@@ -337,8 +337,8 @@ module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/tru
 /******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
 /******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
 /******/ 		var installedChunks = {
-/******/ 			"index": 0,
-/******/ 			"./style-index": 0
+/******/ 			"carousel/index": 0,
+/******/ 			"carousel/style-index": 0
 /******/ 		};
 /******/ 		
 /******/ 		// no chunk on demand loading
@@ -388,7 +388,7 @@ module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/tru
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["./style-index"], () => (__webpack_require__("./src/index.js")))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["carousel/style-index"], () => (__webpack_require__("./src/carousel/index.js")))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

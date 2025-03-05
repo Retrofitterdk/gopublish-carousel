@@ -6,6 +6,7 @@
 
 // Calculate unique ID for this carousel instance
 $carousel_id = 'carousel-' . uniqid();
+var_dump($carousel_id);
 
 // Determine number of real slides and columns
 $realSlides = count($block->parsed_block['innerBlocks']);
@@ -28,7 +29,7 @@ $wrapper_attributes = get_block_wrapper_attributes([
     'loop'         => $loop,
     'itemsTotal'   => $realSlides,
     'clonesCount'  => $columns,
-    'slideWidth'   => $slide_width
+    'slideWidth'   => $slide_width,
   ])
 ]);
 
@@ -38,7 +39,8 @@ $wrapper_attributes = get_block_wrapper_attributes([
     <button class="carousel-prev"
       data-carousel-id="<?php echo $carousel_id; ?>"
       data-wp-on--click="actions.moveBack"
-      data-wp-bind--disabled="state.isTransitioning">
+      data-wp-bind--disabled="state.isTransitioning"
+      data-wp-context='<?php echo wp_json_encode(['carouselId' => $carousel_id]); ?>'>
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -46,14 +48,15 @@ $wrapper_attributes = get_block_wrapper_attributes([
     <button class="carousel-next"
       data-carousel-id="<?php echo $carousel_id; ?>"
       data-wp-on--click="actions.moveForward"
-      data-wp-bind--disabled="state.isTransitioning">
+      data-wp-bind--disabled="state.isTransitioning"
+      data-wp-context='<?php echo wp_json_encode(['carouselId' => $carousel_id]); ?>'>
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
   </div>
   <div class="carousel-container" id="<?php echo $carousel_id; ?>">
-    <div class="carousel-track" data-wp-bind--style="transform: ${state.transform}">
+    <div class="carousel-track"  data-carousel-id="<?php echo $carousel_id; ?>" data-wp-bind--style.transform="state.transform">
       <?php 
       // Clone last slides at the beginning for seamless looping
       if ( $loop && $realSlides > 0 ) :
