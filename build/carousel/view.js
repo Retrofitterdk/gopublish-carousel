@@ -66,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.carouselStores = {};
   wrappers.forEach(wrapper => {
     const carouselId = wrapper.getAttribute('id');
-    console.log(carouselId);
     let phpContext = {};
     try {
       phpContext = JSON.parse(wrapper.getAttribute('data-wp-context'));

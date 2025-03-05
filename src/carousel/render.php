@@ -6,7 +6,6 @@
 
 // Calculate unique ID for this carousel instance
 $carousel_id = 'carousel-' . uniqid();
-var_dump($carousel_id);
 
 // Determine number of real slides and columns
 $realSlides = count($block->parsed_block['innerBlocks']);
