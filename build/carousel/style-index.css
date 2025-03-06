@@ -76,12 +76,16 @@
 #editor .wp-block-squareonesoftware-demo-carousel .carousel-container {
   position: relative;
   overflow: visible;
-  max-width: 100% !important;
   padding: 20px;
   border: 1px solid;
 }
 #editor .wp-block-squareonesoftware-demo-carousel .block-editor-block-list__block {
   margin-bottom: 10px;
+}
+#editor .wp-block-squareonesoftware-demo-carousel > .carousel-container > .block-editor-inner-blocks > .block-editor-block-list__layout {
+  display: grid !important;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  gap: 10px;
 }
 
 @media (max-width: 760px) {

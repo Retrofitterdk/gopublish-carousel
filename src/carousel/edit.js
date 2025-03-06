@@ -3,7 +3,9 @@ import { PanelBody, RangeControl } from '@wordpress/components';
 
 export default function Edit({ attributes, setAttributes }) {
   const { columns, autoplay, scroll } = attributes;
-  const blockProps = useBlockProps();
+  const blockProps = useBlockProps({
+    style: { '--columns': columns }, // Passing column count as a CSS variable
+  });
 
   return (
     <div {...blockProps}>
@@ -27,12 +29,12 @@ export default function Edit({ attributes, setAttributes }) {
       </InspectorControls>
       
       <div className="carousel-container">
-      <InnerBlocks
-        allowedBlocks={['squareonesoftware/rp-carousel-slide']}
-        template={[['squareonesoftware/rp-carousel-slide', {}]]}
-        templateLock={false}
-        orientation="horizontal"
-      />
+        <InnerBlocks
+          allowedBlocks={['squareonesoftware/rp-carousel-slide']}
+          template={[['squareonesoftware/rp-carousel-slide', {}]]}
+          templateLock={false}
+          orientation="horizontal"
+        />
       </div>
     </div>
   );
