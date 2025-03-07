@@ -30,12 +30,6 @@ function create_block_demo_carousel_block_init() {
 
     // Register custom slide inner block
     $slide_block = register_block_type_from_metadata( __DIR__ . '/build/carousel-slide' );
-
-    // Debug logging
-    if ( ! $slide_block ) {
-        error_log( 'Failed to register slide block: ' . __DIR__ . '/build/slide' );
-    } else {
-        error_log( 'Slide block registered successfully' );
-    }
+    
 }
 add_action( 'init', 'create_block_demo_carousel_block_init', 9 );  // Note the priority

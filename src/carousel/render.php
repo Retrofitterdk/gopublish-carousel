@@ -4,17 +4,19 @@
  * Creates a responsive, looping carousel with configurable columns and scrolling
  */
 
-// Calculate unique ID for this carousel instance
-$carousel_id = 'carousel-' . uniqid();
+// Ensure innerBlocks is defined to avoid warnings in the editor
+$innerBlocks = $block->parsed_block['innerBlocks'] ?? [];
+$realSlides  = count($innerBlocks);
 
-// Determine number of real slides and columns
-$realSlides = count($block->parsed_block['innerBlocks']);
 $columns    = $attributes['columns'] ?? 3;
 $scroll     = $attributes['scroll'] ?? 1;
 $loop       = true;
 
 // Increase slide width to create partial cut-off effect
 $slide_width = (100 / ($columns - 0.3)) . '%';
+
+// Calculate unique ID for this carousel instance
+$carousel_id = 'carousel-' . uniqid();
 
 // Pass configuration via data-wp-context
 $wrapper_attributes = get_block_wrapper_attributes([
@@ -31,7 +33,6 @@ $wrapper_attributes = get_block_wrapper_attributes([
     'slideWidth'   => $slide_width,
   ])
 ]);
-
 ?>
 <div <?php echo $wrapper_attributes; ?>>
   <div class="navigation-container">
@@ -55,38 +56,42 @@ $wrapper_attributes = get_block_wrapper_attributes([
     </button>
   </div>
   <div class="carousel-container" id="<?php echo $carousel_id; ?>">
-    <div class="carousel-track"  data-carousel-id="<?php echo $carousel_id; ?>" data-wp-bind--style.transform="state.transform">
+    <div class="carousel-track" data-carousel-id="<?php echo $carousel_id; ?>" data-wp-bind--style.transform="state.transform">
       <?php 
       // Clone last slides at the beginning for seamless looping
       if ( $loop && $realSlides > 0 ) :
         $start = max(0, $realSlides - $columns);
-        for ($i = $start; $i < $realSlides; $i++) : ?>
-          <div class="carousel-slide carousel-clone"
-               data-slide-index="<?php echo $i; ?>"
-               style="width: <?php echo $slide_width; ?>">
-            <?php echo render_block($block->parsed_block['innerBlocks'][$i]); ?>
-          </div>
-        <?php endfor; 
+        for ( $i = $start; $i < $realSlides; $i++ ) :
+          if ( isset( $innerBlocks[$i] ) ) : ?>
+            <div class="carousel-slide carousel-clone"
+                 data-slide-index="<?php echo $i; ?>"
+                 style="width: <?php echo $slide_width; ?>">
+              <?php echo render_block( $innerBlocks[$i] ); ?>
+            </div>
+          <?php endif;
+        endfor;
       endif;
       
       // Render actual slides
-      foreach ($block->parsed_block['innerBlocks'] as $index => $inner_block) : ?>
+      foreach ( $innerBlocks as $index => $inner_block ) : ?>
         <div class="carousel-slide"
              data-slide-index="<?php echo $index; ?>"
              style="width: <?php echo $slide_width; ?>">
-          <?php echo render_block($inner_block); ?>
+          <?php echo render_block( $inner_block ); ?>
         </div>
-      <?php endforeach; 
+      <?php endforeach;
       
       // Clone first slides at the end for seamless looping
       if ( $loop && $realSlides > 0 ) :
-        for ($i = 0; $i < $columns; $i++) : ?>
-          <div class="carousel-slide carousel-clone"
-               data-slide-index="<?php echo $i; ?>"
-               style="width: <?php echo $slide_width; ?>">
-            <?php echo render_block($block->parsed_block['innerBlocks'][$i]); ?>
-          </div>
-        <?php endfor;
+        for ( $i = 0; $i < $columns; $i++ ) :
+          if ( isset( $innerBlocks[$i] ) ) : ?>
+            <div class="carousel-slide carousel-clone"
+                 data-slide-index="<?php echo $i; ?>"
+                 style="width: <?php echo $slide_width; ?>">
+              <?php echo render_block( $innerBlocks[$i] ); ?>
+            </div>
+          <?php endif;
+        endfor;
       endif;
       ?>
     </div>
