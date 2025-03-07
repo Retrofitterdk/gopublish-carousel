@@ -82,9 +82,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/blocks */ "@wordpress/blocks");
 /* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./style.scss */ "./src/carousel/style.scss");
-/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./edit */ "./src/carousel/edit.js");
-/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./save */ "./src/carousel/save.js");
-/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./block.json */ "./src/carousel/block.json");
+/* harmony import */ var _editor_scss__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./editor.scss */ "./src/carousel/editor.scss");
+/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./edit */ "./src/carousel/edit.js");
+/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./save */ "./src/carousel/save.js");
+/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./block.json */ "./src/carousel/block.json");
+
 
 
 
@@ -94,38 +96,38 @@ __webpack_require__.r(__webpack_exports__);
 // Enhanced block registration with comprehensive logging
 try {
   // Log block registration attempt
-  console.log('Attempting to register block:', _block_json__WEBPACK_IMPORTED_MODULE_4__.name);
+  console.log('Attempting to register block:', _block_json__WEBPACK_IMPORTED_MODULE_5__.name);
 
   // Verify critical dependencies before registration
-  if (!_edit__WEBPACK_IMPORTED_MODULE_2__["default"]) {
+  if (!_edit__WEBPACK_IMPORTED_MODULE_3__["default"]) {
     throw new Error('Edit component is missing');
   }
-  if (!_save__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+  if (!_save__WEBPACK_IMPORTED_MODULE_4__["default"]) {
     throw new Error('Save component is missing');
   }
 
   // Extensive block registration with error handling
-  const registeredBlock = (0,_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__.registerBlockType)(_block_json__WEBPACK_IMPORTED_MODULE_4__.name, {
-    edit: _edit__WEBPACK_IMPORTED_MODULE_2__["default"],
-    save: _save__WEBPACK_IMPORTED_MODULE_3__["default"],
+  const registeredBlock = (0,_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__.registerBlockType)(_block_json__WEBPACK_IMPORTED_MODULE_5__.name, {
+    edit: _edit__WEBPACK_IMPORTED_MODULE_3__["default"],
+    save: _save__WEBPACK_IMPORTED_MODULE_4__["default"],
     // Optional: Add extra metadata for debugging
     __experimentalBlockRegistration: {
       registrationTime: new Date().toISOString(),
-      blockName: _block_json__WEBPACK_IMPORTED_MODULE_4__.name,
-      version: _block_json__WEBPACK_IMPORTED_MODULE_4__.version
+      blockName: _block_json__WEBPACK_IMPORTED_MODULE_5__.name,
+      version: _block_json__WEBPACK_IMPORTED_MODULE_5__.version
     }
   });
 
   // Log successful registration
   console.log('Block registered successfully:', {
-    name: _block_json__WEBPACK_IMPORTED_MODULE_4__.name,
-    title: _block_json__WEBPACK_IMPORTED_MODULE_4__.title,
+    name: _block_json__WEBPACK_IMPORTED_MODULE_5__.name,
+    title: _block_json__WEBPACK_IMPORTED_MODULE_5__.title,
     registeredBlock
   });
 } catch (error) {
   // Comprehensive error logging
   console.error('Block Registration Error:', {
-    blockName: _block_json__WEBPACK_IMPORTED_MODULE_4__.name,
+    blockName: _block_json__WEBPACK_IMPORTED_MODULE_5__.name,
     errorMessage: error.message,
     errorStack: error.stack
   });
@@ -133,7 +135,7 @@ try {
   // Optional: Trigger a more visible error notification
   if (window.console && console.warn) {
     console.warn(`
-      ⚠️ Block Registration Failed: ${_block_json__WEBPACK_IMPORTED_MODULE_4__.name}
+      ⚠️ Block Registration Failed: ${_block_json__WEBPACK_IMPORTED_MODULE_5__.name}
       Please check your block configuration and dependencies.
     `);
   }
@@ -166,6 +168,18 @@ function Save({
     children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.InnerBlocks.Content, {})
   });
 }
+
+/***/ }),
+
+/***/ "./src/carousel/editor.scss":
+/*!**********************************!*\
+  !*** ./src/carousel/editor.scss ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
 
 /***/ }),
 

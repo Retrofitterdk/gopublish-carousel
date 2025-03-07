@@ -3,36 +3,16 @@
 	.carousel-container {
 		position: relative;
 		overflow: visible; // Show all slides in editor
-		max-width: 100% !important;
+		padding: 20px;
+		border: 1px solid;
 	  }
-	
-	  .carousel-track {
-		display: flex;
-		gap: 1rem;
-		padding: 1rem 0;
+	  .block-editor-block-list__block {
+		margin-bottom: 10px;
 	  }
-	
-	  .carousel-slide {
-		flex: 0 0 calc(100% / var(--columns, 3));
-		min-width: 0;
-		transition: none; // Disable transitions in editor
-		opacity: 1 !important; // Force visible in editor
-	  }
-	
-	  .carousel-prev,
-	  .carousel-next {
-		display: none; // Hide navigation in editor
-	  }
-	
-	  // Show column count helper
-	  &::after {
-		content: "Columns: " var(--columns, 3);
-		position: absolute;
-		top: 0;
-		right: 0;
-		background: rgba(0,0,0,0.8);
-		color: white;
-		padding: 0.25rem 0.5rem;
-		font-size: 0.8em;
-	  }
-  }
+}
+
+.wp-block-squareonesoftware-demo-carousel > .carousel-container > .block-editor-inner-blocks > .block-editor-block-list__layout {
+	display: grid !important;
+	grid-template-columns: repeat(var(--columns), 1fr);
+	gap: 10px;
+}
