@@ -9,6 +9,7 @@
 	"description": "A carousel block using the Interactivity API.",
 	"example": {},
 	"supports": {
+		"align": ["wide", "full"],
 		"interactivity": true
 	},
 	"attributes": {

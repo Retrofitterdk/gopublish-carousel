@@ -49,9 +49,6 @@
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-container {
   position: relative;
-  width: calc(100vw - (100vw - 101%) / 2);
-  max-width: 3840px;
-  margin-right: -1%;
   overflow-x: clip;
 }
 .wp-block-squareonesoftware-demo-carousel .carousel-track {

@@ -51,9 +51,6 @@
 	}
 	.carousel-container {
 		position: relative;
-		width: calc(100vw - ((100vw - 101%) / 2));
-		max-width: 3840px;
-		margin-left: -1%;
 		overflow-x: clip;
 	}
 	
@@ -79,6 +76,7 @@
 	  }
 	}
 }
+
 
 @media (max-width: 760px) {
 	.wp-block-squareonesoftware-demo-carousel {
