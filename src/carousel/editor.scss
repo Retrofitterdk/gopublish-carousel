@@ -5,6 +5,9 @@
 		overflow: visible; // Show all slides in editor
 		padding: 20px;
 		border: 1px solid;
+		.block-editor-inner-blocks {
+			min-height: 30px;
+		}
 	  }
 	  .block-editor-block-list__block {
 		margin-bottom: 10px;
