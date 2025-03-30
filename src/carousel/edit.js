@@ -6,7 +6,11 @@ export default function Edit({ attributes, setAttributes }) {
   const blockProps = useBlockProps({
     style: { '--columns': columns }, // Passing column count as a CSS variable
   });
-
+  const CAROUSEL_TEMPLATE = [
+    ['gopublish/carousel-slide', {} ],
+    ['gopublish/carousel-slide', {} ],
+    ['gopublish/carousel-slide', {} ],
+];
   return (
     <div {...blockProps}>
       <InspectorControls>
@@ -30,8 +34,8 @@ export default function Edit({ attributes, setAttributes }) {
       
       <div className="carousel-container">
         <InnerBlocks
-          allowedBlocks={['squareonesoftware/rp-carousel-slide']}
-          template={[['squareonesoftware/rp-carousel-slide', {}]]}
+          allowedBlocks={['gopublish/carousel-slide']}
+          template={ CAROUSEL_TEMPLATE }
           templateLock={false}
           orientation="horizontal"
         />
