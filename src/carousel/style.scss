@@ -1,4 +1,4 @@
-.wp-block-squareonesoftware-demo-carousel {
+.wp-block-gopublish-carousel {
 	position: relative;
 	
 	.navigation-container {
@@ -64,7 +64,7 @@
 	  display: flex;
 	  flex-shrink: 0;
 	  box-sizing: border-box;
-	  padding: 0 10px;
+	  padding-right: 1rem;
 	  
 	  .wp-block-group {
 		display: flex;
@@ -79,7 +79,7 @@
 
 
 @media (max-width: 760px) {
-	.wp-block-squareonesoftware-demo-carousel {
+	.wp-block-gopublish-carousel {
 		.carousel-slide {
 			width: 74.0740740741% !important;
 			user-select: none;
@@ -91,8 +91,6 @@
 		}
 		.navigation-container {
 			display: none;
-		}
-		
+		}	
 	}
-
 }
