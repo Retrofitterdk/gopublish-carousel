@@ -1,8 +1,8 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "squareonesoftware/rp-carousel-slide",
-  "version": "0.1.0",
+  "name": "gopublish/carousel-slide",
+  "version": "0.2.0",
   "title": "Carousel Slide",
   "category": "widgets",
   "icon": "media-default",
@@ -10,7 +10,7 @@
   "supports": {
     "html": false
   },
-  "textdomain": "rp-carousel-slide",
+  "textdomain": "gopublish-carousel",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./style.css",
   "style": "file:./style.css"

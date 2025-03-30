@@ -1,12 +1,12 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "squareonesoftware/demo-carousel",
-  "version": "0.1.0",
+  "name": "gopublish/carousel",
+  "version": "0.2.0",
   "title": "Carousel",
   "category": "widgets",
-  "icon": "media-interactive",
-  "description": "A carousel block using the Interactivity API.",
+  "icon": "slides",
+  "description": "A carousel for block using the Interactivity API.",
   "example": {},
   "supports": {
     "align": [
@@ -29,7 +29,7 @@
       "default": 1
     }
   },
-  "textdomain": "demo-carousel",
+  "textdomain": "gopublish-carousel",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
   "style": "file:./style-index.css",
