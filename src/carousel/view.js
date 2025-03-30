@@ -2,7 +2,7 @@ import { store } from '@wordpress/interactivity';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Find all carousel wrappers having our interactive data attributes.
-  const wrappers = document.querySelectorAll('[data-wp-interactive="squareonesoftware"][data-wp-context]');
+  const wrappers = document.querySelectorAll('[data-wp-interactive="gopublish-carousel"][data-wp-context]');
   // Global registry to store each carousel's store if needed.
   window.carouselStores = {};
 
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Create a unique store for this carousel instance.
-    const { state, actions } = store('squareonesoftware-' + carouselId, {
+    const { state, actions } = store('gopublish-carousel-' + carouselId, {
       actions: {
         moveForward() {
           if (state.isTransitioning) return;

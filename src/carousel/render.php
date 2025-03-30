@@ -21,7 +21,7 @@ $carousel_id = 'carousel-' . uniqid();
 // Pass configuration via data-wp-context
 $wrapper_attributes = get_block_wrapper_attributes([
   'id' => $carousel_id,
-  'data-wp-interactive' => 'squareonesoftware',
+  'data-wp-interactive' => 'gopublish-carousel',
   'data-wp-context' => wp_json_encode([
     'currentIndex' => 0,
     'itemsPerView' => $columns,
