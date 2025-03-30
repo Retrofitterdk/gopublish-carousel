@@ -1,0 +1,96 @@
+.wp-block-gopublish-carousel {
+	position: relative;
+	
+	.navigation-container {
+		padding: 10px;
+		padding-right: 0;
+		text-align: right;
+		right: 0;
+	  
+		.carousel-prev,
+		.carousel-next {
+		  position: relative;
+		  background: #CCD5D3;
+		  width: 52px; 
+		  height: 32px;
+		  border-radius: 20px;
+		  border: none;
+		  cursor: pointer;
+		  transition: background 0.3s ease;
+		
+		  &:hover {
+			background: #022C22;
+		
+			svg path {
+			  stroke: rgb(217, 249, 157); 
+			}
+		  }
+		
+		  svg {
+			margin: 0 auto;
+		
+			path {
+			  stroke: #F7FEEB;
+			  transition: stroke 0.3s ease; // ensures the stroke change is animated
+			}
+		  }
+		}
+	  
+	  .carousel-prev {
+		svg {
+		  transform: rotate(-180deg);
+		}
+	  }
+	}
+	
+	.carousel-prev:disabled,
+	.carousel-next:disabled {
+	  opacity: 1;
+	  cursor: pointer;
+	  pointer-events: none;
+	}
+	.carousel-container {
+		position: relative;
+		overflow-x: clip;
+	}
+	
+	.carousel-track {
+	  display: flex;
+	  align-items: stretch;
+	  transition: transform 0.3s ease-out;
+	}
+	
+	.carousel-slide {
+	  display: flex;
+	  flex-shrink: 0;
+	  box-sizing: border-box;
+	  padding-right: 1rem;
+	  
+	  .wp-block-group {
+		display: flex;
+		flex-direction: column;
+		
+		p:last-of-type {
+		  margin-top: auto;
+		}
+	  }
+	}
+}
+
+
+@media (max-width: 760px) {
+	.wp-block-gopublish-carousel {
+		.carousel-slide {
+			width: 74.0740740741% !important;
+			user-select: none;
+			-webkit-user-select: none;
+			cursor: grab;
+		}
+		.carousel-slide:active {
+			cursor: grabbing;
+		}
+		.navigation-container {
+			display: none;
+		}	
+	}
+}

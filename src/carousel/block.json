@@ -1,0 +1,35 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "gopublish/carousel",
+	"version": "0.2.0",
+	"title": "Carousel",
+	"category": "widgets",
+	"icon": "slides",
+	"description": "A carousel for block using the Interactivity API.",
+	"example": {},
+	"supports": {
+		"align": ["wide", "full"],
+		"interactivity": true
+	},
+	"attributes": {
+		"columns": {
+		  "type": "number",
+		  "default": 3
+		}, 
+		"autoplay": {
+		  "type": "boolean",
+		  "default": false
+		},
+		"scroll": {
+		  "type": "number",
+		  "default": 1
+		}
+	},
+	"textdomain": "gopublish-carousel",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"render": "file:./render.php",
+	"viewScriptModule": "file:./view.js"
+}
