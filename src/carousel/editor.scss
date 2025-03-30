@@ -1,5 +1,5 @@
 // Editor specific styles
-.wp-block-squareonesoftware-demo-carousel {
+.wp-block-gopublish-carousel {
 	.carousel-container {
 		position: relative;
 		overflow: visible; // Show all slides in editor
@@ -8,14 +8,13 @@
 		.block-editor-inner-blocks {
 			min-height: 30px;
 		}
-	  }
-	  .block-editor-block-list__block {
+	}
+	.block-editor-block-list__block {
 		margin-bottom: 10px;
-	  }
-}
-
-.wp-block-squareonesoftware-demo-carousel > .carousel-container > .block-editor-inner-blocks > .block-editor-block-list__layout {
-	display: grid !important;
-	grid-template-columns: repeat(var(--columns), 1fr);
-	gap: 10px;
+	}
+	> .carousel-container > .block-editor-inner-blocks > .block-editor-block-list__layout {
+		display: grid !important;
+		grid-template-columns: repeat(var(--columns), 1fr);
+		gap: 10px;
+	}
 }
