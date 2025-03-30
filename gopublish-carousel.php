@@ -1,16 +1,16 @@
 <?php
 /**
- * Plugin Name:       Carousel Slider - Be2Green
- * Description:       An interactive block with the Interactivity API.
- * Version:           0.1.0
+ * Plugin Name:       Go:Publish Carousel
+ * Description:       A carousel for blocks.
+ * Version:           0.2.0
  * Requires at least: 6.6
  * Requires PHP:      7.2
- * Author:            The WordPress Contributors
+ * Author:            Retrofitter
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       demo-carousel
+ * Text Domain:       gopublish-carousel
  *
- * @package           squareonesoftware
+ * @package           GopublishCarousel
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @see https://developer.wordpress.org/reference/functions/register_block_type/
  */
-function create_block_demo_carousel_block_init() {
+function gopublish_carousel_block_init() {
     // Register main carousel block
     register_block_type_from_metadata( __DIR__ . '/build/carousel' );
 
@@ -32,4 +32,4 @@ function create_block_demo_carousel_block_init() {
     $slide_block = register_block_type_from_metadata( __DIR__ . '/build/carousel-slide' );
     
 }
-add_action( 'init', 'create_block_demo_carousel_block_init', 9 );  // Note the priority
+add_action( 'init', 'gopublish_carousel_block_init', 9 );  // Note the priority
