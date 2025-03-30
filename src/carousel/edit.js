@@ -14,16 +14,16 @@ export default function Edit({ attributes, setAttributes }) {
   return (
     <div {...blockProps}>
       <InspectorControls>
-        <PanelBody title="Carousel Settings">
+        <PanelBody title={__("Carousel Settings", 'gopublish-carousel' )}>
           <RangeControl
-            label="Columns"
+            label={__("Columns", 'gopublish-carousel' )}
             value={columns}
             onChange={(value) => setAttributes({ columns: value })}
             min={1}
             max={6}
           />
           <RangeControl
-            label="Slides to Scroll"
+            label={__("Slides to Scroll", 'gopublish-carousel' )}
             value={scroll}
             onChange={(value) => setAttributes({ scroll: value })}
             min={1}
