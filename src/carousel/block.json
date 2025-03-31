@@ -10,7 +10,19 @@
 	"example": {},
 	"supports": {
 		"align": ["wide", "full"],
-		"interactivity": true
+		"interactivity": true,
+		"spacing": {
+			"margin": [ "top", "bottom" ],
+			"padding": true,
+			"blockGap": true,
+			"__experimentalDefaultControls": {
+				"padding": true,
+				"blockGap": true
+			}
+		},
+		"dimensions": {
+			"minHeight": true
+		}
 	},
 	"attributes": {
 		"columns": {
