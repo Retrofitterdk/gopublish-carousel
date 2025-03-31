@@ -1,5 +1,6 @@
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { PanelBody, RangeControl } from '@wordpress/components';
+import { __ } from "@wordpress/i18n";
 
 export default function Edit({ attributes, setAttributes }) {
   const { columns, autoplay, scroll } = attributes;
