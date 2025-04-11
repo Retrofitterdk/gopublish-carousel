@@ -80,10 +80,16 @@
 			width: 74.0740740741% !important;
 			user-select: none;
 			-webkit-user-select: none;
+			cursor: move; /* fallback if grab cursor is unsupported */
 			cursor: grab;
+			cursor: -moz-grab;
+			cursor: -webkit-grab;
 		}
-		.carousel-slide:active {
+		.carousel-slide:active,
+		.carousel-slide:focus {
 			cursor: grabbing;
+			cursor: -moz-grabbing;
+			cursor: -webkit-grabbing;
 		}
 		.navigation-container {
 			display: none;
