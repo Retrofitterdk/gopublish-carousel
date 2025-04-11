@@ -63,7 +63,7 @@ $wrapper_attributes = get_block_wrapper_attributes([
         $start = max(0, $realSlides - $columns);
         for ( $i = $start; $i < $realSlides; $i++ ) :
           if ( isset( $innerBlocks[$i] ) ) : ?>
-            <div class="carousel-slide carousel-clone"
+            <div class="carousel-slide carousel-clone" ontouchstart=""
                  data-slide-index="<?php echo $i; ?>"
                  style="width: <?php echo $slide_width; ?>">
               <?php echo render_block( $innerBlocks[$i] ); ?>
@@ -72,9 +72,10 @@ $wrapper_attributes = get_block_wrapper_attributes([
         endfor;
       endif;
       
-      // Render actual slides
+      // Render actual slides 
       foreach ( $innerBlocks as $index => $inner_block ) : ?>
-        <div class="carousel-slide"
+      <!-- ontouchstart is essential for ios -->
+        <div class="carousel-slide" ontouchstart=""
              data-slide-index="<?php echo $index; ?>"
              style="width: <?php echo $slide_width; ?>">
           <?php echo render_block( $inner_block ); ?>
