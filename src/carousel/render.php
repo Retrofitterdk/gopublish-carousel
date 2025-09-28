@@ -9,6 +9,7 @@ $innerBlocks = $block->parsed_block['innerBlocks'] ?? [];
 $realSlides  = count($innerBlocks);
 
 $columns    = $attributes['columns'] ?? 3;
+$columnsClass = 'columns-' . $columns;
 $scroll     = $attributes['scroll'] ?? 1;
 $loop       = true;
 
@@ -21,6 +22,7 @@ $carousel_id = 'carousel-' . uniqid();
 // Pass configuration via data-wp-context
 $wrapper_attributes = get_block_wrapper_attributes([
   'id' => $carousel_id,
+  'class' => $columnsClass,
   'data-wp-interactive' => 'gopublish-carousel',
   'data-wp-context' => wp_json_encode([
     'currentIndex' => 0,
