@@ -8,6 +8,25 @@
   "icon": "media-default",
   "description": "A wrapper block for carousel slides",
   "supports": {
+    "align": [
+      "wide",
+      "full"
+    ],
+    "spacing": {
+      "margin": [
+        "top",
+        "bottom"
+      ],
+      "padding": true,
+      "blockGap": true,
+      "__experimentalDefaultControls": {
+        "padding": true,
+        "blockGap": true
+      }
+    },
+    "dimensions": {
+      "minHeight": true
+    },
     "html": false
   },
   "textdomain": "gopublish-carousel",
