@@ -1,36 +1,46 @@
 .wp-block-gopublish-carousel {
 	position: relative;
-	
+	--nav-container-padding: 0.75rem;
+	--nav-container-padding-left: 0;
+	--nav-container-padding-right: 0;
+	--nav-container-justify-content: flex-end;
+	--nav-container-gap: 1rem;
+	--nav-container-text-align: right;
+	--nav-button-width: 32px;
+	--nav-button-height: 32px;
+	--nav-button-radius: 100%;
+	--nav-button-background: transparent;
+	--nav-button-background-hover: #000000;
+	--nav-button-icon-color: #000000;
+	--nav-button-icon-color-hover: #ffffff;
 	.navigation-container {
-		padding: 10px;
-		padding-right: 0;
-		text-align: right;
-		right: 0;
-	  
+		display: flex;
+		justify-content: var(--nav-container-justify-content);
+		gap: var(--nav-container-gap);
+		padding: var(--nav-container-padding);
+		padding-left: var(--nav-container-padding-left);
+		padding-right: var(--nav-container-padding-right);
+		text-align: var(--nav-container-text-align);
 		.carousel-prev,
 		.carousel-next {
 		  position: relative;
-		  background: #CCD5D3;
-		  width: 52px; 
-		  height: 32px;
-		  border-radius: 20px;
+		  background: var(--nav-button-background);
+		  width: var(--nav-button-width); 
+		  height: var(--nav-button-height);
+		  border-radius: var(--nav-button-radius);
 		  border: none;
 		  cursor: pointer;
 		  transition: background 0.3s ease;
-		
 		  &:hover {
-			background: #022C22;
-		
+			background: var(--nav-button-background-hover);
 			svg path {
-			  stroke: rgb(217, 249, 157); 
+			  stroke: var(--nav-button-icon-color-hover);
 			}
 		  }
-		
 		  svg {
 			margin: 0 auto;
-		
 			path {
-			  stroke: #F7FEEB;
+			  stroke: var(--nav-button-icon-color);
 			  transition: stroke 0.3s ease; // ensures the stroke change is animated
 			}
 		  }
@@ -71,7 +81,22 @@
 		flex-direction: column;
 	  }
 	}
+	.wp-block-gopublish-carousel-slide {
+   		width: 100%;
+		max-width: var(--wp--style--global--content-size);
+	}
+	&.alignwide {
+		.wp-block-gopublish-carousel-slide {
+			max-width: var(--wp--style--global--wide-size)
+		}
+	}
+	&.alignfull {
+		.wp-block-gopublish-carousel-slide {
+			max-width: 100vw;
+		}
+	}
 }
+
 
 
 @media (max-width: 760px) {
@@ -91,8 +116,10 @@
 			cursor: -moz-grabbing;
 			cursor: -webkit-grabbing;
 		}
-		.navigation-container {
-			display: none;
+		@media (pointer: coarse) {
+			.navigation-container {
+				display: none;
+			}
 		}	
 	}
 }
