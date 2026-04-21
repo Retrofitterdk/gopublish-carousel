@@ -35,9 +35,9 @@
       "type": "number",
       "default": 3
     },
-    "autoplay": {
+    "cutoff": {
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "scroll": {
       "type": "number",
