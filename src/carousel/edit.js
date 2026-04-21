@@ -1,5 +1,5 @@
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { PanelBody, RangeControl } from '@wordpress/components';
+import { PanelBody, RangeControl, ToggleControl } from '@wordpress/components';
 import { __ } from "@wordpress/i18n";
 
 export default function Edit({ attributes, setAttributes }) {
@@ -30,6 +30,11 @@ export default function Edit({ attributes, setAttributes }) {
             min={1}
             max={columns}
           />
+          <ToggleControl
+						label="Use Cutoff Effect"
+						onChange={ () => setAttributes( { cutoff: ! attributes.cutoff } ) }
+						checked={ attributes.cutoff }
+					/>
         </PanelBody>
       </InspectorControls>
       
