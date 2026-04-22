@@ -7,14 +7,28 @@
 // Ensure innerBlocks is defined to avoid warnings in the editor
 $innerBlocks = $block->parsed_block['innerBlocks'] ?? [];
 $realSlides  = count($innerBlocks);
-
 $columns    = $attributes['columns'] ?? 3;
-$columnsClass = 'columns-' . $columns;
+$onecolumn = $columns === 1;
+$classes    = 'columns-' . $columns;
+$cutoff     = $attributes['cutoff'] ?? false;
+$classes   .= $cutoff ? ' cutoff' : ' no-cutoff';
 $scroll     = $attributes['scroll'] ?? 1;
 $loop       = true;
 
 // Increase slide width to create partial cut-off effect
 $slide_width = (100 / ($columns - 0.3)) . '%';
+// If cutoff is disabled or it's a single column carousel, use normal widths
+if ( ! $cutoff || $onecolumn ) {
+  $slide_width = (100 / ($columns)) . '%';
+}
+
+$maxscroll = $columns;
+if ( $cutoff && ! $onecolumn ) {
+  $maxscroll = $columns - 1;
+}
+if ( $scroll > $maxscroll ) {
+  $scroll = $maxscroll;
+}
 
 // Calculate unique ID for this carousel instance
 $carousel_id = 'carousel-' . uniqid();
@@ -22,13 +36,13 @@ $carousel_id = 'carousel-' . uniqid();
 // Pass configuration via data-wp-context
 $wrapper_attributes = get_block_wrapper_attributes([
   'id' => $carousel_id,
-  'class' => $columnsClass,
+  'class' => $classes,
   'data-wp-interactive' => 'gopublish-carousel',
   'data-wp-context' => wp_json_encode([
     'currentIndex' => 0,
     'itemsPerView' => $columns,
     'scroll'       => $scroll,
-    'autoplay'     => $attributes['autoplay'] ?? false,
+    'cutoff'       => $attributes['cutoff'] ?? false,
     'loop'         => $loop,
     'itemsTotal'   => $realSlides,
     'clonesCount'  => $columns,

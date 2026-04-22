@@ -1,1 +1,437 @@
-(()=>{"use strict";var o,e={83:()=>{const o=window.wp.blocks,e=window.wp.blockEditor,r=window.wp.components,s=window.wp.i18n,l=window.ReactJSXRuntime;function n({attributes:o,setAttributes:n}){const{columns:t,autoplay:i,scroll:c}=o,a=(0,e.useBlockProps)({style:{"--columns":t}});return(0,l.jsxs)("div",{...a,children:[(0,l.jsx)(e.InspectorControls,{children:(0,l.jsxs)(r.PanelBody,{title:(0,s.__)("Carousel Settings","gopublish-carousel"),children:[(0,l.jsx)(r.RangeControl,{label:(0,s.__)("Columns","gopublish-carousel"),value:t,onChange:o=>n({columns:o}),min:1,max:6}),(0,l.jsx)(r.RangeControl,{label:(0,s.__)("Slides to Scroll","gopublish-carousel"),value:c,onChange:o=>n({scroll:o}),min:1,max:t}),(0,l.jsx)(r.ToggleControl,{label:"Use Cutoff Effect",onChange:()=>n({cutoff:!o.cutoff}),checked:o.cutoff})]})}),(0,l.jsx)("div",{className:"carousel-container",children:(0,l.jsx)(e.InnerBlocks,{allowedBlocks:["gopublish/carousel-slide"],template:[["gopublish/carousel-slide",{}],["gopublish/carousel-slide",{}],["gopublish/carousel-slide",{}]],templateLock:!1,orientation:"horizontal"})})]})}function t({attributes:o}){const r=e.useBlockProps.save();return(0,l.jsx)("div",{...r,children:(0,l.jsx)(e.InnerBlocks.Content,{})})}const i=JSON.parse('{"UU":"gopublish/carousel","rE":"0.2.0","DD":"Carousel"}');try{if(console.log("Attempting to register block:",i.UU),!n)throw new Error("Edit component is missing");if(!t)throw new Error("Save component is missing");const e=(0,o.registerBlockType)(i.UU,{edit:n,save:t,__experimentalBlockRegistration:{registrationTime:(new Date).toISOString(),blockName:i.UU,version:i.rE}});console.log("Block registered successfully:",{name:i.UU,title:i.DD,registeredBlock:e})}catch(o){console.error("Block Registration Error:",{blockName:i.UU,errorMessage:o.message,errorStack:o.stack}),window.console&&console.warn&&console.warn(`\n      ⚠️ Block Registration Failed: ${i.UU}\n      Please check your block configuration and dependencies.\n    `)}}},r={};function s(o){var l=r[o];if(void 0!==l)return l.exports;var n=r[o]={exports:{}};return e[o](n,n.exports,s),n.exports}s.m=e,o=[],s.O=(e,r,l,n)=>{if(!r){var t=1/0;for(u=0;u<o.length;u++){for(var[r,l,n]=o[u],i=!0,c=0;c<r.length;c++)(!1&n||t>=n)&&Object.keys(s.O).every((o=>s.O[o](r[c])))?r.splice(c--,1):(i=!1,n<t&&(t=n));if(i){o.splice(u--,1);var a=l();void 0!==a&&(e=a)}}return e}n=n||0;for(var u=o.length;u>0&&o[u-1][2]>n;u--)o[u]=o[u-1];o[u]=[r,l,n]},s.o=(o,e)=>Object.prototype.hasOwnProperty.call(o,e),(()=>{var o={704:0,200:0};s.O.j=e=>0===o[e];var e=(e,r)=>{var l,n,[t,i,c]=r,a=0;if(t.some((e=>0!==o[e]))){for(l in i)s.o(i,l)&&(s.m[l]=i[l]);if(c)var u=c(s)}for(e&&e(r);a<t.length;a++)n=t[a],s.o(o,n)&&o[n]&&o[n][0](),o[n]=0;return s.O(u)},r=globalThis.webpackChunkgopublish_carousel=globalThis.webpackChunkgopublish_carousel||[];r.forEach(e.bind(null,0)),r.push=e.bind(null,r.push.bind(r))})();var l=s.O(void 0,[200],(()=>s(83)));l=s.O(l)})();
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./src/carousel/edit.js":
+/*!******************************!*\
+  !*** ./src/carousel/edit.js ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Edit)
+/* harmony export */ });
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/block-editor */ "@wordpress/block-editor");
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wordpress/components */ "@wordpress/components");
+/* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__);
+
+
+
+
+function Edit({
+  attributes,
+  setAttributes
+}) {
+  const {
+    columns,
+    autoplay,
+    scroll
+  } = attributes;
+  const blockProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.useBlockProps)({
+    style: {
+      '--columns': columns
+    } // Passing column count as a CSS variable
+  });
+  const CAROUSEL_TEMPLATE = [['gopublish/carousel-slide', {}], ['gopublish/carousel-slide', {}], ['gopublish/carousel-slide', {}]];
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)("div", {
+    ...blockProps,
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.InspectorControls, {
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.PanelBody, {
+        title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Carousel Settings", 'gopublish-carousel'),
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.RangeControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Columns", 'gopublish-carousel'),
+          value: columns,
+          onChange: value => setAttributes({
+            columns: value
+          }),
+          min: 1,
+          max: 6,
+          help: "Select the number of slides visible at once."
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.RangeControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_2__.__)("Slides to Scroll", 'gopublish-carousel'),
+          value: scroll,
+          onChange: value => setAttributes({
+            scroll: value
+          }),
+          min: 1,
+          max: columns,
+          help: "Select the number of slides to scroll when navigating. Number cannot exceed the number of columns. If cutoff effect is enabled number should be less than columns."
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_1__.ToggleControl, {
+          label: "Use Cutoff Effect",
+          onChange: () => setAttributes({
+            cutoff: !attributes.cutoff
+          }),
+          checked: attributes.cutoff,
+          help: "Enable to only partially show last slide, hinting that there are more slides to scroll through."
+        })]
+      })
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+      className: "carousel-container",
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.InnerBlocks, {
+        allowedBlocks: ['gopublish/carousel-slide'],
+        template: CAROUSEL_TEMPLATE,
+        templateLock: false,
+        orientation: "horizontal"
+      })
+    })]
+  });
+}
+
+/***/ }),
+
+/***/ "./src/carousel/index.js":
+/*!*******************************!*\
+  !*** ./src/carousel/index.js ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/blocks */ "@wordpress/blocks");
+/* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./style.scss */ "./src/carousel/style.scss");
+/* harmony import */ var _editor_scss__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./editor.scss */ "./src/carousel/editor.scss");
+/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./edit */ "./src/carousel/edit.js");
+/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./save */ "./src/carousel/save.js");
+/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./block.json */ "./src/carousel/block.json");
+
+
+
+
+
+
+
+// Enhanced block registration with comprehensive logging
+try {
+  // Log block registration attempt
+  console.log('Attempting to register block:', _block_json__WEBPACK_IMPORTED_MODULE_5__.name);
+
+  // Verify critical dependencies before registration
+  if (!_edit__WEBPACK_IMPORTED_MODULE_3__["default"]) {
+    throw new Error('Edit component is missing');
+  }
+  if (!_save__WEBPACK_IMPORTED_MODULE_4__["default"]) {
+    throw new Error('Save component is missing');
+  }
+
+  // Extensive block registration with error handling
+  const registeredBlock = (0,_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__.registerBlockType)(_block_json__WEBPACK_IMPORTED_MODULE_5__.name, {
+    edit: _edit__WEBPACK_IMPORTED_MODULE_3__["default"],
+    save: _save__WEBPACK_IMPORTED_MODULE_4__["default"],
+    // Optional: Add extra metadata for debugging
+    __experimentalBlockRegistration: {
+      registrationTime: new Date().toISOString(),
+      blockName: _block_json__WEBPACK_IMPORTED_MODULE_5__.name,
+      version: _block_json__WEBPACK_IMPORTED_MODULE_5__.version
+    }
+  });
+
+  // Log successful registration
+  console.log('Block registered successfully:', {
+    name: _block_json__WEBPACK_IMPORTED_MODULE_5__.name,
+    title: _block_json__WEBPACK_IMPORTED_MODULE_5__.title,
+    registeredBlock
+  });
+} catch (error) {
+  // Comprehensive error logging
+  console.error('Block Registration Error:', {
+    blockName: _block_json__WEBPACK_IMPORTED_MODULE_5__.name,
+    errorMessage: error.message,
+    errorStack: error.stack
+  });
+
+  // Optional: Trigger a more visible error notification
+  if (window.console && console.warn) {
+    console.warn(`
+      ⚠️ Block Registration Failed: ${_block_json__WEBPACK_IMPORTED_MODULE_5__.name}
+      Please check your block configuration and dependencies.
+    `);
+  }
+}
+
+/***/ }),
+
+/***/ "./src/carousel/save.js":
+/*!******************************!*\
+  !*** ./src/carousel/save.js ***!
+  \******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Save)
+/* harmony export */ });
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/block-editor */ "@wordpress/block-editor");
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__);
+
+
+function Save({
+  attributes
+}) {
+  const blockProps = _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.useBlockProps.save();
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)("div", {
+    ...blockProps,
+    children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.InnerBlocks.Content, {})
+  });
+}
+
+/***/ }),
+
+/***/ "./src/carousel/editor.scss":
+/*!**********************************!*\
+  !*** ./src/carousel/editor.scss ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ }),
+
+/***/ "./src/carousel/style.scss":
+/*!*********************************!*\
+  !*** ./src/carousel/style.scss ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ }),
+
+/***/ "react/jsx-runtime":
+/*!**********************************!*\
+  !*** external "ReactJSXRuntime" ***!
+  \**********************************/
+/***/ ((module) => {
+
+module.exports = window["ReactJSXRuntime"];
+
+/***/ }),
+
+/***/ "@wordpress/block-editor":
+/*!*************************************!*\
+  !*** external ["wp","blockEditor"] ***!
+  \*************************************/
+/***/ ((module) => {
+
+module.exports = window["wp"]["blockEditor"];
+
+/***/ }),
+
+/***/ "@wordpress/blocks":
+/*!********************************!*\
+  !*** external ["wp","blocks"] ***!
+  \********************************/
+/***/ ((module) => {
+
+module.exports = window["wp"]["blocks"];
+
+/***/ }),
+
+/***/ "@wordpress/components":
+/*!************************************!*\
+  !*** external ["wp","components"] ***!
+  \************************************/
+/***/ ((module) => {
+
+module.exports = window["wp"]["components"];
+
+/***/ }),
+
+/***/ "@wordpress/i18n":
+/*!******************************!*\
+  !*** external ["wp","i18n"] ***!
+  \******************************/
+/***/ ((module) => {
+
+module.exports = window["wp"]["i18n"];
+
+/***/ }),
+
+/***/ "./src/carousel/block.json":
+/*!*********************************!*\
+  !*** ./src/carousel/block.json ***!
+  \*********************************/
+/***/ ((module) => {
+
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"gopublish/carousel","version":"0.2.0","title":"Carousel","category":"widgets","icon":"slides","description":"A carousel for block using the Interactivity API.","example":{},"supports":{"align":["wide","full"],"interactivity":true,"spacing":{"margin":["top","bottom"],"padding":true,"blockGap":true,"__experimentalDefaultControls":{"padding":true,"blockGap":true}},"dimensions":{"minHeight":true}},"attributes":{"columns":{"type":"number","default":3},"cutoff":{"type":"boolean","default":true},"scroll":{"type":"number","default":1}},"textdomain":"gopublish-carousel","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","render":"file:./render.php","viewScriptModule":"file:./view.js"}');
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/chunk loaded */
+/******/ 	(() => {
+/******/ 		var deferred = [];
+/******/ 		__webpack_require__.O = (result, chunkIds, fn, priority) => {
+/******/ 			if(chunkIds) {
+/******/ 				priority = priority || 0;
+/******/ 				for(var i = deferred.length; i > 0 && deferred[i - 1][2] > priority; i--) deferred[i] = deferred[i - 1];
+/******/ 				deferred[i] = [chunkIds, fn, priority];
+/******/ 				return;
+/******/ 			}
+/******/ 			var notFulfilled = Infinity;
+/******/ 			for (var i = 0; i < deferred.length; i++) {
+/******/ 				var [chunkIds, fn, priority] = deferred[i];
+/******/ 				var fulfilled = true;
+/******/ 				for (var j = 0; j < chunkIds.length; j++) {
+/******/ 					if ((priority & 1 === 0 || notFulfilled >= priority) && Object.keys(__webpack_require__.O).every((key) => (__webpack_require__.O[key](chunkIds[j])))) {
+/******/ 						chunkIds.splice(j--, 1);
+/******/ 					} else {
+/******/ 						fulfilled = false;
+/******/ 						if(priority < notFulfilled) notFulfilled = priority;
+/******/ 					}
+/******/ 				}
+/******/ 				if(fulfilled) {
+/******/ 					deferred.splice(i--, 1)
+/******/ 					var r = fn();
+/******/ 					if (r !== undefined) result = r;
+/******/ 				}
+/******/ 			}
+/******/ 			return result;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/jsonp chunk loading */
+/******/ 	(() => {
+/******/ 		// no baseURI
+/******/ 		
+/******/ 		// object to store loaded and loading chunks
+/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
+/******/ 		var installedChunks = {
+/******/ 			"carousel/index": 0,
+/******/ 			"carousel/style-index": 0
+/******/ 		};
+/******/ 		
+/******/ 		// no chunk on demand loading
+/******/ 		
+/******/ 		// no prefetching
+/******/ 		
+/******/ 		// no preloaded
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
+/******/ 		
+/******/ 		__webpack_require__.O.j = (chunkId) => (installedChunks[chunkId] === 0);
+/******/ 		
+/******/ 		// install a JSONP callback for chunk loading
+/******/ 		var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
+/******/ 			var [chunkIds, moreModules, runtime] = data;
+/******/ 			// add "moreModules" to the modules object,
+/******/ 			// then flag all "chunkIds" as loaded and fire callback
+/******/ 			var moduleId, chunkId, i = 0;
+/******/ 			if(chunkIds.some((id) => (installedChunks[id] !== 0))) {
+/******/ 				for(moduleId in moreModules) {
+/******/ 					if(__webpack_require__.o(moreModules, moduleId)) {
+/******/ 						__webpack_require__.m[moduleId] = moreModules[moduleId];
+/******/ 					}
+/******/ 				}
+/******/ 				if(runtime) var result = runtime(__webpack_require__);
+/******/ 			}
+/******/ 			if(parentChunkLoadingFunction) parentChunkLoadingFunction(data);
+/******/ 			for(;i < chunkIds.length; i++) {
+/******/ 				chunkId = chunkIds[i];
+/******/ 				if(__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 					installedChunks[chunkId][0]();
+/******/ 				}
+/******/ 				installedChunks[chunkId] = 0;
+/******/ 			}
+/******/ 			return __webpack_require__.O(result);
+/******/ 		}
+/******/ 		
+/******/ 		var chunkLoadingGlobal = globalThis["webpackChunkgopublish_carousel"] = globalThis["webpackChunkgopublish_carousel"] || [];
+/******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
+/******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["carousel/style-index"], () => (__webpack_require__("./src/carousel/index.js")))
+/******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
+/******/ 	
+/******/ })()
+;
+//# sourceMappingURL=index.js.map
