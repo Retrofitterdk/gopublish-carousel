@@ -22,6 +22,7 @@ export default function Edit({ attributes, setAttributes }) {
             onChange={(value) => setAttributes({ columns: value })}
             min={1}
             max={6}
+            help="Select the number of slides visible at once."
           />
           <RangeControl
             label={__("Slides to Scroll", 'gopublish-carousel' )}
@@ -29,11 +30,13 @@ export default function Edit({ attributes, setAttributes }) {
             onChange={(value) => setAttributes({ scroll: value })}
             min={1}
             max={columns}
+            help="Select the number of slides to scroll when navigating. Number cannot exceed the number of columns. If cutoff effect is enabled number should be less than columns."
           />
           <ToggleControl
 						label="Use Cutoff Effect"
 						onChange={ () => setAttributes( { cutoff: ! attributes.cutoff } ) }
 						checked={ attributes.cutoff }
+            help="Enable to only partially show last slide, hinting that there are more slides to scroll through."
 					/>
         </PanelBody>
       </InspectorControls>
