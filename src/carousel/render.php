@@ -8,6 +8,7 @@
 $innerBlocks = $block->parsed_block['innerBlocks'] ?? [];
 $realSlides  = count($innerBlocks);
 $columns    = $attributes['columns'] ?? 3;
+$onecolumn = $columns === 1;
 $classes    = 'columns-' . $columns;
 $cutoff     = $attributes['cutoff'] ?? false;
 $classes   .= $cutoff ? ' cutoff' : ' no-cutoff';
@@ -16,10 +17,18 @@ $loop       = true;
 
 // Increase slide width to create partial cut-off effect
 $slide_width = (100 / ($columns - 0.3)) . '%';
-// $slide_width = (100 / ($columns)) . '%';
+// If cutoff is disabled or it's a single column carousel, use normal widths
+if ( ! $cutoff || $onecolumn ) {
+  $slide_width = (100 / ($columns)) . '%';
+}
 
-
-// $slide_width = '55%';
+$maxscroll = $columns;
+if ( $cutoff && ! $onecolumn ) {
+  $maxscroll = $columns - 1;
+}
+if ( $scroll > $maxscroll ) {
+  $scroll = $maxscroll;
+}
 
 // Calculate unique ID for this carousel instance
 $carousel_id = 'carousel-' . uniqid();
@@ -33,7 +42,7 @@ $wrapper_attributes = get_block_wrapper_attributes([
     'currentIndex' => 0,
     'itemsPerView' => $columns,
     'scroll'       => $scroll,
-    'cutoff'     => $attributes['cutoff'] ?? false,
+    'cutoff'       => $attributes['cutoff'] ?? false,
     'loop'         => $loop,
     'itemsTotal'   => $realSlides,
     'clonesCount'  => $columns,
