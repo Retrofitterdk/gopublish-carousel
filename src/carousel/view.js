@@ -90,12 +90,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to calculate and apply the transform based on the current index.
     function doTransform() {
-      const isMobile = window.innerWidth <= 760;
-      if (isMobile) {
-        const slideWidthPercent = 74.0740740741;
+      // const isMobile = window.innerWidth <= 782;
+      function isMobileView() {
+        return window.matchMedia("(max-width: 782px)").matches;
+      }
+      if (isMobileView()) {
+        const slideWidthPercent = state.slideWidthMobile;
         const offsetPercentage = slideWidthPercent * state.currentIndex;
         carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
         carouselContainer.classList.add('mobile-partial-view');
+      } else if (!state.cutoff || state.itemsPerView == 1) {
+        const slideWidthPercent = 100 / (state.itemsPerView);
+        const offsetPercentage = slideWidthPercent * state.currentIndex;
+        carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
+        carouselContainer.classList.remove('mobile-partial-view');
       } else {
         const slideWidthPercent = 100 / (state.itemsPerView - 0.3);
         const offsetPercentage = slideWidthPercent * state.currentIndex;
