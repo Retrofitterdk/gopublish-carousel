@@ -1,9 +1,9 @@
 import { InnerBlocks, InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { PanelBody, RangeControl, ToggleControl } from '@wordpress/components';
+import { PanelBody, RangeControl, TextControl ,ToggleControl } from '@wordpress/components';
 import { __ } from "@wordpress/i18n";
 
 export default function Edit({ attributes, setAttributes }) {
-  const { columns, autoplay, scroll } = attributes;
+  const { columns, autoplay, scroll, mobileWidth } = attributes;
   const blockProps = useBlockProps({
     style: { '--columns': columns }, // Passing column count as a CSS variable
   });
@@ -38,6 +38,14 @@ export default function Edit({ attributes, setAttributes }) {
 						checked={ attributes.cutoff }
             help="Enable to only partially show last slide, hinting that there are more slides to scroll through."
 					/>
+          <RangeControl
+            label="Mobile Slide Width (%)"
+            value={mobileWidth}
+            onChange={(value) => setAttributes({ mobileWidth: value })}
+            min={1}
+            max={100}
+            help="Set the width of each slide in mobile view in percentage. Default is 75%."
+          />
         </PanelBody>
       </InspectorControls>
       
