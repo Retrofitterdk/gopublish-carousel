@@ -7,19 +7,31 @@
 // Ensure innerBlocks is defined to avoid warnings in the editor
 $innerBlocks = $block->parsed_block['innerBlocks'] ?? [];
 $realSlides  = count($innerBlocks);
-$columns    = $attributes['columns'] ?? 3;
-$classes    = 'columns-' . $columns;
-$cutoff     = $attributes['cutoff'] ?? false;
-$classes   .= $cutoff ? ' cutoff' : ' no-cutoff';
-$scroll     = $attributes['scroll'] ?? 1;
-$loop       = true;
+$columns     = $attributes['columns'] ?? 3;
+$onecolumn   = $columns === 1;
+$cutoff      = $attributes['cutoff'] ?? false;
+$classes     = 'columns-' . $columns;
+$classes    .= $cutoff ? ' cutoff' : ' no-cutoff';
+$scroll      = $attributes['scroll'] ?? 1;
+$loop        = true;
 
 // Increase slide width to create partial cut-off effect
 $slide_width = (100 / ($columns - 0.3)) . '%';
-// $slide_width = (100 / ($columns)) . '%';
+// If cutoff is disabled or it's a single column carousel, use normal widths
+if ( ! $cutoff || $onecolumn ) {
+  $slide_width = (100 / ($columns)) . '%';
+}
+$slide_width_mobile = $attributes['mobileWidth'] ?? $slide_width;
+$slide_width_mobile_percentage = $slide_width_mobile . '%';
 
-
-// $slide_width = '55%';
+// Ensure scroll does not exceed columns (or columns - 1 if cutoff is enabled)
+$maxscroll = $columns;
+if ( $cutoff && ! $onecolumn ) {
+  $maxscroll = $columns - 1;
+}
+if ( $scroll > $maxscroll ) {
+  $scroll = $maxscroll;
+}
 
 // Calculate unique ID for this carousel instance
 $carousel_id = 'carousel-' . uniqid();
@@ -33,15 +45,19 @@ $wrapper_attributes = get_block_wrapper_attributes([
     'currentIndex' => 0,
     'itemsPerView' => $columns,
     'scroll'       => $scroll,
-    'cutoff'     => $attributes['cutoff'] ?? false,
+    'cutoff'       => $attributes['cutoff'] ?? false,
     'loop'         => $loop,
     'itemsTotal'   => $realSlides,
     'clonesCount'  => $columns,
     'slideWidth'   => $slide_width,
+    'slideWidthMobile'   => $slide_width_mobile,
   ])
 ]);
 ?>
-<div <?php echo $wrapper_attributes; ?>>
+<div
+  <?php echo $wrapper_attributes; ?>
+  style="--mobile-width: <?php echo esc_attr( $slide_width_mobile_percentage ); ?>"
+>
   <div class="navigation-container">
     <button class="carousel-prev"
       data-carousel-id="<?php echo $carousel_id; ?>"
@@ -83,8 +99,8 @@ $wrapper_attributes = get_block_wrapper_attributes([
       foreach ( $innerBlocks as $index => $inner_block ) : ?>
       <!-- ontouchstart is essential for ios -->
         <div class="carousel-slide" ontouchstart=""
-             data-slide-index="<?php echo $index; ?>"
-             style="width: <?php echo $slide_width; ?>">
+            data-slide-index="<?php echo $index; ?>"
+            style="width: <?php echo $slide_width; ?>">
           <?php echo render_block( $inner_block ); ?>
         </div>
       <?php endforeach;
