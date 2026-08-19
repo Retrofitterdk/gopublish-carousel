@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return window.matchMedia("(max-width: 782px)").matches;
       }
       if (isMobileView()) {
-        const slideWidthPercent = 74.0740740741;
+        const slideWidthPercent = state.slideWidthMobile;
         const offsetPercentage = slideWidthPercent * state.currentIndex;
         carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
         carouselContainer.classList.add('mobile-partial-view');
