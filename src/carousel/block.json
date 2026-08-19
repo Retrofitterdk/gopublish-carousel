@@ -36,6 +36,10 @@
 		"scroll": {
 		  "type": "number",
 		  "default": 1
+		},
+		"mobileWidth": {
+		  "type": "number",
+		  "default": 75
 		}
 	},
 	"textdomain": "gopublish-carousel",
