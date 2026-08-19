@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Go:Publish Carousel
  * Description:       A carousel for blocks.
- * Version:           0.2.1
+ * Version:           0.2.2
  * Requires at least: 6.6
  * Requires PHP:      7.2
  * Author:            Retrofitter
