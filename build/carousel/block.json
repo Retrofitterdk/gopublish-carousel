@@ -35,13 +35,17 @@
       "type": "number",
       "default": 3
     },
-    "autoplay": {
+    "cutoff": {
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "scroll": {
       "type": "number",
       "default": 1
+    },
+    "mobileWidth": {
+      "type": "number",
+      "default": 75
     }
   },
   "textdomain": "gopublish-carousel",
