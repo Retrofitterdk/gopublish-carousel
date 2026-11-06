@@ -109,7 +109,7 @@ export default function Edit( { attributes, setAttributes } ) {
 							'gopublish-carousel'
 						) }
 						help={ __(
-							'Width of each slide on small screens (below 782 px), as a percentage of the carousel width.',
+							'Width of each slide on mobile and tablet screens, as a percentage of the carousel width.',
 							'gopublish-carousel'
 						) }
 						value={ mobileWidth }

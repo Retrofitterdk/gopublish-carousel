@@ -116,6 +116,8 @@ $context = array(
 	'itemsTotal'           => $real_slides,
 	'clonesCount'          => $leading_clones,
 	'slideWidthMobile'     => $slide_width_mobile,
+	// Same query as the small-screen CSS (follows the theme's viewports).
+	'smallScreenQuery'     => gopublish_carousel_small_screen_query(),
 	'staticDesktop'        => $static_desktop,
 	'staticMobile'         => $static_mobile,
 	// Live region text, set by view.js after each move (empty on load, so

@@ -137,39 +137,6 @@
 	}
 }
 
-@media (max-width: 782px) {
-
-	.wp-block-gopublish-carousel {
-
-		.carousel-slide {
-			// Overrides the inline desktop width from render.php.
-			width: var(--mobile-width) !important;
-			cursor: grab;
-			user-select: none;
-		}
-
-		.carousel-slide:active {
-			cursor: grabbing;
-		}
-
-		// A single column with cutoff needs the gap to the next, partly
-		// visible slide; without cutoff there is no next slide in view.
-		&.columns-1.cutoff .carousel-slide {
-			padding-right: var(--slide--padding-right);
-		}
-
-		// Small touch screens: navigate by swiping. The buttons are only
-		// visually hidden (not display: none), so keyboard, switch and screen
-		// reader users can still reach them, and they appear as soon as
-		// anything in the carousel has keyboard focus (:focus-visible doesn't
-		// match taps). Browsers without :has() ignore this rule and simply
-		// show the buttons.
-		@media (pointer: coarse) {
-
-			&:not(:has(:focus-visible)) .navigation-container {
-
-				@include visually-hidden;
-			}
-		}
-	}
-}
+// Small-screen styles (slide width, drag cursor, touch navigation) are
+// generated in PHP, so their media query follows the theme's viewport
+// settings: see gopublish_carousel_add_small_screen_styles().

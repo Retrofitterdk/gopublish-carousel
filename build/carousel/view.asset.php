@@ -2,6 +2,6 @@
 	'dependencies' => array(
 		'@wordpress/interactivity'
 	),
-	'version' => '3062eb2bfe5e30451143',
+	'version' => '7ba2b25250209689cc6e',
 	'type' => 'module'
 );

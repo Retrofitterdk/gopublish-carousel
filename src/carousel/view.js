@@ -12,8 +12,15 @@ const DRAG_CLICK_THRESHOLD = 5;
 // Pending fallback timer per carousel, keyed by wrapper element.
 const fallbackTimers = new WeakMap();
 
-function isMobileView() {
-	return window.matchMedia( '(max-width: 782px)' ).matches;
+/**
+ * True on small screens (mobile/tablet). The query comes from render.php and
+ * follows the theme's viewport settings, so it matches the small-screen CSS.
+ *
+ * @param {Object} context Carousel context.
+ * @return {boolean} Whether the small-screen layout is active.
+ */
+function isMobileView( context ) {
+	return window.matchMedia( context.smallScreenQuery ).matches;
 }
 
 function prefersReducedMotion() {
@@ -38,7 +45,9 @@ function trackTransition() {
  * @return {boolean} Whether the carousel is static right now.
  */
 function isStatic( context ) {
-	return isMobileView() ? context.staticMobile : context.staticDesktop;
+	return isMobileView( context )
+		? context.staticMobile
+		: context.staticDesktop;
 }
 
 /**
@@ -49,7 +58,7 @@ function isStatic( context ) {
  * @return {number} Number of slides in view.
  */
 function visibleCount( context ) {
-	if ( isMobileView() ) {
+	if ( isMobileView( context ) ) {
 		return 100 / context.slideWidthMobile;
 	}
 	return context.cutoff && context.itemsPerView > 1
@@ -127,7 +136,7 @@ function applyTransform( context, { wrapper, track } ) {
 	}
 
 	let slideWidthPercent;
-	if ( isMobileView() ) {
+	if ( isMobileView( context ) ) {
 		slideWidthPercent = context.slideWidthMobile;
 	} else if ( ! context.cutoff || context.itemsPerView === 1 ) {
 		slideWidthPercent = 100 / context.itemsPerView;

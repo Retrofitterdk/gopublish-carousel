@@ -11,7 +11,7 @@ A looping carousel block for WordPress. Each slide can hold any blocks. The caro
 - Slides (`gopublish/carousel-slide`) can contain any blocks.
 - 1–6 slides visible at once, with a configurable number of slides to scroll.
 - Optional cutoff effect: the last visible slide is partly shown.
-- Separate slide width on mobile (below 782 px).
+- Separate slide width on mobile and tablet (follows the theme's viewport settings; default up to 782 px).
 - Endless looping, previous/next buttons, touch swipe and mouse drag.
 - Navigation is hidden when all slides fit in view.
 - Wide/full alignment, spacing and minimum height support.

@@ -87,7 +87,7 @@ On small touch screens the carousel is navigated by swiping, so the buttons are 
 
 = What is the breakpoint for mobile? =
 
-782 px, the same as the WordPress admin and many block themes.
+The mobile slide width and touch navigation apply to mobile and tablet screens: everything up to the theme's tablet viewport. By default that is 782 px. From WordPress 7.1, themes can change it in theme.json (settings.viewport), and the carousel follows.
 
 == Development ==
 

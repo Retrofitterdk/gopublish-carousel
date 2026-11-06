@@ -36,6 +36,101 @@ function gopublish_carousel_block_init() {
 add_action( 'init', 'gopublish_carousel_block_init', 9 );
 
 /**
+ * The largest viewport width that counts as a small screen (mobile/tablet).
+ *
+ * Follows the theme's viewport settings (theme.json settings.viewport,
+ * WordPress 7.1+): small screens are everything below core's @desktop
+ * viewport, i.e. up to the tablet breakpoint (default 782px). Falls back to
+ * 782px on older WordPress versions.
+ *
+ * @return string CSS length, e.g. '782px' or '48rem'.
+ */
+function gopublish_carousel_small_screen_max_width() {
+	$max_width = '782px';
+
+	if ( method_exists( 'WP_Theme_JSON', 'get_viewport_media_queries' ) ) {
+		$queries = WP_Theme_JSON::get_viewport_media_queries(
+			wp_get_global_settings( array( 'viewport' ) ),
+			array( 'include_desktop' => true )
+		);
+		// The desktop query has the form "@media (width > 782px)".
+		if ( isset( $queries['@desktop'] ) && preg_match( '/width > ([0-9.]+(?:px|em|rem))\)/', $queries['@desktop'], $matches ) ) {
+			$max_width = $matches[1];
+		}
+	}
+
+	return $max_width;
+}
+
+/**
+ * Media query (without "@media") that matches small screens.
+ *
+ * Used for the small-screen CSS below and passed to view.js, so CSS and JS
+ * always switch layouts at the same width.
+ *
+ * @return string Media query, e.g. '(width <= 782px)'.
+ */
+function gopublish_carousel_small_screen_query() {
+	return '(width <= ' . gopublish_carousel_small_screen_max_width() . ')';
+}
+
+/**
+ * Add the small-screen styles to the carousel's stylesheet.
+ *
+ * These rules live here instead of in style.scss because a stylesheet can't
+ * read the theme's viewport settings: the media query is generated from them.
+ * Keep the visually hidden declarations in sync with the visually-hidden
+ * mixin in style.scss.
+ */
+function gopublish_carousel_add_small_screen_styles() {
+	$block_type = WP_Block_Type_Registry::get_instance()->get_registered( 'gopublish/carousel' );
+	if ( ! $block_type || empty( $block_type->style_handles ) ) {
+		return;
+	}
+
+	$query = gopublish_carousel_small_screen_query();
+	$css   = <<<CSS
+@media {$query} {
+	.wp-block-gopublish-carousel .carousel-slide {
+		width: var(--mobile-width) !important; /* Overrides the inline desktop width from render.php. */
+		cursor: grab;
+		-webkit-user-select: none;
+		user-select: none;
+	}
+	.wp-block-gopublish-carousel .carousel-slide:active {
+		cursor: grabbing;
+	}
+	/* A single column with cutoff needs the gap to the next, partly visible slide. */
+	.wp-block-gopublish-carousel.columns-1.cutoff .carousel-slide {
+		padding-right: var(--slide--padding-right);
+	}
+}
+/*
+ * Small touch screens: navigate by swiping. The buttons are only visually
+ * hidden, so keyboard, switch and screen reader users can still reach them,
+ * and they appear when anything in the carousel has keyboard focus.
+ * Browsers without :has() ignore this rule and simply show the buttons.
+ */
+@media {$query} and (pointer: coarse) {
+	.wp-block-gopublish-carousel:not(:has(:focus-visible)) .navigation-container {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
+	}
+}
+CSS;
+
+	wp_add_inline_style( $block_type->style_handles[0], $css );
+}
+add_action( 'init', 'gopublish_carousel_add_small_screen_styles', 20 );
+
+/**
  * Extra registration settings that block.json can't express.
  *
  * The carousel is registered with skip_inner_blocks: render.php renders the
