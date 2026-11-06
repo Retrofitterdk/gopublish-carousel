@@ -124,6 +124,11 @@ $wrapper_attributes = get_block_wrapper_attributes( $a11y_attributes + [
     'slideWidthMobile' => $slide_width_mobile,
     'staticDesktop'    => $static_desktop,
     'staticMobile'     => $static_mobile,
+    // Live region text, set by view.js after each move (empty on load, so
+    // nothing is announced until the user navigates).
+    'announcement'     => '',
+    /* translators: Announced after moving the carousel. 1: Slide number, 2: Total number of slides. */
+    'announcementTemplate' => __( 'Slide %1$d of %2$d', 'gopublish-carousel' ),
   ])
 ] );
 ?>
@@ -147,6 +152,7 @@ $wrapper_attributes = get_block_wrapper_attributes( $a11y_attributes + [
       </svg>
     </button>
   </div>
+  <div class="carousel-status" aria-live="polite" aria-atomic="true" data-wp-text="context.announcement"></div>
   <?php endif; ?>
   <div class="carousel-container" id="<?php echo esc_attr( $slides_id ); ?>">
     <div class="carousel-track">

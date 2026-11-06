@@ -65,6 +65,19 @@
 		overflow-x: clip;
 	}
 
+	// Live region for screen readers: visually hidden, but still announced.
+	.carousel-status {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
 	// All slides fit in view at this breakpoint (set by view.js):
 	// nothing to scroll, so hide the clones and the navigation.
 	&.is-static {

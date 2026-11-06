@@ -147,11 +147,30 @@ function resetWithoutAnimation( context, parts, offset ) {
 }
 
 /**
+ * Update the live region text, e.g. "Slide 3 of 9" (first slide in view).
+ * The region is bound with data-wp-text, and screen readers announce the
+ * change politely (aria-live="polite").
+ *
+ * @param {Object} context Carousel context.
+ */
+function announce( context ) {
+	const { currentIndex, clonesCount, itemsTotal } = context;
+	const slideNumber =
+		( ( ( ( currentIndex - clonesCount ) % itemsTotal ) + itemsTotal ) %
+			itemsTotal ) +
+		1;
+	context.announcement = context.announcementTemplate
+		.replace( '%1$d', slideNumber )
+		.replace( '%2$d', itemsTotal );
+}
+
+/**
  * Called when a slide transition has finished, either from `transitionend`
  * or from the fallback timer, whichever comes first.
  *
  * Unlocks the carousel and, after sliding onto the clones, jumps back to the
- * matching real slide without animation (seamless looping).
+ * matching real slide without animation (seamless looping). Then announces
+ * the new position to screen readers.
  *
  * @param {Object} context Carousel context.
  * @param {Object} parts   Result of getParts().
@@ -171,6 +190,8 @@ function finishTransition( context, parts ) {
 	} else if ( context.currentIndex < context.clonesCount ) {
 		resetWithoutAnimation( context, parts, context.itemsTotal );
 	}
+
+	announce( context );
 }
 
 /**
