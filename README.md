@@ -49,6 +49,8 @@ npm run lint:php       # phpcs
 npm run lint:php:fix   # phpcbf
 ```
 
+phpcs only checks PHP files (see `phpcs.xml.dist`); JavaScript and styles are linted by `wp-scripts`. All three linters currently pass without errors, so keep it that way: run them before committing.
+
 To create a translation template, use WP-CLI. It reads PHP, JavaScript and `block.json`:
 
 ```bash

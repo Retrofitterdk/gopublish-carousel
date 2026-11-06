@@ -4,7 +4,7 @@ Tags:              carousel, slider, block, interactivity api
 Requires at least: 6.6
 Tested up to:      7.1
 Requires PHP:      7.2
-Stable tag:        0.2.6
+Stable tag:        0.2.7
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,11 +97,20 @@ Source files are in `src/`, and the compiled blocks in `build/` are what WordPre
 * `npm start` – build and watch for changes during development.
 * `npm run build` – production build.
 * `npm run lint:js` / `npm run lint:css` – lint JavaScript and styles.
+* `npm run lint:php` – check PHP against the WordPress coding standards (run `composer install` first).
 * `npm run plugin-zip` – create an installable zip file.
 
 See README.md for more developer notes.
 
 == Changelog ==
+
+= 0.2.7 =
+* Fix: Groups inside slides keep their own layout (Row, Grid, Stack) instead of always being forced into a column.
+* Editor: Slides to scroll only allows values the carousel can use, and adjusts automatically when Columns or the cutoff effect change.
+* Editor: all settings and help texts are translatable, and labels use sentence case.
+* Editor: blocks inside slides no longer get extra spacing that the front end doesn't have.
+* Removed debug logging from the editor script.
+* JavaScript, CSS and PHP now follow the WordPress coding standards, and unused code was removed.
 
 = 0.2.6 =
 * Accessibility: navigation buttons have accessible names, aria-controls and type="button", and the icons are hidden from screen readers.
