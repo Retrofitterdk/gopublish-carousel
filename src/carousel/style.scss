@@ -26,6 +26,9 @@
 	--nav-button-background-hover: #000000;
 	--nav-button-icon-color: #000000;
 	--nav-button-icon-color-hover: #ffffff;
+	--nav-button-outline-color: var(--nav-button-background-hover);
+	--nav-button-outline-width: 2px;
+	--nav-button-outline-offset: 2px;
 	--slide--padding-right: 1rem;
 	.navigation-container {
 		display: flex;
@@ -45,11 +48,18 @@
 		  border: none;
 		  cursor: pointer;
 		  transition: background 0.3s ease;
-		  &:hover {
+		  // Keyboard focus gets the hover look plus an outline ring, so it's
+		  // clearly visible (not only a colour change).
+		  &:hover,
+		  &:focus-visible {
 			background: var(--nav-button-background-hover);
 			svg path {
 			  stroke: var(--nav-button-icon-color-hover);
 			}
+		  }
+		  &:focus-visible {
+			outline: var(--nav-button-outline-width) solid var(--nav-button-outline-color);
+			outline-offset: var(--nav-button-outline-offset);
 		  }
 		  svg {
 			margin: 0 auto;

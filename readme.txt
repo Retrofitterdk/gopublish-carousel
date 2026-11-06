@@ -64,6 +64,7 @@ Available properties:
 * `--nav-button-width`, `--nav-button-height`, `--nav-button-radius`
 * `--nav-button-background`, `--nav-button-background-hover`
 * `--nav-button-icon-color`, `--nav-button-icon-color-hover`
+* `--nav-button-outline-color`, `--nav-button-outline-width`, `--nav-button-outline-offset` (keyboard focus ring)
 * `--slide--padding-right` (space between slides)
 
 = Why are the navigation buttons hidden on my phone? =
