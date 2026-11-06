@@ -70,6 +70,11 @@ if ( $loop && $is_scrollable && $realSlides > 0 ) {
 // Unique ID for this carousel instance. wp_unique_id() counts up per page
 // render, so the IDs are stable between page loads (unlike uniqid()).
 $carousel_id = wp_unique_id( 'gopublish-carousel-' );
+$slides_id   = $carousel_id . '-slides';
+
+// Accessible names for the navigation buttons (they only contain an icon).
+$label_prev = _n( 'Previous slide', 'Previous slides', $scroll, 'gopublish-carousel' );
+$label_next = _n( 'Next slide', 'Next slides', $scroll, 'gopublish-carousel' );
 
 // Interactivity API wiring:
 // - data-wp-interactive: the store namespace registered in view.js.
@@ -103,21 +108,25 @@ $wrapper_attributes = get_block_wrapper_attributes([
 <div <?php echo $wrapper_attributes; ?>>
   <?php if ( $is_scrollable ) : ?>
   <div class="navigation-container">
-    <button class="carousel-prev"
+    <button type="button" class="carousel-prev"
+      aria-label="<?php echo esc_attr( $label_prev ); ?>"
+      aria-controls="<?php echo esc_attr( $slides_id ); ?>"
       data-wp-on--click="actions.moveBack">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
         <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
-    <button class="carousel-next"
+    <button type="button" class="carousel-next"
+      aria-label="<?php echo esc_attr( $label_next ); ?>"
+      aria-controls="<?php echo esc_attr( $slides_id ); ?>"
       data-wp-on--click="actions.moveForward">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
         <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
   </div>
   <?php endif; ?>
-  <div class="carousel-container">
+  <div class="carousel-container" id="<?php echo esc_attr( $slides_id ); ?>">
     <div class="carousel-track">
       <?php 
       // Leading clones: the slides that come before slide 0 in an endless
