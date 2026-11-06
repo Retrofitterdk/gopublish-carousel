@@ -15,6 +15,7 @@ A looping carousel block for WordPress. Each slide can hold any blocks. The caro
 - Endless looping, previous/next buttons, touch swipe and mouse drag.
 - Navigation is hidden when all slides fit in view.
 - Wide/full alignment, spacing and minimum height support.
+- Accessible, following the [W3C carousel pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/) (see below).
 
 ## Installation
 
@@ -71,6 +72,15 @@ See [src/README.md](src/README.md) for what each source file does.
 - **State:** each carousel's settings and position live in its `data-wp-context`. One store, `gopublish-carousel` in `view.js`, handles every carousel on the page, and directives such as `data-wp-on--click="actions.moveForward"` resolve to the carousel they sit in.
 - **Looping:** the slides are repeated cyclically as clones before and after the real slides. After sliding onto a clone, the track jumps back to the matching real slide without animation.
 
+### Accessibility
+
+- **Semantics:** the wrapper has `aria-roledescription="carousel"`, and is a `region` when the *Carousel label* setting (`ariaLabel` attribute, Advanced panel) is filled in, otherwise a `group`. Each real slide is a `group` with `aria-roledescription="slide"` and a label such as "2 of 9".
+- **Navigation:** the buttons have translatable `aria-label`s and `aria-controls`, and a `:focus-visible` style. On small touch screens they're visually hidden (not removed) until keyboard focus enters the carousel.
+- **Clones:** `aria-hidden="true"`, and `gopublish_carousel_clone_html()` sets `tabindex="-1"` on everything focusable inside them. They aren't `inert`, because they can be visible and should stay clickable.
+- **Off-screen slides:** `view.js` sets `inert` on real slides outside the view after every move (partly visible slides count as visible).
+- **Announcements:** a visually hidden `aria-live="polite"` region, bound with `data-wp-text`, says "Slide 3 of 9" after each move. The text template is translated in PHP and passed in the context.
+- **Reduced motion:** with `prefers-reduced-motion: reduce`, the track jumps without a transition, and moves finish immediately.
+
 ### Styling
 
 The navigation is styled with CSS custom properties on `.wp-block-gopublish-carousel`, for example:
@@ -88,7 +98,6 @@ The full list is in the FAQ in [readme.txt](readme.txt).
 
 - Carousel for posts in a Query Loop.
 - Separate navigation and pagination blocks.
-- Accessibility: keyboard support, screen reader labels and announcements.
 
 ## Credits
 

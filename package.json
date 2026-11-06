@@ -1,6 +1,6 @@
 {
 	"name": "gopublish-carousel",
-	"version": "0.2.4",
+	"version": "0.2.6",
 	"description": "A looping carousel block for any blocks, built on the Interactivity API.",
 	"author": "Retrofitter",
 	"license": "GPL-2.0-or-later",
