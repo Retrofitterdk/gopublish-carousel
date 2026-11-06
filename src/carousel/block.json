@@ -9,7 +9,7 @@
 	"description": "A carousel for block using the Interactivity API.",
 	"example": {},
 	"supports": {
-		"align": ["wide", "full"],
+		"align": [ "wide", "full" ],
 		"interactivity": true,
 		"spacing": {
 			"margin": [ "top", "bottom" ],
@@ -26,24 +26,24 @@
 	},
 	"attributes": {
 		"columns": {
-		  "type": "number",
-		  "default": 3
-		}, 
+			"type": "number",
+			"default": 3
+		},
 		"cutoff": {
-		  "type": "boolean",
-		  "default": true
+			"type": "boolean",
+			"default": true
 		},
 		"scroll": {
-		  "type": "number",
-		  "default": 1
+			"type": "number",
+			"default": 1
 		},
 		"mobileWidth": {
-		  "type": "number",
-		  "default": 75
+			"type": "number",
+			"default": 75
 		},
 		"ariaLabel": {
-		  "type": "string",
-		  "default": ""
+			"type": "string",
+			"default": ""
 		}
 	},
 	"textdomain": "gopublish-carousel",

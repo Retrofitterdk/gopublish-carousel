@@ -9,7 +9,7 @@
 	"description": "A wrapper block for carousel slides",
 	"parent": [ "gopublish/carousel" ],
 	"supports": {
-		"align": ["wide", "full"],
+		"align": [ "wide", "full" ],
 		"spacing": {
 			"margin": [ "top", "bottom" ],
 			"padding": true,
@@ -23,7 +23,6 @@
 			"minHeight": true
 		},
 		"html": false
-
 	},
 	"textdomain": "gopublish-carousel",
 	"editorScript": "file:./index.js",
