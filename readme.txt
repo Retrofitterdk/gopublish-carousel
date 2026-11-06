@@ -29,6 +29,7 @@ Features:
 * Wide and full alignment, padding, margin and minimum height.
 * Several carousels on the same page.
 * Slides keep the block context they inherit, and slides that render empty (e.g. hidden by a visibility plugin) are skipped.
+* The editor shows the carousel as on the front end: one row with the real slide widths, the cutoff effect and navigation arrows. Switch to "Show all slides" for an overview.
 
 Accessibility (following the W3C carousel pattern):
 
@@ -57,7 +58,15 @@ Go:Publish Carousel was originally based on [demo-carousel](https://github.com/e
 
 = How do I add more slides? =
 
-Select the Carousel block and use the inserter (+) inside it to add another Carousel Slide. Carousel Slide blocks can only be placed inside a Carousel.
+Select the Carousel block and click Add slide (+) in the block toolbar. The new slide is added at the end. If a slide or a block inside it is selected, select the Carousel first, e.g. with "Select parent" in the toolbar or in List View. Carousel Slide blocks can only be placed inside a Carousel.
+
+= How do I see or rearrange all slides in the editor? =
+
+The editor shows the carousel as a scrollable row, like on the front end; use the arrows or scroll sideways to reach the other slides. To see every slide at once, click Show all slides in the Carousel's block toolbar. This grid view is only shown in the editor and is handy for rearranging slides. Click the button again to return to the carousel view.
+
+= Does the editor show the mobile layout? =
+
+Yes. Switch the editor's preview to Tablet or Mobile, and the slides use the mobile slide width, as on the front end.
 
 = How do I make the carousel accessible? =
 
@@ -103,6 +112,14 @@ Source files are in `src/`, and the compiled blocks in `build/` are what WordPre
 See README.md for more developer notes.
 
 == Changelog ==
+
+= Unreleased =
+* New: the editor shows the carousel as on the front end: one scrollable row with the real slide widths, the cutoff effect and navigation arrows, and the mobile slide width in Tablet and Mobile preview.
+* New: Add slide and Show all slides (a grid view of every slide) in the Carousel's block toolbar.
+* New: the mobile/tablet breakpoint follows the theme's viewport settings (theme.json settings.viewport, WordPress 7.1).
+* Changed: requires WordPress 6.8. All blocks are registered from a blocks manifest.
+* Changed: a new carousel gets its three starting slides from a default block variation. Deleting every slide no longer adds three new ones automatically.
+* Development: updated to @wordpress/scripts 37.
 
 = 0.2.7 =
 * Fix: Groups inside slides keep their own layout (Row, Grid, Stack) instead of always being forced into a column.

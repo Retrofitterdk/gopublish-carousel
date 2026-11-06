@@ -14,6 +14,7 @@ A looping carousel block for WordPress. Each slide can hold any blocks. The caro
 - Separate slide width on mobile and tablet (follows the theme's viewport settings; default up to 782 px).
 - Endless looping, previous/next buttons, touch swipe and mouse drag.
 - Navigation is hidden when all slides fit in view.
+- The editor shows the carousel as on the front end (one scrollable row with the real widths and arrows), with a "Show all slides" grid view and an "Add slide" toolbar button.
 - Wide/full alignment, spacing and minimum height support.
 - Accessible, following the [W3C carousel pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/) (see below).
 
@@ -74,6 +75,9 @@ See [src/README.md](src/README.md) for what each source file does.
 - **Rendering:** the carousel is a dynamic block registered with `skip_inner_blocks`. `render.php` renders each slide once with `gopublish_carousel_render_inner_block()`, which applies the same filters and block context as core. The output includes the navigation, the slides and the clones used for seamless looping.
 - **State:** each carousel's settings and position live in its `data-wp-context`. One store, `gopublish-carousel` in `view.js`, handles every carousel on the page, and directives such as `data-wp-on--click="actions.moveForward"` resolve to the carousel they sit in.
 - **Looping:** the slides are repeated cyclically as clones before and after the real slides. After sliding onto a clone, the track jumps back to the matching real slide without animation.
+- **Breakpoint:** small screens are everything below core's `@desktop` viewport (theme.json `settings.viewport`, default 782px). `gopublish_carousel_small_screen_query()` builds the media query with `WP_Theme_JSON::get_viewport_media_queries()`. The small-screen CSS is generated in PHP and attached to the block's stylesheet, and the same query is passed to `view.js` as `smallScreenQuery`.
+- **Editor:** `edit.js` uses the front-end classes (`.carousel-container`, `.carousel-track`, `columns-N`, `cutoff`) and sets `--slide-width` and `--mobile-width`, so `style.scss` and the small-screen CSS apply in the editor too. Slides get an editor-only `carousel-slide` class. `editor.scss` only makes the row scrollable and adds the "Show all slides" grid. The arrows scroll the row with plain React, without the Interactivity API, clones or looping.
+- **Starting slides:** a default block variation (in `index.js`) inserts three slides. It replaces the InnerBlocks `template` prop, which is deprecated in newer editor versions.
 
 ### Accessibility
 
