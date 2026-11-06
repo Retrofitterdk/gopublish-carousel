@@ -33,8 +33,9 @@ if ( $scroll > $maxscroll ) {
   $scroll = $maxscroll;
 }
 
-// Calculate unique ID for this carousel instance
-$carousel_id = 'carousel-' . uniqid();
+// Unique ID for this carousel instance. wp_unique_id() counts up per page
+// render, so the IDs are stable between page loads (unlike uniqid()).
+$carousel_id = wp_unique_id( 'gopublish-carousel-' );
 
 // Interactivity API wiring:
 // - data-wp-interactive: the store namespace registered in view.js.
@@ -78,7 +79,7 @@ $wrapper_attributes = get_block_wrapper_attributes([
       </svg>
     </button>
   </div>
-  <div class="carousel-container" id="<?php echo $carousel_id; ?>">
+  <div class="carousel-container">
     <div class="carousel-track">
       <?php 
       // Clone last slides at the beginning for seamless looping
