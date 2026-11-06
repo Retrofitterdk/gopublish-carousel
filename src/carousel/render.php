@@ -4,9 +4,18 @@
  * Creates a responsive, looping carousel with configurable columns and scrolling
  */
 
-// Ensure innerBlocks is defined to avoid warnings in the editor
-$innerBlocks = $block->parsed_block['innerBlocks'] ?? [];
-$realSlides  = count($innerBlocks);
+// Render each slide once, as a WP_Block, so it keeps the block context it
+// inherits (e.g. postId inside a Query Loop) and the usual render filters run.
+// The clones below reuse this HTML instead of rendering the slide again.
+// Slides that render empty (e.g. hidden by a visibility plugin) are skipped.
+$slides_html = [];
+foreach ( $block->inner_blocks as $inner_block ) {
+  $html = gopublish_carousel_render_inner_block( $inner_block, $block );
+  if ( '' !== trim( $html ) ) {
+    $slides_html[] = $html;
+  }
+}
+$realSlides = count( $slides_html );
 $columns     = $attributes['columns'] ?? 3;
 $onecolumn   = $columns === 1;
 $cutoff      = $attributes['cutoff'] ?? false;
@@ -118,17 +127,17 @@ $wrapper_attributes = get_block_wrapper_attributes([
             <div class="carousel-slide carousel-clone" ontouchstart=""
                  data-slide-index="<?php echo $i; ?>"
                  style="width: <?php echo $slide_width; ?>">
-              <?php echo render_block( $innerBlocks[$i] ); ?>
+              <?php echo $slides_html[ $i ]; ?>
             </div>
       <?php endfor;
 
       // Render actual slides 
-      foreach ( $innerBlocks as $index => $inner_block ) : ?>
+      foreach ( $slides_html as $index => $slide_html ) : ?>
       <!-- ontouchstart is essential for ios -->
         <div class="carousel-slide" ontouchstart=""
             data-slide-index="<?php echo $index; ?>"
             style="width: <?php echo $slide_width; ?>">
-          <?php echo render_block( $inner_block ); ?>
+          <?php echo $slide_html; ?>
         </div>
       <?php endforeach;
       
@@ -139,7 +148,7 @@ $wrapper_attributes = get_block_wrapper_attributes([
             <div class="carousel-slide carousel-clone"
                  data-slide-index="<?php echo $i; ?>"
                  style="width: <?php echo $slide_width; ?>">
-              <?php echo render_block( $innerBlocks[$i] ); ?>
+              <?php echo $slides_html[ $i ]; ?>
             </div>
       <?php endfor;
       ?>
