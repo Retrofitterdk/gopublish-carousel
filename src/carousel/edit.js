@@ -1,22 +1,24 @@
 import {
-	InnerBlocks,
+	BlockControls,
 	InspectorControls,
+	store as blockEditorStore,
 	useBlockProps,
+	useInnerBlocksProps,
 } from '@wordpress/block-editor';
+import { createBlock } from '@wordpress/blocks';
 import {
 	PanelBody,
 	RangeControl,
 	TextControl,
 	ToggleControl,
+	ToolbarButton,
+	ToolbarGroup,
 } from '@wordpress/components';
+import { useDispatch, useSelect } from '@wordpress/data';
+import { useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 const ALLOWED_BLOCKS = [ 'gopublish/carousel-slide' ];
-const TEMPLATE = [
-	[ 'gopublish/carousel-slide', {} ],
-	[ 'gopublish/carousel-slide', {} ],
-	[ 'gopublish/carousel-slide', {} ],
-];
 
 /**
  * The largest allowed "Slides to scroll" value. Mirrors render.php: with the
@@ -30,9 +32,100 @@ function getMaxScroll( columns, cutoff ) {
 	return cutoff && columns > 1 ? columns - 1 : columns;
 }
 
-export default function Edit( { attributes, setAttributes } ) {
+/**
+ * Desktop slide width in percent. Mirrors render.php: with the cutoff effect,
+ * slides are wider, so the last visible slide is only partly shown.
+ *
+ * @param {number}  columns Number of columns.
+ * @param {boolean} cutoff  Whether the cutoff effect is on.
+ * @return {number} Slide width in percent.
+ */
+function getSlideWidth( columns, cutoff ) {
+	return cutoff && columns > 1 ? 100 / ( columns - 0.3 ) : 100 / columns;
+}
+
+/**
+ * The arrow icon from render.php (the previous button rotates it via CSS).
+ *
+ * @return {Element} SVG icon.
+ */
+function ArrowIcon() {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="14"
+			height="14"
+			viewBox="0 0 14 14"
+			fill="none"
+			aria-hidden="true"
+			focusable="false"
+		>
+			<path
+				d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+		</svg>
+	);
+}
+
+export default function Edit( { attributes, setAttributes, clientId } ) {
 	const { columns, scroll, cutoff, mobileWidth, ariaLabel } = attributes;
 	const maxScroll = getMaxScroll( columns, cutoff );
+
+	// "Show all slides": an editor-only grid view (not saved).
+	const [ showAll, setShowAll ] = useState( false );
+	// Whether the slides overflow the row, i.e. there is something to scroll.
+	const [ canScroll, setCanScroll ] = useState( false );
+	const trackRef = useRef();
+
+	const slideCount = useSelect(
+		( select ) => select( blockEditorStore ).getBlockCount( clientId ),
+		[ clientId ]
+	);
+	const { insertBlock } = useDispatch( blockEditorStore );
+
+	// Add a slide at the end (it gets selected and scrolled into view).
+	const addSlide = () =>
+		insertBlock(
+			createBlock( 'gopublish/carousel-slide' ),
+			slideCount,
+			clientId
+		);
+
+	// Show the arrows only when the slides overflow, like the front end. The
+	// row's width follows the editor canvas, including device previews.
+	useEffect( () => {
+		const track = trackRef.current;
+		if ( ! track || showAll ) {
+			return;
+		}
+		const update = () =>
+			setCanScroll( track.scrollWidth > track.clientWidth + 1 );
+		update();
+		const { ResizeObserver } = track.ownerDocument.defaultView;
+		const observer = new ResizeObserver( update );
+		observer.observe( track );
+		return () => observer.disconnect();
+	}, [ showAll, slideCount, columns, cutoff, mobileWidth ] );
+
+	// The arrows only scroll the row (by "Slides to scroll"); no looping.
+	const scrollBySlides = ( direction ) => {
+		const track = trackRef.current;
+		const slide = track?.firstElementChild;
+		if ( ! slide ) {
+			return;
+		}
+		const reduceMotion = track.ownerDocument.defaultView.matchMedia(
+			'(prefers-reduced-motion: reduce)'
+		).matches;
+		track.scrollBy( {
+			left: direction * scroll * slide.getBoundingClientRect().width,
+			behavior: reduceMotion ? 'auto' : 'smooth',
+		} );
+	};
 
 	// Keep "Slides to scroll" within the limit when columns or cutoff change.
 	const updateLayout = ( changes ) => {
@@ -44,13 +137,51 @@ export default function Edit( { attributes, setAttributes } ) {
 		} );
 	};
 
+	// Same classes and widths as the front end (render.php), so the front-end
+	// styles apply in the editor too. Nothing here is saved.
 	const blockProps = useBlockProps( {
-		// Column count for the editor grid (editor.scss).
-		style: { '--columns': columns },
+		className: [
+			`columns-${ columns }`,
+			cutoff ? 'cutoff' : 'no-cutoff',
+			showAll ? 'is-editor-grid' : '',
+		]
+			.filter( Boolean )
+			.join( ' ' ),
+		style: {
+			'--columns': columns,
+			'--slide-width': `${ getSlideWidth( columns, cutoff ) }%`,
+			'--mobile-width': `${ mobileWidth }%`,
+		},
 	} );
+
+	const innerBlocksProps = useInnerBlocksProps(
+		{ className: 'carousel-track', ref: trackRef },
+		{
+			allowedBlocks: ALLOWED_BLOCKS,
+			templateLock: false,
+			orientation: 'horizontal',
+			// Slides are added from the toolbar instead.
+			renderAppender: false,
+		}
+	);
 
 	return (
 		<div { ...blockProps }>
+			<BlockControls>
+				<ToolbarGroup>
+					<ToolbarButton
+						icon="plus-alt2"
+						label={ __( 'Add slide', 'gopublish-carousel' ) }
+						onClick={ addSlide }
+					/>
+					<ToolbarButton
+						icon="grid-view"
+						label={ __( 'Show all slides', 'gopublish-carousel' ) }
+						isPressed={ showAll }
+						onClick={ () => setShowAll( ! showAll ) }
+					/>
+				</ToolbarGroup>
+			</BlockControls>
 			<InspectorControls>
 				<PanelBody
 					title={ __( 'Carousel settings', 'gopublish-carousel' ) }
@@ -137,13 +268,32 @@ export default function Edit( { attributes, setAttributes } ) {
 				/>
 			</InspectorControls>
 
+			{ ! showAll && canScroll && (
+				<div className="navigation-container">
+					<button
+						type="button"
+						className="carousel-prev"
+						aria-label={ __(
+							'Previous slide',
+							'gopublish-carousel'
+						) }
+						onClick={ () => scrollBySlides( -1 ) }
+					>
+						<ArrowIcon />
+					</button>
+					<button
+						type="button"
+						className="carousel-next"
+						aria-label={ __( 'Next slide', 'gopublish-carousel' ) }
+						onClick={ () => scrollBySlides( 1 ) }
+					>
+						<ArrowIcon />
+					</button>
+				</div>
+			) }
+
 			<div className="carousel-container">
-				<InnerBlocks
-					allowedBlocks={ ALLOWED_BLOCKS }
-					template={ TEMPLATE }
-					templateLock={ false }
-					orientation="horizontal"
-				/>
+				<div { ...innerBlocksProps } />
 			</div>
 		</div>
 	);
