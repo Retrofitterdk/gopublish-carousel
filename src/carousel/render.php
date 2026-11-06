@@ -81,12 +81,29 @@ $slides_id   = $carousel_id . '-slides';
 $label_prev = _n( 'Previous slide', 'Previous slides', $scroll, 'gopublish-carousel' );
 $label_next = _n( 'Next slide', 'Next slides', $scroll, 'gopublish-carousel' );
 
+// Carousel semantics (W3C APG carousel pattern). With a label, the carousel is
+// a named region (a landmark). Without one it's a group: an unnamed region is
+// ignored by screen readers, and a default "Carousel" label would be read as
+// "Carousel carousel" together with the role description.
+$aria_label      = trim( (string) ( $attributes['ariaLabel'] ?? '' ) );
+$a11y_attributes = [
+  'role'                 => '' !== $aria_label ? 'region' : 'group',
+  /* translators: Spoken by screen readers to describe the carousel block. */
+  'aria-roledescription' => __( 'carousel', 'gopublish-carousel' ),
+];
+if ( '' !== $aria_label ) {
+  $a11y_attributes['aria-label'] = $aria_label;
+}
+
+/* translators: Spoken by screen readers to describe a single slide. */
+$slide_roledescription = __( 'slide', 'gopublish-carousel' );
+
 // Interactivity API wiring:
 // - data-wp-interactive: the store namespace registered in view.js.
 // - data-wp-context: per-carousel state. Every directive inside this wrapper
 //   (buttons, future navigation/pagination blocks) reads the same context.
 // - data-wp-init: runs callbacks.init once when the carousel is hydrated.
-$wrapper_attributes = get_block_wrapper_attributes([
+$wrapper_attributes = get_block_wrapper_attributes( $a11y_attributes + [
   'id' => $carousel_id,
   'class' => $classes,
   // Merged with any styles WordPress adds from block supports (padding,
@@ -108,7 +125,7 @@ $wrapper_attributes = get_block_wrapper_attributes([
     'staticDesktop'    => $static_desktop,
     'staticMobile'     => $static_mobile,
   ])
-]);
+] );
 ?>
 <div <?php echo $wrapper_attributes; ?>>
   <?php if ( $is_scrollable ) : ?>
@@ -149,6 +166,12 @@ $wrapper_attributes = get_block_wrapper_attributes([
       foreach ( $slides_html as $index => $slide_html ) : ?>
       <!-- ontouchstart is essential for ios -->
         <div class="carousel-slide" ontouchstart=""
+            role="group"
+            aria-roledescription="<?php echo esc_attr( $slide_roledescription ); ?>"
+            aria-label="<?php
+              /* translators: 1: Slide number, 2: Total number of slides. */
+              echo esc_attr( sprintf( __( '%1$d of %2$d', 'gopublish-carousel' ), $index + 1, $realSlides ) );
+            ?>"
             data-slide-index="<?php echo $index; ?>"
             style="width: <?php echo $slide_width; ?>">
           <?php echo $slide_html; ?>

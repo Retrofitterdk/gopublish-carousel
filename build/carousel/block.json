@@ -46,6 +46,10 @@
     "mobileWidth": {
       "type": "number",
       "default": 75
+    },
+    "ariaLabel": {
+      "type": "string",
+      "default": ""
     }
   },
   "textdomain": "gopublish-carousel",

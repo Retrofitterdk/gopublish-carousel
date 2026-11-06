@@ -48,6 +48,16 @@ export default function Edit({ attributes, setAttributes }) {
           />
         </PanelBody>
       </InspectorControls>
+      <InspectorControls group="advanced">
+        <TextControl
+          __next40pxDefaultSize
+          __nextHasNoMarginBottom
+          label={ __( 'Carousel label', 'gopublish-carousel' ) }
+          value={ attributes.ariaLabel }
+          onChange={ ( value ) => setAttributes( { ariaLabel: value } ) }
+          help={ __( 'Describes the carousel for screen reader users, e.g. "Customer testimonials". With a label, the carousel becomes a landmark they can jump to.', 'gopublish-carousel' ) }
+        />
+      </InspectorControls>
       
       <div className="carousel-container">
         <InnerBlocks
