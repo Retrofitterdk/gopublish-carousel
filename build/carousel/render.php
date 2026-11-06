@@ -21,8 +21,8 @@ $slide_width = (100 / ($columns - 0.3)) . '%';
 if ( ! $cutoff || $onecolumn ) {
   $slide_width = (100 / ($columns)) . '%';
 }
-$slide_width_mobile = $attributes['mobileWidth'] ?? $slide_width;
-$slide_width_mobile_percentage = $slide_width_mobile . '%';
+// Mobile slide width in percent (block.json default: 75).
+$slide_width_mobile = (float) ( $attributes['mobileWidth'] ?? 75 );
 
 // Ensure scroll does not exceed columns (or columns - 1 if cutoff is enabled)
 $maxscroll = $columns;
@@ -44,6 +44,9 @@ $carousel_id = 'carousel-' . uniqid();
 $wrapper_attributes = get_block_wrapper_attributes([
   'id' => $carousel_id,
   'class' => $classes,
+  // Merged with any styles WordPress adds from block supports (padding,
+  // min-height, etc.) into a single style attribute.
+  'style' => '--mobile-width: ' . $slide_width_mobile . '%;',
   'data-wp-interactive' => 'gopublish-carousel',
   'data-wp-init' => 'callbacks.init',
   'data-wp-context' => wp_json_encode([
@@ -60,10 +63,7 @@ $wrapper_attributes = get_block_wrapper_attributes([
   ])
 ]);
 ?>
-<div
-  <?php echo $wrapper_attributes; ?>
-  style="--mobile-width: <?php echo esc_attr( $slide_width_mobile_percentage ); ?>"
->
+<div <?php echo $wrapper_attributes; ?>>
   <div class="navigation-container">
     <button class="carousel-prev"
       data-wp-on--click="actions.moveBack">
