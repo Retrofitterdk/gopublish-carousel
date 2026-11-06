@@ -75,3 +75,30 @@ function gopublish_carousel_render_inner_block( WP_Block $inner_block, WP_Block 
 
 	return $inner_block->render();
 }
+
+/**
+ * Prepare a slide's HTML for use as a loop clone.
+ *
+ * Clones are visual copies only. Their wrapper gets aria-hidden="true" (in
+ * render.php), so screen readers skip them, and every focusable element inside
+ * gets tabindex="-1", so keyboard users don't tab into duplicates. Mouse
+ * clicks still work, because clones can be visible next to the real slides.
+ *
+ * @param string $html Rendered slide HTML.
+ * @return string HTML with focusable elements removed from the tab order.
+ */
+function gopublish_carousel_clone_html( $html ) {
+	$focusable_tags = array( 'A', 'AREA', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'IFRAME', 'SUMMARY', 'AUDIO', 'VIDEO', 'EMBED', 'OBJECT' );
+
+	$processor = new WP_HTML_Tag_Processor( $html );
+	while ( $processor->next_tag() ) {
+		if (
+			in_array( $processor->get_tag(), $focusable_tags, true ) ||
+			null !== $processor->get_attribute( 'tabindex' ) ||
+			null !== $processor->get_attribute( 'contenteditable' )
+		) {
+			$processor->set_attribute( 'tabindex', '-1' );
+		}
+	}
+	return $processor->get_updated_html();
+}

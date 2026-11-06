@@ -16,6 +16,10 @@ foreach ( $block->inner_blocks as $inner_block ) {
   }
 }
 $realSlides = count( $slides_html );
+
+// Clone versions of the slides: hidden from screen readers and the tab order
+// (see gopublish_carousel_clone_html()). Only built when clones are rendered.
+$clones_html = [];
 $columns     = $attributes['columns'] ?? 3;
 $onecolumn   = $columns === 1;
 $cutoff      = $attributes['cutoff'] ?? false;
@@ -65,6 +69,7 @@ if ( $loop && $is_scrollable && $realSlides > 0 ) {
     $static_mobile ? 0 : ceil( $visible_mobile )
   );
   $trailing_clones = (int) $visible_max + $scroll - 1;
+  $clones_html     = array_map( 'gopublish_carousel_clone_html', $slides_html );
 }
 
 // Unique ID for this carousel instance. wp_unique_id() counts up per page
@@ -133,10 +138,10 @@ $wrapper_attributes = get_block_wrapper_attributes([
       // loop, i.e. the last slides (repeated if there are fewer than needed).
       for ( $p = 0; $p < $leading_clones; $p++ ) :
         $i = ( ( $p - $leading_clones ) % $realSlides + $realSlides ) % $realSlides; ?>
-            <div class="carousel-slide carousel-clone" ontouchstart=""
+            <div class="carousel-slide carousel-clone" aria-hidden="true" ontouchstart=""
                  data-slide-index="<?php echo $i; ?>"
                  style="width: <?php echo $slide_width; ?>">
-              <?php echo $slides_html[ $i ]; ?>
+              <?php echo $clones_html[ $i ]; ?>
             </div>
       <?php endfor;
 
@@ -154,10 +159,10 @@ $wrapper_attributes = get_block_wrapper_attributes([
       // endless loop, i.e. the first slides (repeated if needed).
       for ( $p = 0; $p < $trailing_clones; $p++ ) :
         $i = $p % $realSlides; ?>
-            <div class="carousel-slide carousel-clone"
+            <div class="carousel-slide carousel-clone" aria-hidden="true"
                  data-slide-index="<?php echo $i; ?>"
                  style="width: <?php echo $slide_width; ?>">
-              <?php echo $slides_html[ $i ]; ?>
+              <?php echo $clones_html[ $i ]; ?>
             </div>
       <?php endfor;
       ?>
