@@ -1,7 +1,14 @@
 import { store, getContext, getElement } from '@wordpress/interactivity';
 
-const TRANSITION = 'transform 0.3s ease-out';
+const TRANSITION_MS = 300;
+const TRANSITION = `transform ${ TRANSITION_MS }ms ease-out`;
+// Extra time before the fallback unlocks the carousel, in case
+// `transitionend` never fires (hidden tab, interrupted transition, etc.).
+const FALLBACK_MARGIN_MS = 200;
 const SWIPE_THRESHOLD = 50;
+
+// Pending fallback timer per carousel, keyed by wrapper element.
+const fallbackTimers = new WeakMap();
 
 function isMobileView() {
 	return window.matchMedia( '(max-width: 782px)' ).matches;
@@ -75,6 +82,50 @@ function applyTransform( context, { wrapper, track, container } ) {
 }
 
 /**
+ * Jump to a position without animating (used for the seamless loop).
+ *
+ * @param {Object} context Carousel context.
+ * @param {Object} parts   Result of getParts().
+ * @param {number} offset  Number of slides to shift currentIndex by.
+ */
+function resetWithoutAnimation( context, parts, offset ) {
+	parts.track.style.transition = 'none';
+	context.currentIndex += offset;
+	applyTransform( context, parts );
+	window.requestAnimationFrame( () => {
+		parts.track.getBoundingClientRect(); // Force reflow.
+		parts.track.style.transition = TRANSITION;
+	} );
+}
+
+/**
+ * Called when a slide transition has finished, either from `transitionend`
+ * or from the fallback timer, whichever comes first.
+ *
+ * Unlocks the carousel and, after sliding onto the clones, jumps back to the
+ * matching real slide without animation (seamless looping).
+ *
+ * @param {Object} context Carousel context.
+ * @param {Object} parts   Result of getParts().
+ */
+function finishTransition( context, parts ) {
+	clearTimeout( fallbackTimers.get( parts.wrapper ) );
+	fallbackTimers.delete( parts.wrapper );
+
+	// Already handled (e.g. the fallback ran before transitionend).
+	if ( ! context.isTransitioning ) {
+		return;
+	}
+	context.isTransitioning = false;
+
+	if ( context.currentIndex >= context.itemsTotal + context.clonesCount ) {
+		resetWithoutAnimation( context, parts, -context.itemsTotal );
+	} else if ( context.currentIndex < context.clonesCount ) {
+		resetWithoutAnimation( context, parts, context.itemsTotal );
+	}
+}
+
+/**
  * Move the carousel forward (1) or back (-1) by `scroll` slides.
  *
  * @param {Object}      context   Carousel context.
@@ -92,6 +143,15 @@ function move( context, element, direction ) {
 	context.isTransitioning = true;
 	context.currentIndex += direction * context.scroll;
 	applyTransform( context, parts );
+
+	// Never stay locked: finish anyway if transitionend doesn't arrive.
+	fallbackTimers.set(
+		parts.wrapper,
+		setTimeout(
+			() => finishTransition( context, parts ),
+			TRANSITION_MS + FALLBACK_MARGIN_MS
+		)
+	);
 }
 
 store( 'gopublish-carousel', {
@@ -119,27 +179,12 @@ store( 'gopublish-carousel', {
 			}
 			const context = getContext();
 
-			const resetWithoutAnimation = ( offset ) => {
-				track.style.transition = 'none';
-				context.currentIndex += offset;
-				applyTransform( context, parts );
-				window.requestAnimationFrame( () => {
-					track.getBoundingClientRect(); // Force reflow.
-					track.style.transition = TRANSITION;
-				} );
-			};
-
-			// Seamless looping: after sliding onto the clones, jump back to
-			// the matching real slide without animation.
-			track.addEventListener( 'transitionend', () => {
-				context.isTransitioning = false;
-				if (
-					context.currentIndex >=
-					context.itemsTotal + context.clonesCount
-				) {
-					resetWithoutAnimation( -context.itemsTotal );
-				} else if ( context.currentIndex < context.clonesCount ) {
-					resetWithoutAnimation( context.itemsTotal );
+			// transitionend bubbles, so transitions inside the slides (e.g.
+			// hover effects) also arrive here. Only react to the track's own
+			// transform transition.
+			track.addEventListener( 'transitionend', ( e ) => {
+				if ( e.target === track && e.propertyName === 'transform' ) {
+					finishTransition( context, parts );
 				}
 			} );
 
