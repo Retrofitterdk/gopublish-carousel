@@ -33,6 +33,31 @@ if ( $scroll > $maxscroll ) {
   $scroll = $maxscroll;
 }
 
+// How many slides are visible at once (cutoff shows a partial extra slide).
+$visible_desktop = ( $cutoff && ! $onecolumn ) ? $columns - 0.3 : $columns;
+$visible_mobile  = 100 / max( 1, $slide_width_mobile );
+
+// If every slide fits in view, there is nothing to scroll at that breakpoint:
+// no navigation, no dragging and no clones (view.js toggles .is-static).
+$static_desktop = $realSlides <= $visible_desktop + 0.01;
+$static_mobile  = $realSlides <= $visible_mobile + 0.01;
+$is_scrollable  = ! ( $static_desktop && $static_mobile );
+
+// Clones for seamless looping. Clones repeat the slides cyclically, so the
+// loop also works with fewer slides than columns.
+// - Leading: enough to move back by `scroll` from the first slide.
+// - Trailing: enough to fill the view after moving past the last slide.
+$leading_clones  = 0;
+$trailing_clones = 0;
+if ( $loop && $is_scrollable && $realSlides > 0 ) {
+  $leading_clones  = $columns;
+  $visible_max     = max(
+    $static_desktop ? 0 : ceil( $visible_desktop ),
+    $static_mobile ? 0 : ceil( $visible_mobile )
+  );
+  $trailing_clones = (int) $visible_max + $scroll - 1;
+}
+
 // Unique ID for this carousel instance. wp_unique_id() counts up per page
 // render, so the IDs are stable between page loads (unlike uniqid()).
 $carousel_id = wp_unique_id( 'gopublish-carousel-' );
@@ -51,20 +76,23 @@ $wrapper_attributes = get_block_wrapper_attributes([
   'data-wp-interactive' => 'gopublish-carousel',
   'data-wp-init' => 'callbacks.init',
   'data-wp-context' => wp_json_encode([
-    // With looping, the real slides start after the leading clones.
-    'currentIndex'     => $loop ? $columns : 0,
+    // The real slides start after the leading clones.
+    'currentIndex'     => $leading_clones,
     'isTransitioning'  => false,
     'itemsPerView'     => $columns,
     'scroll'           => $scroll,
     'cutoff'           => $cutoff,
     'loop'             => $loop,
     'itemsTotal'       => $realSlides,
-    'clonesCount'      => $columns,
+    'clonesCount'      => $leading_clones,
     'slideWidthMobile' => $slide_width_mobile,
+    'staticDesktop'    => $static_desktop,
+    'staticMobile'     => $static_mobile,
   ])
 ]);
 ?>
 <div <?php echo $wrapper_attributes; ?>>
+  <?php if ( $is_scrollable ) : ?>
   <div class="navigation-container">
     <button class="carousel-prev"
       data-wp-on--click="actions.moveBack">
@@ -79,23 +107,21 @@ $wrapper_attributes = get_block_wrapper_attributes([
       </svg>
     </button>
   </div>
+  <?php endif; ?>
   <div class="carousel-container">
     <div class="carousel-track">
       <?php 
-      // Clone last slides at the beginning for seamless looping
-      if ( $loop && $realSlides > 0 ) :
-        $start = max(0, $realSlides - $columns);
-        for ( $i = $start; $i < $realSlides; $i++ ) :
-          if ( isset( $innerBlocks[$i] ) ) : ?>
+      // Leading clones: the slides that come before slide 0 in an endless
+      // loop, i.e. the last slides (repeated if there are fewer than needed).
+      for ( $p = 0; $p < $leading_clones; $p++ ) :
+        $i = ( ( $p - $leading_clones ) % $realSlides + $realSlides ) % $realSlides; ?>
             <div class="carousel-slide carousel-clone" ontouchstart=""
                  data-slide-index="<?php echo $i; ?>"
                  style="width: <?php echo $slide_width; ?>">
               <?php echo render_block( $innerBlocks[$i] ); ?>
             </div>
-          <?php endif;
-        endfor;
-      endif;
-      
+      <?php endfor;
+
       // Render actual slides 
       foreach ( $innerBlocks as $index => $inner_block ) : ?>
       <!-- ontouchstart is essential for ios -->
@@ -106,18 +132,16 @@ $wrapper_attributes = get_block_wrapper_attributes([
         </div>
       <?php endforeach;
       
-      // Clone first slides at the end for seamless looping
-      if ( $loop && $realSlides > 0 ) :
-        for ( $i = 0; $i < $columns; $i++ ) :
-          if ( isset( $innerBlocks[$i] ) ) : ?>
+      // Trailing clones: the slides that come after the last slide in an
+      // endless loop, i.e. the first slides (repeated if needed).
+      for ( $p = 0; $p < $trailing_clones; $p++ ) :
+        $i = $p % $realSlides; ?>
             <div class="carousel-slide carousel-clone"
                  data-slide-index="<?php echo $i; ?>"
                  style="width: <?php echo $slide_width; ?>">
               <?php echo render_block( $innerBlocks[$i] ); ?>
             </div>
-          <?php endif;
-        endfor;
-      endif;
+      <?php endfor;
       ?>
     </div>
   </div>

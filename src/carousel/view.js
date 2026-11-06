@@ -8,16 +8,28 @@ function isMobileView() {
 }
 
 /**
+ * True when every slide fits in view at the current breakpoint, so there is
+ * nothing to scroll (computed in render.php).
+ *
+ * @param {Object} context Carousel context.
+ * @return {boolean} Whether the carousel is static right now.
+ */
+function isStatic( context ) {
+	return isMobileView() ? context.staticMobile : context.staticDesktop;
+}
+
+/**
  * Find the carousel parts from any element inside (or on) the wrapper.
  *
  * @param {HTMLElement} element Element with a directive, e.g. a button.
- * @return {{track: HTMLElement|null, container: HTMLElement|null}} Parts.
+ * @return {{wrapper: HTMLElement|null, track: HTMLElement|null, container: HTMLElement|null}} Parts.
  */
 function getParts( element ) {
 	const wrapper = element.closest(
 		'[data-wp-interactive="gopublish-carousel"]'
 	);
 	return {
+		wrapper,
 		track: wrapper?.querySelector( '.carousel-track' ) ?? null,
 		container: wrapper?.querySelector( '.carousel-container' ) ?? null,
 	};
@@ -30,11 +42,23 @@ function getParts( element ) {
  * the loop reset below needs it applied synchronously, before the transition
  * is switched back on.
  *
- * @param {Object}      context   Carousel context.
- * @param {HTMLElement} track     The .carousel-track element.
- * @param {HTMLElement} container The .carousel-container element.
+ * When the carousel is static at the current breakpoint, the clones are hidden
+ * (via .is-static) and the track is not moved.
+ *
+ * @param {Object}      context         Carousel context.
+ * @param {Object}      parts           Result of getParts().
+ * @param {HTMLElement} parts.wrapper   The block wrapper.
+ * @param {HTMLElement} parts.track     The .carousel-track element.
+ * @param {HTMLElement} parts.container The .carousel-container element.
  */
-function applyTransform( context, track, container ) {
+function applyTransform( context, { wrapper, track, container } ) {
+	const staticNow = isStatic( context );
+	wrapper.classList.toggle( 'is-static', staticNow );
+	if ( staticNow ) {
+		track.style.transform = 'none';
+		return;
+	}
+
 	let slideWidthPercent;
 	if ( isMobileView() ) {
 		slideWidthPercent = context.slideWidthMobile;
@@ -58,16 +82,16 @@ function applyTransform( context, track, container ) {
  * @param {number}      direction 1 or -1.
  */
 function move( context, element, direction ) {
-	if ( context.isTransitioning ) {
+	if ( context.isTransitioning || isStatic( context ) ) {
 		return;
 	}
-	const { track, container } = getParts( element );
-	if ( ! track || ! container ) {
+	const parts = getParts( element );
+	if ( ! parts.track || ! parts.container ) {
 		return;
 	}
 	context.isTransitioning = true;
 	context.currentIndex += direction * context.scroll;
-	applyTransform( context, track, container );
+	applyTransform( context, parts );
 }
 
 store( 'gopublish-carousel', {
@@ -88,8 +112,9 @@ store( 'gopublish-carousel', {
 			// Keep references: the listeners below run outside the
 			// Interactivity scope, so they can't call getContext() themselves.
 			const wrapper = getElement().ref;
-			const { track, container } = getParts( wrapper );
-			if ( ! track || ! container ) {
+			const parts = getParts( wrapper );
+			const { track } = parts;
+			if ( ! track || ! parts.container ) {
 				return;
 			}
 			const context = getContext();
@@ -97,7 +122,7 @@ store( 'gopublish-carousel', {
 			const resetWithoutAnimation = ( offset ) => {
 				track.style.transition = 'none';
 				context.currentIndex += offset;
-				applyTransform( context, track, container );
+				applyTransform( context, parts );
 				window.requestAnimationFrame( () => {
 					track.getBoundingClientRect(); // Force reflow.
 					track.style.transition = TRANSITION;
@@ -120,14 +145,14 @@ store( 'gopublish-carousel', {
 
 			// Initial position, without animation.
 			track.style.transition = 'none';
-			applyTransform( context, track, container );
+			applyTransform( context, parts );
 			track.getBoundingClientRect(); // Force reflow.
 			setTimeout( () => {
 				track.style.transition = TRANSITION;
 			}, 50 );
 
 			window.addEventListener( 'resize', () =>
-				applyTransform( context, track, container )
+				applyTransform( context, parts )
 			);
 
 			const swipe = ( deltaX ) => {

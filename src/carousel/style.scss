@@ -64,6 +64,15 @@
 		position: relative;
 		overflow-x: clip;
 	}
+
+	// All slides fit in view at this breakpoint (set by view.js):
+	// nothing to scroll, so hide the clones and the navigation.
+	&.is-static {
+		.carousel-clone,
+		.navigation-container {
+			display: none;
+		}
+	}
 	
 	.carousel-track {
 	  display: flex;
