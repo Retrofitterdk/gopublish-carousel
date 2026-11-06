@@ -17,7 +17,7 @@ A dynamic block. Its output is rendered in PHP, and it runs in the browser with 
 | `style.scss` | Front-end and editor styles. |
 | `editor.scss` | Editor-only styles. |
 
-The carousel is registered with `skip_inner_blocks`. `render.php` renders each slide once with `gopublish_carousel_render_inner_block()` (in `gopublish-carousel.php`), so the slides keep their inherited block context.
+All blocks are registered from `build/blocks-manifest.php`, which `npm run build` generates. The carousel gets `skip_inner_blocks` through the `register_block_type_args` filter. `render.php` renders each slide once with `gopublish_carousel_render_inner_block()` (in `gopublish-carousel.php`), so the slides keep their inherited block context.
 
 ## `carousel-slide/` – Carousel Slide (`gopublish/carousel-slide`)
 

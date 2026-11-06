@@ -1,7 +1,7 @@
 === Go:Publish Carousel ===
 Contributors:      retrofitter
 Tags:              carousel, slider, block, interactivity api
-Requires at least: 6.6
+Requires at least: 6.8
 Tested up to:      7.1
 Requires PHP:      7.2
 Stable tag:        0.2.7

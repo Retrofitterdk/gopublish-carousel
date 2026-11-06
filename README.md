@@ -2,7 +2,7 @@
 
 A looping carousel block for WordPress. Each slide can hold any blocks. The carousel is rendered on the server and runs on the [Interactivity API](https://developer.wordpress.org/block-editor/reference-guides/interactivity-api/), with no jQuery or third-party slider library.
 
-- **Requires:** WordPress 6.6+, PHP 7.2+
+- **Requires:** WordPress 6.8+, PHP 7.2+
 - **License:** GPL-2.0-or-later
 - **Changelog and user FAQ:** see [readme.txt](readme.txt)
 
@@ -70,6 +70,7 @@ See [src/README.md](src/README.md) for what each source file does.
 
 ### How it works
 
+- **Registration:** `npm run build` generates `build/blocks-manifest.php` (`--blocks-manifest`), and `wp_register_block_types_from_metadata_collection()` registers every block in it. A new block folder in `src/` is registered automatically. Settings that `block.json` can't express go through the `register_block_type_args` filter.
 - **Rendering:** the carousel is a dynamic block registered with `skip_inner_blocks`. `render.php` renders each slide once with `gopublish_carousel_render_inner_block()`, which applies the same filters and block context as core. The output includes the navigation, the slides and the clones used for seamless looping.
 - **State:** each carousel's settings and position live in its `data-wp-context`. One store, `gopublish-carousel` in `view.js`, handles every carousel on the page, and directives such as `data-wp-on--click="actions.moveForward"` resolve to the carousel they sit in.
 - **Looping:** the slides are repeated cyclically as clones before and after the real slides. After sliding onto a clone, the track jumps back to the matching real slide without animation.
