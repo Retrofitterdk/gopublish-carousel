@@ -6,6 +6,8 @@ const TRANSITION = `transform ${ TRANSITION_MS }ms ease-out`;
 // `transitionend` never fires (hidden tab, interrupted transition, etc.).
 const FALLBACK_MARGIN_MS = 200;
 const SWIPE_THRESHOLD = 50;
+// A mouse press that moves further than this is a drag, not a click.
+const DRAG_CLICK_THRESHOLD = 5;
 
 // Pending fallback timer per carousel, keyed by wrapper element.
 const fallbackTimers = new WeakMap();
@@ -234,6 +236,7 @@ store( 'gopublish-carousel', {
 			let mouseStartX = 0;
 			let mouseCurrentX = 0;
 			let isDragging = false;
+			let suppressClick = false;
 			const endDrag = () => {
 				if ( isDragging ) {
 					isDragging = false;
@@ -242,6 +245,10 @@ store( 'gopublish-carousel', {
 			};
 
 			track.addEventListener( 'mousedown', ( e ) => {
+				// Only the primary (left) button drags.
+				if ( e.button !== 0 ) {
+					return;
+				}
 				e.preventDefault();
 				mouseStartX = mouseCurrentX = e.clientX;
 				isDragging = true;
@@ -251,8 +258,38 @@ store( 'gopublish-carousel', {
 					mouseCurrentX = e.clientX;
 				}
 			} );
-			track.addEventListener( 'mouseup', endDrag );
+			track.addEventListener( 'mouseup', () => {
+				// The browser fires a click right after mouseup. If the mouse
+				// moved, it was a drag: swallow that click so links and buttons
+				// inside the slide aren't activated.
+				if (
+					isDragging &&
+					Math.abs( mouseCurrentX - mouseStartX ) >
+						DRAG_CLICK_THRESHOLD
+				) {
+					suppressClick = true;
+					// Safety: never let the flag outlive this click, or it
+					// could swallow a later keyboard "click" (Enter on a link).
+					setTimeout( () => {
+						suppressClick = false;
+					}, 0 );
+				}
+				endDrag();
+			} );
 			track.addEventListener( 'mouseleave', endDrag );
+
+			// Capture phase, so this runs before any handler inside the slide.
+			track.addEventListener(
+				'click',
+				( e ) => {
+					if ( suppressClick ) {
+						suppressClick = false;
+						e.preventDefault();
+						e.stopPropagation();
+					}
+				},
+				true
+			);
 		},
 	},
 } );
