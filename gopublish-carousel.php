@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Go:Publish Carousel
  * Description:       A looping carousel block for any blocks, built on the Interactivity API.
- * Version:           0.2.7
+ * Version:           0.2.8
  * Requires at least: 6.8
  * Requires PHP:      7.2
  * Author:            Retrofitter
