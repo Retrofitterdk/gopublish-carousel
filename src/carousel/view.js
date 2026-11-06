@@ -28,6 +28,49 @@ function isStatic( context ) {
 }
 
 /**
+ * How many slides are in view at the current breakpoint. Fractions mean a
+ * partly visible slide (cutoff effect or mobile width). Mirrors render.php.
+ *
+ * @param {Object} context Carousel context.
+ * @return {number} Number of slides in view.
+ */
+function visibleCount( context ) {
+	if ( isMobileView() ) {
+		return 100 / context.slideWidthMobile;
+	}
+	return context.cutoff && context.itemsPerView > 1
+		? context.itemsPerView - 0.3
+		: context.itemsPerView;
+}
+
+/**
+ * Make real slides outside the view unreachable: `inert` removes them from
+ * the tab order and from screen readers, so focus can't land on something
+ * that isn't visible. Partly visible slides count as visible.
+ *
+ * Clones are left alone: they are always hidden from assistive technology
+ * (aria-hidden + tabindex="-1" from render.php) but stay clickable, because
+ * they can be visible next to the real slides.
+ *
+ * @param {Object}      context Carousel context.
+ * @param {HTMLElement} track   The .carousel-track element.
+ */
+function updateHiddenSlides( context, track ) {
+	const staticNow = isStatic( context );
+	const first = context.currentIndex;
+	// Small tolerance so e.g. exactly 2 slides in view doesn't round up to 3.
+	const last = first + Math.ceil( visibleCount( context ) - 0.01 ) - 1;
+
+	Array.from( track.children ).forEach( ( slide, position ) => {
+		if ( slide.classList.contains( 'carousel-clone' ) ) {
+			return;
+		}
+		const hidden = ! staticNow && ( position < first || position > last );
+		slide.toggleAttribute( 'inert', hidden );
+	} );
+}
+
+/**
  * Find the carousel parts from any element inside (or on) the wrapper.
  *
  * @param {HTMLElement} element Element with a directive, e.g. a button.
@@ -54,6 +97,8 @@ function getParts( element ) {
  * When the carousel is static at the current breakpoint, the clones are hidden
  * (via .is-static) and the track is not moved.
  *
+ * Also updates which slides are reachable (see updateHiddenSlides()).
+ *
  * @param {Object}      context         Carousel context.
  * @param {Object}      parts           Result of getParts().
  * @param {HTMLElement} parts.wrapper   The block wrapper.
@@ -63,6 +108,7 @@ function getParts( element ) {
 function applyTransform( context, { wrapper, track, container } ) {
 	const staticNow = isStatic( context );
 	wrapper.classList.toggle( 'is-static', staticNow );
+	updateHiddenSlides( context, track );
 	if ( staticNow ) {
 		track.style.transform = 'none';
 		return;
