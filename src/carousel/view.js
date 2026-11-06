@@ -1,217 +1,188 @@
-import { store } from '@wordpress/interactivity';
+import { store, getContext, getElement } from '@wordpress/interactivity';
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Find all carousel wrappers having our interactive data attributes.
-  const wrappers = document.querySelectorAll('[data-wp-interactive="gopublish-carousel"][data-wp-context]');
-  // Global registry to store each carousel's store if needed.
-  window.carouselStores = {};
+const TRANSITION = 'transform 0.3s ease-out';
+const SWIPE_THRESHOLD = 50;
 
-  wrappers.forEach((wrapper) => {
-    const carouselId = wrapper.getAttribute('id');
-    let phpContext = {};
-    try {
-      phpContext = JSON.parse(wrapper.getAttribute('data-wp-context'));
-    } catch (e) {
-      console.error(`Error parsing PHP context for carousel ${carouselId}:`, e);
-    }
+function isMobileView() {
+	return window.matchMedia( '(max-width: 782px)' ).matches;
+}
 
-    // Set up initial state merging defaults with PHP provided context.
-    const initialState = Object.assign(
-      {
-        currentIndex: 0,
-        transform: 'translateX(0%)',
-        isTransitioning: false,
-        itemsTotal: 0,
-        clonesCount: 0,
-        itemsPerView: 3,
-        scroll: 1,
-        loop: true,
-        slideWidth: null,
-      },
-      phpContext
-    );
+/**
+ * Find the carousel parts from any element inside (or on) the wrapper.
+ *
+ * @param {HTMLElement} element Element with a directive, e.g. a button.
+ * @return {{track: HTMLElement|null, container: HTMLElement|null}} Parts.
+ */
+function getParts( element ) {
+	const wrapper = element.closest(
+		'[data-wp-interactive="gopublish-carousel"]'
+	);
+	return {
+		track: wrapper?.querySelector( '.carousel-track' ) ?? null,
+		container: wrapper?.querySelector( '.carousel-container' ) ?? null,
+	};
+}
 
-    // Adjust the initial index if looping.
-    if (initialState.loop) {
-      initialState.currentIndex = initialState.clonesCount;
-    }
+/**
+ * Move the track to match context.currentIndex.
+ *
+ * The transform is set directly on the element (not via a directive) because
+ * the loop reset below needs it applied synchronously, before the transition
+ * is switched back on.
+ *
+ * @param {Object}      context   Carousel context.
+ * @param {HTMLElement} track     The .carousel-track element.
+ * @param {HTMLElement} container The .carousel-container element.
+ */
+function applyTransform( context, track, container ) {
+	let slideWidthPercent;
+	if ( isMobileView() ) {
+		slideWidthPercent = context.slideWidthMobile;
+		container.classList.add( 'mobile-partial-view' );
+	} else if ( ! context.cutoff || context.itemsPerView === 1 ) {
+		slideWidthPercent = 100 / context.itemsPerView;
+		container.classList.remove( 'mobile-partial-view' );
+	} else {
+		slideWidthPercent = 100 / ( context.itemsPerView - 0.3 );
+		container.classList.remove( 'mobile-partial-view' );
+	}
+	const offsetPercentage = slideWidthPercent * context.currentIndex;
+	track.style.transform = `translateX(-${ offsetPercentage }%)`;
+}
 
-    // Create a unique store for this carousel instance.
-    const { state, actions } = store('gopublish-carousel-' + carouselId, {
-      actions: {
-        moveForward() {
-          if (state.isTransitioning) return;
-          state.isTransitioning = true;
-          state.currentIndex += state.scroll;
-          doTransform();
-        },
-        moveBack() {
-          if (state.isTransitioning) return;
-          state.isTransitioning = true;
-          state.currentIndex -= state.scroll;
-          doTransform();
-        },
-      },
-      state: initialState,
-    });
+/**
+ * Move the carousel forward (1) or back (-1) by `scroll` slides.
+ *
+ * @param {Object}      context   Carousel context.
+ * @param {HTMLElement} element   Any element inside the carousel.
+ * @param {number}      direction 1 or -1.
+ */
+function move( context, element, direction ) {
+	if ( context.isTransitioning ) {
+		return;
+	}
+	const { track, container } = getParts( element );
+	if ( ! track || ! container ) {
+		return;
+	}
+	context.isTransitioning = true;
+	context.currentIndex += direction * context.scroll;
+	applyTransform( context, track, container );
+}
 
-    // Save the store so we can reference it if needed.
-    window.carouselStores[carouselId] = { state, actions };
+store( 'gopublish-carousel', {
+	actions: {
+		moveForward() {
+			move( getContext(), getElement().ref, 1 );
+		},
+		moveBack() {
+			move( getContext(), getElement().ref, -1 );
+		},
+	},
+	callbacks: {
+		/**
+		 * Runs once per carousel (data-wp-init on the wrapper).
+		 * Sets the start position and attaches the gesture listeners.
+		 */
+		init() {
+			// Keep references: the listeners below run outside the
+			// Interactivity scope, so they can't call getContext() themselves.
+			const wrapper = getElement().ref;
+			const { track, container } = getParts( wrapper );
+			if ( ! track || ! container ) {
+				return;
+			}
+			const context = getContext();
 
-    // Get the carousel track and container within this wrapper.
-    const carouselTrack = wrapper.querySelector('.carousel-track');
-    const carouselContainer = wrapper.querySelector('.carousel-container');
-    if (!carouselTrack || !carouselContainer) return;
+			const resetWithoutAnimation = ( offset ) => {
+				track.style.transition = 'none';
+				context.currentIndex += offset;
+				applyTransform( context, track, container );
+				window.requestAnimationFrame( () => {
+					track.getBoundingClientRect(); // Force reflow.
+					track.style.transition = TRANSITION;
+				} );
+			};
 
-    // Handle seamless looping after transition.
-    carouselTrack.addEventListener('transitionend', () => {
-      state.isTransitioning = false;
-      // If we've reached the end, reset to the proper index.
-      if (state.currentIndex >= state.itemsTotal + state.clonesCount) {
-        carouselTrack.style.transition = 'none';
-        state.currentIndex = state.currentIndex - state.itemsTotal;
-        doTransform();
-        requestAnimationFrame(() => {
-          carouselTrack.offsetHeight; // Force reflow.
-          carouselTrack.style.transition = 'transform 0.3s ease-out';
-        });
-      }
-      // If we've reached the beginning, reset to the proper index.
-      else if (state.currentIndex < state.clonesCount) {
-        carouselTrack.style.transition = 'none';
-        state.currentIndex = state.currentIndex + state.itemsTotal;
-        doTransform();
-        requestAnimationFrame(() => {
-          carouselTrack.offsetHeight; // Force reflow.
-          carouselTrack.style.transition = 'transform 0.3s ease-out';
-        });
-      }
-    });
+			// Seamless looping: after sliding onto the clones, jump back to
+			// the matching real slide without animation.
+			track.addEventListener( 'transitionend', () => {
+				context.isTransitioning = false;
+				if (
+					context.currentIndex >=
+					context.itemsTotal + context.clonesCount
+				) {
+					resetWithoutAnimation( -context.itemsTotal );
+				} else if ( context.currentIndex < context.clonesCount ) {
+					resetWithoutAnimation( context.itemsTotal );
+				}
+			} );
 
-    // Function to calculate and apply the transform based on the current index.
-    function doTransform() {
-      // const isMobile = window.innerWidth <= 782;
-      function isMobileView() {
-        return window.matchMedia("(max-width: 782px)").matches;
-      }
-      if (isMobileView()) {
-        const slideWidthPercent = state.slideWidthMobile;
-        const offsetPercentage = slideWidthPercent * state.currentIndex;
-        carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
-        carouselContainer.classList.add('mobile-partial-view');
-      } else if (!state.cutoff || state.itemsPerView == 1) {
-        const slideWidthPercent = 100 / (state.itemsPerView);
-        const offsetPercentage = slideWidthPercent * state.currentIndex;
-        carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
-        carouselContainer.classList.remove('mobile-partial-view');
-      } else {
-        const slideWidthPercent = 100 / (state.itemsPerView - 0.3);
-        const offsetPercentage = slideWidthPercent * state.currentIndex;
-        carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
-        carouselContainer.classList.remove('mobile-partial-view');
-      }
-    }
+			// Initial position, without animation.
+			track.style.transition = 'none';
+			applyTransform( context, track, container );
+			track.getBoundingClientRect(); // Force reflow.
+			setTimeout( () => {
+				track.style.transition = TRANSITION;
+			}, 50 );
 
-    // Initial carousel setup.
-    carouselTrack.style.transition = 'none';
-    doTransform();
-    carouselTrack.offsetHeight; // Force reflow.
-    setTimeout(() => {
-      carouselTrack.style.transition = 'transform 0.3s ease-out';
-    }, 50);
+			window.addEventListener( 'resize', () =>
+				applyTransform( context, track, container )
+			);
 
-    // Responsive resize handling.
-    window.addEventListener('resize', doTransform);
+			const swipe = ( deltaX ) => {
+				if ( Math.abs( deltaX ) > SWIPE_THRESHOLD ) {
+					move( context, wrapper, deltaX < 0 ? 1 : -1 );
+				}
+			};
 
-    // Touch swipe navigation.
-    let startX = 0;
-    let currentX = 0;
-    let isSwiping = false;
-    const swipeThreshold = 50;
+			// Touch swipe.
+			let touchStartX = 0;
+			let touchCurrentX = 0;
+			let isSwiping = false;
 
-    carouselTrack.addEventListener('touchstart', (e) => {
-      if (!e.touches || !e.touches.length) return;
-      startX = e.touches[0].clientX;
-      currentX = startX;
-      isSwiping = true;
-    });
+			track.addEventListener( 'touchstart', ( e ) => {
+				if ( ! e.touches?.length ) {
+					return;
+				}
+				touchStartX = touchCurrentX = e.touches[ 0 ].clientX;
+				isSwiping = true;
+			} );
+			track.addEventListener( 'touchmove', ( e ) => {
+				if ( isSwiping && e.touches?.length ) {
+					touchCurrentX = e.touches[ 0 ].clientX;
+				}
+			} );
+			track.addEventListener( 'touchend', () => {
+				if ( isSwiping ) {
+					isSwiping = false;
+					swipe( touchCurrentX - touchStartX );
+				}
+			} );
 
-    carouselTrack.addEventListener('touchmove', (e) => {
-      if (!isSwiping || !e.touches || !e.touches.length) return;
-      currentX = e.touches[0].clientX;
-    });
+			// Mouse drag.
+			let mouseStartX = 0;
+			let mouseCurrentX = 0;
+			let isDragging = false;
+			const endDrag = () => {
+				if ( isDragging ) {
+					isDragging = false;
+					swipe( mouseCurrentX - mouseStartX );
+				}
+			};
 
-    carouselTrack.addEventListener('touchend', () => {
-      if (!isSwiping) return;
-      isSwiping = false;
-      const deltaX = currentX - startX;
-      if (Math.abs(deltaX) > swipeThreshold) {
-        if (deltaX < 0) {
-          actions.moveForward();
-        } else {
-          actions.moveBack();
-        }
-      }
-    });
-
-    // Mouse drag navigation.
-    let isDragging = false;
-    let mouseStartX = 0;
-    let mouseCurrentX = 0;
-    const dragThreshold = 50;
-
-    carouselTrack.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      isDragging = true;
-      mouseStartX = e.clientX;
-      mouseCurrentX = mouseStartX;
-    });
-
-    carouselTrack.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      mouseCurrentX = e.clientX;
-    });
-
-    carouselTrack.addEventListener('mouseup', () => {
-      if (!isDragging) return;
-      isDragging = false;
-      const deltaX = mouseCurrentX - mouseStartX;
-      if (Math.abs(deltaX) > dragThreshold) {
-        if (deltaX < 0) {
-          actions.moveForward();
-        } else {
-          actions.moveBack();
-        }
-      }
-    });
-
-    // Handle case when mouse leaves the track while dragging.
-    carouselTrack.addEventListener('mouseleave', () => {
-      if (isDragging) {
-        isDragging = false;
-        const deltaX = mouseCurrentX - mouseStartX;
-        if (Math.abs(deltaX) > dragThreshold) {
-          if (deltaX < 0) {
-            actions.moveForward();
-          } else {
-            actions.moveBack();
-          }
-        }
-      }
-    });
-
-    // Navigation button event bindings (found within the same wrapper).
-    const prevButton = wrapper.querySelector('.carousel-prev[data-carousel-id]');
-    if (prevButton) {
-      prevButton.addEventListener('click', () => {
-        actions.moveBack();
-      });
-    }
-    const nextButton = wrapper.querySelector('.carousel-next[data-carousel-id]');
-    if (nextButton) {
-      nextButton.addEventListener('click', () => {
-        actions.moveForward();
-      });
-    }
-  });
-});
+			track.addEventListener( 'mousedown', ( e ) => {
+				e.preventDefault();
+				mouseStartX = mouseCurrentX = e.clientX;
+				isDragging = true;
+			} );
+			track.addEventListener( 'mousemove', ( e ) => {
+				if ( isDragging ) {
+					mouseCurrentX = e.clientX;
+				}
+			} );
+			track.addEventListener( 'mouseup', endDrag );
+			track.addEventListener( 'mouseleave', endDrag );
+		},
+	},
+} );

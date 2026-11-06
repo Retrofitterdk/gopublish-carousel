@@ -36,21 +36,27 @@ if ( $scroll > $maxscroll ) {
 // Calculate unique ID for this carousel instance
 $carousel_id = 'carousel-' . uniqid();
 
-// Pass configuration via data-wp-context
+// Interactivity API wiring:
+// - data-wp-interactive: the store namespace registered in view.js.
+// - data-wp-context: per-carousel state. Every directive inside this wrapper
+//   (buttons, future navigation/pagination blocks) reads the same context.
+// - data-wp-init: runs callbacks.init once when the carousel is hydrated.
 $wrapper_attributes = get_block_wrapper_attributes([
   'id' => $carousel_id,
   'class' => $classes,
   'data-wp-interactive' => 'gopublish-carousel',
+  'data-wp-init' => 'callbacks.init',
   'data-wp-context' => wp_json_encode([
-    'currentIndex' => 0,
-    'itemsPerView' => $columns,
-    'scroll'       => $scroll,
-    'cutoff'       => $attributes['cutoff'] ?? false,
-    'loop'         => $loop,
-    'itemsTotal'   => $realSlides,
-    'clonesCount'  => $columns,
-    'slideWidth'   => $slide_width,
-    'slideWidthMobile'   => $slide_width_mobile,
+    // With looping, the real slides start after the leading clones.
+    'currentIndex'     => $loop ? $columns : 0,
+    'isTransitioning'  => false,
+    'itemsPerView'     => $columns,
+    'scroll'           => $scroll,
+    'cutoff'           => $cutoff,
+    'loop'             => $loop,
+    'itemsTotal'       => $realSlides,
+    'clonesCount'      => $columns,
+    'slideWidthMobile' => $slide_width_mobile,
   ])
 ]);
 ?>
@@ -60,26 +66,20 @@ $wrapper_attributes = get_block_wrapper_attributes([
 >
   <div class="navigation-container">
     <button class="carousel-prev"
-      data-carousel-id="<?php echo $carousel_id; ?>"
-      data-wp-on--click="actions.moveBack"
-      data-wp-bind--disabled="state.isTransitioning"
-      data-wp-context='<?php echo wp_json_encode(['carouselId' => $carousel_id]); ?>'>
+      data-wp-on--click="actions.moveBack">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
     <button class="carousel-next"
-      data-carousel-id="<?php echo $carousel_id; ?>"
-      data-wp-on--click="actions.moveForward"
-      data-wp-bind--disabled="state.isTransitioning"
-      data-wp-context='<?php echo wp_json_encode(['carouselId' => $carousel_id]); ?>'>
+      data-wp-on--click="actions.moveForward">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
   </div>
   <div class="carousel-container" id="<?php echo $carousel_id; ?>">
-    <div class="carousel-track" data-carousel-id="<?php echo $carousel_id; ?>" data-wp-bind--style.transform="state.transform">
+    <div class="carousel-track">
       <?php 
       // Clone last slides at the beginning for seamless looping
       if ( $loop && $realSlides > 0 ) :
