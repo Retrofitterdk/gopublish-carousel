@@ -88,7 +88,7 @@ function updateHiddenSlides( context, track ) {
  * Find the carousel parts from any element inside (or on) the wrapper.
  *
  * @param {HTMLElement} element Element with a directive, e.g. a button.
- * @return {{wrapper: HTMLElement|null, track: HTMLElement|null, container: HTMLElement|null}} Parts.
+ * @return {{wrapper: HTMLElement|null, track: HTMLElement|null}} Parts.
  */
 function getParts( element ) {
 	const wrapper = element.closest(
@@ -97,7 +97,6 @@ function getParts( element ) {
 	return {
 		wrapper,
 		track: wrapper?.querySelector( '.carousel-track' ) ?? null,
-		container: wrapper?.querySelector( '.carousel-container' ) ?? null,
 	};
 }
 
@@ -113,13 +112,12 @@ function getParts( element ) {
  *
  * Also updates which slides are reachable (see updateHiddenSlides()).
  *
- * @param {Object}      context         Carousel context.
- * @param {Object}      parts           Result of getParts().
- * @param {HTMLElement} parts.wrapper   The block wrapper.
- * @param {HTMLElement} parts.track     The .carousel-track element.
- * @param {HTMLElement} parts.container The .carousel-container element.
+ * @param {Object}      context       Carousel context.
+ * @param {Object}      parts         Result of getParts().
+ * @param {HTMLElement} parts.wrapper The block wrapper.
+ * @param {HTMLElement} parts.track   The .carousel-track element.
  */
-function applyTransform( context, { wrapper, track, container } ) {
+function applyTransform( context, { wrapper, track } ) {
 	const staticNow = isStatic( context );
 	wrapper.classList.toggle( 'is-static', staticNow );
 	updateHiddenSlides( context, track );
@@ -131,13 +129,10 @@ function applyTransform( context, { wrapper, track, container } ) {
 	let slideWidthPercent;
 	if ( isMobileView() ) {
 		slideWidthPercent = context.slideWidthMobile;
-		container.classList.add( 'mobile-partial-view' );
 	} else if ( ! context.cutoff || context.itemsPerView === 1 ) {
 		slideWidthPercent = 100 / context.itemsPerView;
-		container.classList.remove( 'mobile-partial-view' );
 	} else {
 		slideWidthPercent = 100 / ( context.itemsPerView - 0.3 );
-		container.classList.remove( 'mobile-partial-view' );
 	}
 	const offsetPercentage = slideWidthPercent * context.currentIndex;
 	track.style.transform = `translateX(-${ offsetPercentage }%)`;
@@ -220,7 +215,7 @@ function move( context, element, direction ) {
 		return;
 	}
 	const parts = getParts( element );
-	if ( ! parts.track || ! parts.container ) {
+	if ( ! parts.track ) {
 		return;
 	}
 	context.isTransitioning = true;
@@ -265,7 +260,7 @@ store( 'gopublish-carousel', {
 			const wrapper = getElement().ref;
 			const parts = getParts( wrapper );
 			const { track } = parts;
-			if ( ! track || ! parts.container ) {
+			if ( ! track ) {
 				return;
 			}
 			const context = getContext();

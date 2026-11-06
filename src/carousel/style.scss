@@ -12,7 +12,7 @@
 }
 
 .wp-block-gopublish-carousel {
-	position: relative;
+	// Custom properties for theming (documented in readme.txt, FAQ).
 	--nav-container-padding: 0.75rem;
 	--nav-container-padding-left: 0;
 	--nav-container-padding-right: 0;
@@ -23,66 +23,68 @@
 	--nav-button-height: 32px;
 	--nav-button-radius: 100%;
 	--nav-button-background: transparent;
-	--nav-button-background-hover: #000000;
-	--nav-button-icon-color: #000000;
-	--nav-button-icon-color-hover: #ffffff;
+	--nav-button-background-hover: #000;
+	--nav-button-icon-color: #000;
+	--nav-button-icon-color-hover: #fff;
 	--nav-button-outline-color: var(--nav-button-background-hover);
 	--nav-button-outline-width: 2px;
 	--nav-button-outline-offset: 2px;
 	--slide--padding-right: 1rem;
+
+	position: relative;
+
 	.navigation-container {
 		display: flex;
-		justify-content: var(--nav-container-justify-content);
 		gap: var(--nav-container-gap);
+		justify-content: var(--nav-container-justify-content);
 		padding: var(--nav-container-padding);
-		padding-left: var(--nav-container-padding-left);
 		padding-right: var(--nav-container-padding-right);
+		padding-left: var(--nav-container-padding-left);
 		text-align: var(--nav-container-text-align);
+
 		.carousel-prev,
 		.carousel-next {
-		  position: relative;
-		  background: var(--nav-button-background);
-		  width: var(--nav-button-width); 
-		  height: var(--nav-button-height);
-		  border-radius: var(--nav-button-radius);
-		  border: none;
-		  cursor: pointer;
-		  transition: background 0.3s ease;
-		  // Keyboard focus gets the hover look plus an outline ring, so it's
-		  // clearly visible (not only a colour change).
-		  &:hover,
-		  &:focus-visible {
-			background: var(--nav-button-background-hover);
+			position: relative;
+			width: var(--nav-button-width);
+			height: var(--nav-button-height);
+			background: var(--nav-button-background);
+			border: none;
+			border-radius: var(--nav-button-radius);
+			cursor: pointer;
+			transition: background 0.3s ease;
+
+			svg {
+				margin: 0 auto;
+			}
+
 			svg path {
-			  stroke: var(--nav-button-icon-color-hover);
+				stroke: var(--nav-button-icon-color);
+				transition: stroke 0.3s ease;
 			}
-		  }
-		  &:focus-visible {
-			outline: var(--nav-button-outline-width) solid var(--nav-button-outline-color);
-			outline-offset: var(--nav-button-outline-offset);
-		  }
-		  svg {
-			margin: 0 auto;
-			path {
-			  stroke: var(--nav-button-icon-color);
-			  transition: stroke 0.3s ease; // ensures the stroke change is animated
+
+			// Keyboard focus gets the hover look plus an outline ring, so it's
+			// clearly visible (not only a colour change).
+			&:hover,
+			&:focus-visible {
+				background: var(--nav-button-background-hover);
+
+				svg path {
+					stroke: var(--nav-button-icon-color-hover);
+				}
 			}
-		  }
+
+			&:focus-visible {
+				outline: var(--nav-button-outline-width) solid var(--nav-button-outline-color);
+				outline-offset: var(--nav-button-outline-offset);
+			}
 		}
-	  
-	  .carousel-prev {
-		svg {
-		  transform: rotate(-180deg);
+
+		// Both buttons use the same arrow icon; point the first one back.
+		.carousel-prev svg {
+			transform: rotate(-180deg);
 		}
-	  }
 	}
-	
-	.carousel-prev:disabled,
-	.carousel-next:disabled {
-	  opacity: 1;
-	  cursor: pointer;
-	  pointer-events: none;
-	}
+
 	.carousel-container {
 		position: relative;
 		overflow-x: clip;
@@ -90,101 +92,72 @@
 
 	// Live region for screen readers: visually hidden, but still announced.
 	.carousel-status {
+
 		@include visually-hidden;
 	}
 
 	// All slides fit in view at this breakpoint (set by view.js):
 	// nothing to scroll, so hide the clones and the navigation.
 	&.is-static {
+
 		.carousel-clone,
 		.navigation-container {
 			display: none;
 		}
 	}
-	
-	.carousel-track {
-	  display: flex;
-	  align-items: stretch;
-	  transition: transform 0.3s ease-out;
 
-	  @media (prefers-reduced-motion: reduce) {
-		transition: none;
-	  }
-	}
-	
-	.carousel-slide {
-	  display: flex;
-	  flex-shrink: 0;
-	  box-sizing: border-box;
-	  padding-right: var(--slide--padding-right);
-	  .wp-block-group {
+	// The transition is set inline by view.js (none with reduced motion).
+	.carousel-track {
 		display: flex;
-		flex-direction: column;
-	  }
+		align-items: stretch;
 	}
+
+	// The width of each slide is set inline by render.php.
+	.carousel-slide {
+		display: flex;
+		flex-shrink: 0;
+		box-sizing: border-box;
+		padding-right: var(--slide--padding-right);
+	}
+
 	.wp-block-gopublish-carousel-slide {
-   		width: 100%;
 		max-width: var(--wp--style--global--content-size);
 	}
-	&.alignwide {
-		.wp-block-gopublish-carousel-slide {
-			max-width: var(--wp--style--global--wide-size)
-		}
+
+	&.alignwide .wp-block-gopublish-carousel-slide {
+		max-width: var(--wp--style--global--wide-size);
 	}
-	&.alignfull {
-		.wp-block-gopublish-carousel-slide {
-			max-width: 100vw;
-		}
+
+	&.alignfull .wp-block-gopublish-carousel-slide {
+		max-width: 100vw;
 	}
-	&.columns-1 {
-		.carousel-slide {
-			padding-right: unset;
-			// .cutoff & {
-			// 	@media (min-width: 782px) {
-			// 		.carousel-slide {
-			// 			padding-right: var(--slide--padding-right);
-			// 		}
-			// 	}
-			// }
-		}
-		&.cutoff {
-			@media (min-width: 782px) {
-				.carousel-slide {
-					// background: rebeccapurple;
-					// padding-right: var(--slide--padding-right);
-				}
-			}
-		}
+
+	&.columns-1 .carousel-slide {
+		padding-right: 0;
 	}
 }
 
 @media (max-width: 782px) {
+
 	.wp-block-gopublish-carousel {
+
 		.carousel-slide {
+			// Overrides the inline desktop width from render.php.
 			width: var(--mobile-width) !important;
-			user-select: none;
-			-webkit-user-select: none;
-			cursor: move; /* fallback if grab cursor is unsupported */
 			cursor: grab;
-			cursor: -moz-grab;
-			cursor: -webkit-grab;
+			user-select: none;
 		}
-		&.columns-1 {
-			&.no-cutoff {
-				--slide--padding-right: 0;
-			}
-			&.cutoff {
-				.carousel-slide {
-					padding-right: var(--slide--padding-right);
-				}
-			}
-		}
-		.carousel-slide:active,
-		.carousel-slide:focus {
+
+		.carousel-slide:active {
 			cursor: grabbing;
-			cursor: -moz-grabbing;
-			cursor: -webkit-grabbing;
 		}
+
+		// A single column with cutoff needs the gap to the next, partly
+		// visible slide; without cutoff there is no next slide in view.
+		&.columns-1.cutoff .carousel-slide {
+			padding-right: var(--slide--padding-right);
+		}
+
 		// Small touch screens: navigate by swiping. The buttons are only
 		// visually hidden (not display: none), so keyboard, switch and screen
 		// reader users can still reach them, and they appear as soon as
@@ -192,7 +165,9 @@
 		// match taps). Browsers without :has() ignore this rule and simply
 		// show the buttons.
 		@media (pointer: coarse) {
+
 			&:not(:has(:focus-visible)) .navigation-container {
+
 				@include visually-hidden;
 			}
 		}

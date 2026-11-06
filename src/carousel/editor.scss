@@ -1,17 +1,18 @@
-// Editor specific styles
+// Editor-only styles: show all slides in a grid instead of a carousel.
 .wp-block-gopublish-carousel {
+
 	.carousel-container {
 		position: relative;
-		overflow: visible; // Show all slides in editor
+		overflow: visible;
 		padding: 20px;
 		border: 1px solid;
+
 		.block-editor-inner-blocks {
 			min-height: 30px;
 		}
 	}
-	.block-editor-block-list__block {
-		margin-bottom: 10px;
-	}
+
+	// One grid column per carousel column (--columns is set in edit.js).
 	> .carousel-container > .block-editor-inner-blocks > .block-editor-block-list__layout {
 		display: grid !important;
 		grid-template-columns: repeat(var(--columns), 1fr);
