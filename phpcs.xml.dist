@@ -6,6 +6,9 @@
     <rule ref="WordPress-Docs"/>
     <rule ref="WordPress-Extra"/>
 
+    <!-- Only check PHP files (JS and CSS are linted with wp-scripts) -->
+    <arg name="extensions" value="php"/>
+
     <!-- Paths to exclude from the scan -->
     <exclude-pattern>vendor/*</exclude-pattern>
     <exclude-pattern>build/*</exclude-pattern>
