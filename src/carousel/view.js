@@ -16,6 +16,20 @@ function isMobileView() {
 	return window.matchMedia( '(max-width: 782px)' ).matches;
 }
 
+function prefersReducedMotion() {
+	return window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
+}
+
+/**
+ * The track's transition: none when the user has asked for reduced motion
+ * (checked each time, so changing the OS setting takes effect right away).
+ *
+ * @return {string} CSS transition value.
+ */
+function trackTransition() {
+	return prefersReducedMotion() ? 'none' : TRANSITION;
+}
+
 /**
  * True when every slide fits in view at the current breakpoint, so there is
  * nothing to scroll (computed in render.php).
@@ -142,7 +156,7 @@ function resetWithoutAnimation( context, parts, offset ) {
 	applyTransform( context, parts );
 	window.requestAnimationFrame( () => {
 		parts.track.getBoundingClientRect(); // Force reflow.
-		parts.track.style.transition = TRANSITION;
+		parts.track.style.transition = trackTransition();
 	} );
 }
 
@@ -211,7 +225,15 @@ function move( context, element, direction ) {
 	}
 	context.isTransitioning = true;
 	context.currentIndex += direction * context.scroll;
+	parts.track.style.transition = trackTransition();
 	applyTransform( context, parts );
+
+	// Reduced motion: the track jumps instantly and no transitionend event
+	// will fire, so finish the move right away (loop reset + announcement).
+	if ( prefersReducedMotion() ) {
+		finishTransition( context, parts );
+		return;
+	}
 
 	// Never stay locked: finish anyway if transitionend doesn't arrive.
 	fallbackTimers.set(
@@ -262,7 +284,7 @@ store( 'gopublish-carousel', {
 			applyTransform( context, parts );
 			track.getBoundingClientRect(); // Force reflow.
 			setTimeout( () => {
-				track.style.transition = TRANSITION;
+				track.style.transition = trackTransition();
 			}, 50 );
 
 			window.addEventListener( 'resize', () =>
