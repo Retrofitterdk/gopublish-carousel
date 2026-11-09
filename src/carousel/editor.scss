@@ -23,8 +23,7 @@
 	&.is-editor-grid .carousel-track {
 		display: grid;
 		grid-template-columns: repeat(var(--columns), 1fr);
-		gap: 10px;
+		gap: var(--carousel-gap);
 		overflow-x: visible;
-
 	}
 }

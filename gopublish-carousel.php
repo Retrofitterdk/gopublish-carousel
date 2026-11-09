@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name:       Go:Publish Carousel
- * Description:       A looping carousel block for any blocks, built on the Interactivity API.
- * Version:           0.2.8
+ * Description:       A carousel block for any blocks, built on native scrolling and the Interactivity API.
+ * Version:           0.3.0
  * Requires at least: 6.8
  * Requires PHP:      7.2
  * Author:            Retrofitter
@@ -95,6 +95,104 @@ function gopublish_carousel_small_screen_max_width() {
 function gopublish_carousel_small_screen_query() {
 	return '(width <= ' . gopublish_carousel_small_screen_max_width() . ')';
 }
+
+/**
+ * Media queries for the viewports a block can have its own styles for
+ * (WordPress 7.1+), e.g. '@mobile' => '@media (width <= 480px)'.
+ *
+ * The same queries core uses for per-viewport block styles, so the carousel's
+ * per-viewport gap switches at the same widths as its padding etc.
+ *
+ * @return array<string, string> Media queries keyed by viewport, or an empty
+ *                               array on WordPress versions without them.
+ */
+function gopublish_carousel_viewport_media_queries() {
+	if ( ! method_exists( 'WP_Theme_JSON', 'get_viewport_media_queries' ) ) {
+		return array();
+	}
+	return WP_Theme_JSON::get_viewport_media_queries( wp_get_global_settings( array( 'viewport' ) ) );
+}
+
+/**
+ * The CSS value for a Block spacing (blockGap) setting, for --carousel-gap.
+ *
+ * Converts spacing presets ('var:preset|spacing|30') to their CSS variable
+ * and only accepts plain lengths or preset variables, so a crafted value
+ * can't inject other CSS.
+ *
+ * @param mixed $gap The blockGap value from the block's style attribute.
+ * @return string|null CSS value, or null if unset or invalid.
+ */
+function gopublish_carousel_gap_value( $gap ) {
+	// A gap with separate values per axis: the space between slides is the
+	// horizontal one.
+	if ( is_array( $gap ) ) {
+		$gap = $gap['left'] ?? null;
+	}
+	if ( ! is_string( $gap ) ) {
+		return null;
+	}
+	if ( str_starts_with( $gap, 'var:preset|spacing|' ) ) {
+		$gap = 'var(--wp--preset--spacing--' . _wp_to_kebab_case( substr( $gap, strrpos( $gap, '|' ) + 1 ) ) . ')';
+	}
+	if ( ! preg_match( '/^(?:0|\d*\.?\d+(?:px|em|rem|%|vw|vh|ch)|var\(--wp--preset--spacing--[a-z0-9-]+\))$/', $gap ) ) {
+		return null;
+	}
+	return $gap;
+}
+
+/**
+ * Add the CSS for a per-viewport gap to the carousel's stylesheet (once per
+ * class, shared by carousels with the same values).
+ *
+ * Added with wp_add_inline_style() rather than the style engine's
+ * block-supports store: with the Gutenberg plugin active, that store is
+ * printed from Gutenberg's own copy of the style engine, and rules added to
+ * core's store never reach the page.
+ *
+ * @param string                $class_name    Class on the carousel wrapper.
+ * @param array<string, string> $viewport_gaps Gap values (already validated
+ *                                             by gopublish_carousel_gap_value())
+ *                                             keyed by media query.
+ */
+function gopublish_carousel_add_viewport_gap_styles( $class_name, $viewport_gaps ) {
+	static $added = array();
+	if ( isset( $added[ $class_name ] ) ) {
+		return;
+	}
+	$added[ $class_name ] = true;
+
+	$block_type = WP_Block_Type_Registry::get_instance()->get_registered( 'gopublish/carousel' );
+	if ( ! $block_type || empty( $block_type->style_handles ) ) {
+		return;
+	}
+
+	$css = '';
+	foreach ( $viewport_gaps as $media_query => $gap ) {
+		$css .= "{$media_query}{.{$class_name}{--carousel-gap:{$gap} !important;}}";
+	}
+	wp_add_inline_style( $block_type->style_handles[0], $css );
+}
+
+/**
+ * Pass the viewport media queries to the editor script, so the editor applies
+ * a per-viewport gap at exactly the same widths as the front end (read in
+ * edit.js as window.gopublishCarousel.mediaQueries). Block editor settings
+ * can't carry them: the editor only passes on settings it knows.
+ */
+function gopublish_carousel_editor_data() {
+	$block_type = WP_Block_Type_Registry::get_instance()->get_registered( 'gopublish/carousel' );
+	if ( ! $block_type || empty( $block_type->editor_script_handles ) ) {
+		return;
+	}
+	$data = array( 'mediaQueries' => (object) gopublish_carousel_viewport_media_queries() );
+	wp_add_inline_script(
+		$block_type->editor_script_handles[0],
+		'window.gopublishCarousel = ' . wp_json_encode( $data ) . ';',
+		'before'
+	);
+}
+add_action( 'enqueue_block_editor_assets', 'gopublish_carousel_editor_data' );
 
 /**
  * Add the small-screen styles to the carousel's stylesheet.

@@ -4,41 +4,45 @@ Tags:              carousel, slider, block, interactivity api
 Requires at least: 6.8
 Tested up to:      7.1
 Requires PHP:      7.2
-Stable tag:        0.2.7
+Stable tag:        0.3.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-A looping carousel block for any blocks, built on the Interactivity API.
+A carousel block for any blocks, built on native scrolling and the Interactivity API.
 
 == Description ==
 
 Go:Publish Carousel adds a Carousel block to the block editor. Each slide is a Carousel Slide block that can hold any other blocks: images, text, buttons, groups, cards and so on.
 
-The carousel is rendered on the server and runs on the WordPress Interactivity API, so no jQuery or third-party slider library is loaded.
+The carousel is rendered on the server and built on the browser's own scrolling (CSS scroll snap). Swiping, trackpad scrolling and momentum work like anywhere else on the device. A small script on the WordPress Interactivity API adds the navigation buttons, so no jQuery or third-party slider library is loaded.
 
 Features:
 
 * Slides can contain any blocks.
 * 1–6 slides visible at once (Columns).
-* Choose how many slides to move per step (Slides to Scroll).
+* Choose how many slides to move per step (Slides to scroll).
 * Cutoff effect: the last visible slide is partly shown, hinting that there is more to scroll through.
-* Separate slide width on mobile (in percent of the carousel width).
-* Endless looping in both directions.
-* Previous/next buttons, touch swipe and mouse drag.
-* If every slide fits in view, the navigation is hidden and the carousel stays still.
+* Separate slide width on mobile and tablet (in percent of the carousel width).
+* Rewind at the end: on the last slide, Next goes back to the first (and Previous on the first goes to the last). Turn it off to stop at the ends instead.
+* Previous/next buttons, touch swipe, trackpad and keyboard scrolling, all snapping to the start of a slide.
+* If every slide fits in view, the navigation is hidden.
+* The Block spacing setting sets the space between slides, with separate values per viewport in WordPress 7.1.
 * Wide and full alignment, padding, margin and minimum height.
+* Right-to-left languages.
 * Several carousels on the same page.
 * Slides keep the block context they inherit, and slides that render empty (e.g. hidden by a visibility plugin) are skipped.
 * The editor shows the carousel as on the front end: one row with the real slide widths, the cutoff effect and navigation arrows. Switch to "Show all slides" for an overview.
+* Translation-ready, with a Danish translation included.
 
 Accessibility (following the W3C carousel pattern):
 
 * Labelled navigation buttons, with a visible focus ring for keyboard users.
 * Screen readers announce the carousel and each slide ("slide, 2 of 9"), and an optional label turns the carousel into a landmark.
-* Slide changes are announced politely ("Slide 3 of 9").
-* Keyboard focus only reaches slides that are in view, and the copies used for looping are skipped.
+* After using the buttons, the visible slides are announced politely ("Slide 3 of 9", or "Slides 3 to 5 of 9" when several are in view).
+* Every slide can be reached with Tab; the carousel scrolls a focused slide into view. If the slides contain nothing focusable, the row of slides can be focused itself and scrolled with the arrow keys.
+* With Rewind at the end turned off, the buttons are marked as unavailable at the ends, but stay focusable, so keyboard focus isn't lost.
 * On touch screens, the navigation appears for keyboard and switch users, and screen readers can always reach it.
-* Respects the reduced motion setting: slides change instantly instead of sliding.
+* Respects the reduced motion setting: the carousel jumps instead of scrolling smoothly.
 
 Go:Publish Carousel was originally based on [demo-carousel](https://github.com/eirichmond/demo-carousel) by Elliott Richmond. It has since been rewritten and extended, and is now developed as a separate plugin.
 
@@ -66,7 +70,19 @@ The editor shows the carousel as a scrollable row, like on the front end; use th
 
 = Does the editor show the mobile layout? =
 
-Yes. Switch the editor's preview to Tablet or Mobile, and the slides use the mobile slide width, as on the front end.
+Yes. Switch the editor's preview to Tablet or Mobile, and the slides use the mobile slide width and any per-viewport spacing, as on the front end.
+
+= What happens at the end of the carousel? =
+
+With Rewind at the end turned on (the default), Next on the last slide scrolls back to the first, and Previous on the first slide scrolls to the last. The carousel doesn't loop endlessly: it scrolls back through the slides. If that feels jarring, e.g. with many slides, turn Rewind at the end off in the Carousel settings. The buttons then stop at the ends and are shown dimmed.
+
+= Can I drag the carousel with the mouse? =
+
+No. On a computer, use the buttons, scroll sideways with a trackpad or with Shift and the scroll wheel, or the arrow keys. On touch screens, swipe.
+
+= How do I change the space between slides? =
+
+Select the Carousel and change Block spacing in the Dimensions panel. From WordPress 7.1, you can set a different value for tablet and mobile. Themes can also set the `--carousel-gap` custom property.
 
 = How do I make the carousel accessible? =
 
@@ -74,9 +90,9 @@ Most of it is built in. To help screen reader users, give the carousel a label t
 
 Avoid forms and other complex interactive content inside slides.
 
-= How do I style the navigation buttons? =
+= How do I style the carousel? =
 
-The navigation is styled with CSS custom properties, which you can override in your theme or in Additional CSS. For example:
+The carousel is styled with CSS custom properties, which you can override in your theme or in Additional CSS. For example:
 
 `.wp-block-gopublish-carousel { --nav-button-background-hover: #1e1e1e; --nav-container-justify-content: center; }`
 
@@ -88,11 +104,14 @@ Available properties:
 * `--nav-button-background`, `--nav-button-background-hover`
 * `--nav-button-icon-color`, `--nav-button-icon-color-hover`
 * `--nav-button-outline-color`, `--nav-button-outline-width`, `--nav-button-outline-offset` (keyboard focus ring)
-* `--slide--padding-right` (space between slides)
+* `--nav-button-disabled-opacity` (buttons at the ends, with Rewind at the end off)
+* `--carousel-gap` (space between slides; normally set with Block spacing). The older `--slide--padding-right` still works as a fallback.
+
+The carousel also has classes for its state: `is-scrollable` (the slides don't all fit), `is-at-start` and `is-at-end`, plus `columns-N` and `cutoff` or `no-cutoff` for its settings.
 
 = Why are the navigation buttons hidden on my phone? =
 
-On small touch screens the carousel is navigated by swiping, so the buttons are visually hidden. They appear as soon as someone uses a keyboard or switch device to move focus into the carousel, and screen readers can always reach them. On any screen size where all slides fit in view, there is nothing to navigate and the buttons are removed.
+On small touch screens the carousel is navigated by swiping, so the buttons are visually hidden. They appear as soon as someone uses a keyboard or switch device to move focus into the carousel, and screen readers can always reach them. On any screen size where all slides fit in view, there is nothing to navigate and the buttons are hidden.
 
 = What is the breakpoint for mobile? =
 
@@ -109,17 +128,30 @@ Source files are in `src/`, and the compiled blocks in `build/` are what WordPre
 * `npm run lint:php` – check PHP against the WordPress coding standards (run `composer install` first).
 * `npm run plugin-zip` – create an installable zip file.
 
-See README.md for more developer notes.
+See README.md for more developer notes, including how to update translations.
 
 == Changelog ==
 
-= Unreleased =
-* New: the editor shows the carousel as on the front end: one scrollable row with the real slide widths, the cutoff effect and navigation arrows, and the mobile slide width in Tablet and Mobile preview.
-* New: Add slide and Show all slides (a grid view of every slide) in the Carousel's block toolbar.
-* New: the mobile/tablet breakpoint follows the theme's viewport settings (theme.json settings.viewport, WordPress 7.1).
+= 0.3.0 =
+* Changed: the carousel is built on native scrolling (CSS scroll snap) instead of moving the slides with transforms. Swiping, trackpad scrolling and momentum are handled by the browser, and the carousel needs far less JavaScript.
+* Changed: endless looping is replaced by rewinding. New setting: Rewind at the end (on by default). When it's off, the buttons are disabled at the ends (aria-disabled, dimmed).
+* Changed: mouse dragging is removed. Use the buttons, a trackpad, Shift and the scroll wheel, or the arrow keys.
+* Changed: the Block spacing setting sets the space between slides (the `--carousel-gap` custom property). `--slide--padding-right` still works as a fallback.
+* Changed: off-screen slides are no longer inert, and no copies of slides are rendered. Tabbing to a slide scrolls it into view. If no slide contains anything focusable, the row of slides can be focused and scrolled with the arrow keys.
+* Changed: the scrollbar is hidden.
+* Changed: after using the buttons, all fully visible slides are announced ("Slides 3 to 5 of 9"), not only the first.
+* Changed: a carousel without slides renders nothing.
 * Changed: requires WordPress 6.8. All blocks are registered from a blocks manifest.
 * Changed: a new carousel gets its three starting slides from a default block variation. Deleting every slide no longer adds three new ones automatically.
+* New: Block spacing per viewport (WordPress 7.1), on the front end and in the editor's Tablet and Mobile preview.
+* New: the mobile/tablet breakpoint follows the theme's viewport settings (theme.json settings.viewport, WordPress 7.1).
+* New: right-to-left languages: the buttons scroll in the reading direction and the arrows point the right way.
+* New: with a minimum height set, the slides fill it.
+* New: state classes `is-scrollable`, `is-at-start` and `is-at-end`, and the `--nav-button-disabled-opacity` custom property.
+* New: the editor shows the carousel as on the front end: one scrollable row with the real slide widths, the cutoff effect and navigation arrows, and the mobile slide width in Tablet and Mobile preview.
+* New: Add slide and Show all slides (a grid view of every slide) in the Carousel's block toolbar.
 * New: Danish translation (da_DK), including the screen reader texts ("karrusel", "dias", "Dias 4 af 9"). Translations ship with the plugin in languages/.
+* Removed: the `data-slide-index` attribute on slides.
 * Development: updated to @wordpress/scripts 37.
 
 = 0.2.7 =
@@ -173,3 +205,8 @@ See README.md for more developer notes.
 
 = 0.1.0 =
 * First release, as demo-carousel.
+
+== Upgrade Notice ==
+
+= 0.3.0 =
+New scrolling engine: endless looping is replaced by rewinding (Rewind at the end setting), and mouse dragging is removed. Theme CSS that targeted the old slide copies or the track's transform no longer applies. Requires WordPress 6.8.

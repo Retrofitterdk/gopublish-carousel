@@ -1,5 +1,6 @@
 import {
 	BlockControls,
+	getSpacingPresetCssVar,
 	InspectorControls,
 	store as blockEditorStore,
 	useBlockProps,
@@ -19,6 +20,26 @@ import { useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 const ALLOWED_BLOCKS = [ 'gopublish/carousel-slide' ];
+
+// Plain lengths or spacing preset variables (same check as
+// gopublish_carousel_gap_value() in PHP).
+const GAP_PATTERN =
+	/^(?:0|\d*\.?\d+(?:px|em|rem|%|vw|vh|ch)|var\(--wp--preset--spacing--[a-z0-9-]+\))$/;
+
+/**
+ * The CSS value for a Block spacing (blockGap) setting, for --carousel-gap.
+ * Mirrors gopublish_carousel_gap_value() in PHP.
+ *
+ * @param {string|Object|undefined} gap The blockGap value.
+ * @return {string|undefined} CSS value, or undefined if unset or invalid.
+ */
+function getGapValue( gap ) {
+	// Separate values per axis: the space between slides is the horizontal one.
+	const value = getSpacingPresetCssVar(
+		gap && typeof gap === 'object' ? gap.left : gap
+	);
+	return value && GAP_PATTERN.test( value ) ? value : undefined;
+}
 
 /**
  * The largest allowed "Slides to scroll" value. Mirrors render.php: with the
@@ -60,7 +81,7 @@ function ArrowIcon() {
 }
 
 export default function Edit( { attributes, setAttributes, clientId } ) {
-	const { columns, scroll, cutoff, rewind, mobileWidth, ariaLabel } =
+	const { columns, scroll, cutoff, rewind, mobileWidth, ariaLabel, style } =
 		attributes;
 	const maxScroll = getMaxScroll( columns, cutoff );
 
@@ -78,6 +99,23 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		[ clientId ]
 	);
 	const { insertBlock } = useDispatch( blockEditorStore );
+
+	// Block spacing sets the gap between slides, like on the front end
+	// (render.php): the base value inline, and per-viewport values (WordPress
+	// 7.1+) in a style element with the same media queries as the front end,
+	// passed from PHP (gopublish_carousel_editor_data()). In the editor
+	// canvas, they apply in Tablet and Mobile preview.
+	const mediaQueries = window.gopublishCarousel?.mediaQueries;
+	const gap = getGapValue( style?.spacing?.blockGap );
+	const gapClass = `gopublish-carousel-gap-${ clientId }`;
+	const viewportGapCSS = Object.entries( mediaQueries ?? {} )
+		.map( ( [ viewport, mediaQuery ] ) => {
+			const value = getGapValue( style?.[ viewport ]?.spacing?.blockGap );
+			return value
+				? `${ mediaQuery }{.${ gapClass }{--carousel-gap:${ value } !important}}`
+				: '';
+		} )
+		.join( '' );
 
 	// Add a slide at the end (it gets selected and scrolled into view).
 	const addSlide = () =>
@@ -167,12 +205,14 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			`columns-${ columns }`,
 			cutoff ? 'cutoff' : 'no-cutoff',
 			showAll ? 'is-editor-grid' : '',
+			viewportGapCSS ? gapClass : '',
 		]
 			.filter( Boolean )
 			.join( ' ' ),
 		style: {
 			'--columns': columns,
 			'--mobile-width': `${ mobileWidth }%`,
+			'--carousel-gap': gap,
 		},
 	} );
 
@@ -189,6 +229,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	return (
 		<div { ...blockProps }>
+			{ viewportGapCSS && <style>{ viewportGapCSS }</style> }
 			<BlockControls>
 				<ToolbarGroup>
 					<ToolbarButton

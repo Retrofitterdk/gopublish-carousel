@@ -50,12 +50,27 @@ $scroll     = min( $scroll, $max_scroll );
 $style = '--columns: ' . $columns . '; --mobile-width: ' . $slide_width_mobile . '%;';
 
 // The Block spacing setting (blockGap) sets the space between slides.
-$gap = $attributes['style']['spacing']['blockGap'] ?? null;
-if ( is_string( $gap ) && str_starts_with( $gap, 'var:preset|spacing|' ) ) {
-	$gap = 'var(--wp--preset--spacing--' . _wp_to_kebab_case( substr( $gap, strrpos( $gap, '|' ) + 1 ) ) . ')';
-}
-if ( is_string( $gap ) && preg_match( '/^(?:0|\d*\.?\d+(?:px|em|rem|%|vw|vh|ch)|var\(--wp--preset--spacing--[a-z0-9-]+\))$/', $gap ) ) {
+$gap = gopublish_carousel_gap_value( $attributes['style']['spacing']['blockGap'] ?? null );
+if ( null !== $gap ) {
 	$style .= ' --carousel-gap: ' . $gap . ';';
+}
+
+// Block spacing per viewport (WordPress 7.1+, e.g. a smaller gap on mobile).
+// Core doesn't output blockGap for blocks without layout support, so add the
+// rules the way core adds other per-viewport styles: a class shared by
+// carousels with the same values, with !important rules so they win over the
+// inline base value (see gopublish_carousel_add_viewport_gap_styles()).
+$viewport_gaps = array();
+foreach ( gopublish_carousel_viewport_media_queries() as $viewport => $media_query ) {
+	$viewport_gap = gopublish_carousel_gap_value( $attributes['style'][ $viewport ]['spacing']['blockGap'] ?? null );
+	if ( null !== $viewport_gap ) {
+		$viewport_gaps[ $media_query ] = $viewport_gap;
+	}
+}
+if ( $viewport_gaps ) {
+	$gap_class = wp_unique_id_from_values( $viewport_gaps, 'gopublish-carousel-gap-' );
+	$classes  .= ' ' . $gap_class;
+	gopublish_carousel_add_viewport_gap_styles( $gap_class, $viewport_gaps );
 }
 
 // Best guess whether there is anything to scroll, so the server-rendered

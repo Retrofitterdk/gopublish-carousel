@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Go:Publish Carousel 0.2.8\n"
+"Project-Id-Version: Go:Publish Carousel 0.3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -19,24 +19,19 @@ msgstr ""
 msgid "Go:Publish Carousel"
 msgstr ""
 
-#. Description of the plugin
-#: gopublish-carousel.php
-msgid "A looping carousel block for any blocks, built on the Interactivity API."
-msgstr "En karruselblok, der kører i ring, til alle slags blokke, bygget med Interactivity API."
-
 #. Author of the plugin
 #: gopublish-carousel.php
 msgid "Retrofitter"
 msgstr ""
 
-#: build/carousel/render.php:80
+#: build/carousel/render.php:101
 #: build/carousel/index.js:1
 msgid "Previous slide"
 msgid_plural "Previous slides"
 msgstr[0] "Forrige dias"
 msgstr[1] "Forrige dias"
 
-#: build/carousel/render.php:81
+#: build/carousel/render.php:102
 #: build/carousel/index.js:1
 msgid "Next slide"
 msgid_plural "Next slides"
@@ -44,23 +39,23 @@ msgstr[0] "Næste dias"
 msgstr[1] "Næste dias"
 
 #. translators: Spoken by screen readers to describe the carousel block.
-#: build/carousel/render.php:91
+#: build/carousel/render.php:112
 msgid "carousel"
 msgstr "karrusel"
 
 #. translators: Spoken by screen readers to describe a single slide.
-#: build/carousel/render.php:98
+#: build/carousel/render.php:119
 msgid "slide"
 msgstr "dias"
 
 #. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:130
+#: build/carousel/render.php:151
 #, php-format
 msgid "Slide %1$d of %2$d"
 msgstr "Dias %1$d af %2$d"
 
 #. translators: 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:182
+#: build/carousel/render.php:203
 #, php-format
 msgid "%1$d of %2$d"
 msgstr "%1$d af %2$d"
@@ -138,7 +133,7 @@ msgid "A carousel for blocks using the Interactivity API."
 msgstr "En karrusel til blokke, bygget med Interactivity API."
 
 #. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
-#: build/carousel/render.php:132
+#: build/carousel/render.php:153
 #, php-format
 msgid "Slides %1$d to %2$d of %3$d"
 msgstr "Dias %1$d til %2$d af %3$d"
@@ -150,3 +145,8 @@ msgstr "Start forfra ved slutningen"
 #: build/carousel/index.js:1
 msgid "On the last slide, Next goes back to the first, and Previous on the first slide goes to the last. When off, the buttons are disabled at the ends."
 msgstr "På sidste dias går Næste tilbage til det første, og Forrige på første dias går til det sidste. Når den er slået fra, er knapperne deaktiveret ved enderne."
+
+#. Description of the plugin
+#: gopublish-carousel.php
+msgid "A carousel block for any blocks, built on native scrolling and the Interactivity API."
+msgstr "En karruselblok til alle slags blokke, bygget på browserens egen scrolling og Interactivity API."
