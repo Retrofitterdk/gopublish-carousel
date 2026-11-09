@@ -24,34 +24,34 @@ msgstr ""
 msgid "Retrofitter"
 msgstr ""
 
-#: build/carousel/render.php:103
-#: build/carousel/index.js:4
+#: gopublish-carousel.php:555
+#: build/carousel-navigation/index.js:1
 msgid "Previous slide"
 msgstr "Forrige dias"
 
-#: build/carousel/render.php:104
-#: build/carousel/index.js:4
+#: gopublish-carousel.php:561
+#: build/carousel-navigation/index.js:1
 msgid "Next slide"
 msgstr "Næste dias"
 
 #. translators: Spoken by screen readers to describe the carousel block.
-#: build/carousel/render.php:114
+#: build/carousel/render.php:125
 msgid "carousel"
 msgstr "karrusel"
 
 #. translators: Spoken by screen readers to describe a single slide.
-#: build/carousel/render.php:121
+#: gopublish-carousel.php:485
 msgid "slide"
 msgstr "dias"
 
 #. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:152
+#: build/carousel/render.php:160
 #, php-format
 msgid "Slide %1$d of %2$d"
 msgstr "Dias %1$d af %2$d"
 
 #. translators: 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:204
+#: gopublish-carousel.php:498
 #, php-format
 msgid "%1$d of %2$d"
 msgstr "%1$d af %2$d"
@@ -113,7 +113,7 @@ msgid "A carousel for blocks using the Interactivity API."
 msgstr "En karrusel til blokke, bygget med Interactivity API."
 
 #. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
-#: build/carousel/render.php:154
+#: build/carousel/render.php:162
 #, php-format
 msgid "Slides %1$d to %2$d of %3$d"
 msgstr "Dias %1$d til %2$d af %3$d"
@@ -180,3 +180,44 @@ msgstr "Nulstil til %s"
 #: build/carousel/index.js:4
 msgid "Navigation"
 msgstr "Navigation"
+
+#: build/carousel-navigation/block.json
+msgctxt "block title"
+msgid "Carousel Navigation"
+msgstr "Karruselnavigation"
+
+#: build/carousel-navigation/block.json
+msgctxt "block description"
+msgid "Previous and next buttons for a carousel."
+msgstr "Knapper til forrige og næste dias i en karrusel."
+
+#: build/carousel-slides/block.json
+msgctxt "block title"
+msgid "Carousel Slides"
+msgstr "Karrusellens dias"
+
+#: build/carousel-slides/block.json
+msgctxt "block description"
+msgid "The slides of a carousel, in a scrollable row."
+msgstr "Karrusellens dias i en række, der kan rulles."
+
+#: build/carousel-pagination/render.php:31
+msgid "Choose slide"
+msgstr "Vælg dias"
+
+#. translators: Label of a pagination dot. %d: Number of the first slide it scrolls to.
+#: build/carousel/render.php:180
+#: build/carousel-pagination/index.js:2
+#, php-format,js-format
+msgid "Go to slide %d"
+msgstr "Gå til dias %d"
+
+#: build/carousel-pagination/block.json
+msgctxt "block title"
+msgid "Carousel Pagination"
+msgstr "Karruselpaginering"
+
+#: build/carousel-pagination/block.json
+msgctxt "block description"
+msgid "Dots for jumping to a position in a carousel."
+msgstr "Prikker til at springe til en position i en karrusel."

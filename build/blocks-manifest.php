@@ -60,12 +60,113 @@ return array(
 				'default' => ''
 			)
 		),
+		'providesContext' => array(
+			'gopublish-carousel/rewind' => 'rewind'
+		),
 		'textdomain' => 'gopublish-carousel',
 		'editorScript' => 'file:./index.js',
 		'editorStyle' => 'file:./index.css',
 		'style' => 'file:./style-index.css',
 		'render' => 'file:./render.php',
 		'viewScriptModule' => 'file:./view.js'
+	),
+	'carousel-navigation' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'gopublish/carousel-navigation',
+		'version' => '0.4.0',
+		'title' => 'Carousel Navigation',
+		'category' => 'widgets',
+		'icon' => 'leftright',
+		'description' => 'Previous and next buttons for a carousel.',
+		'parent' => array(
+			'gopublish/carousel'
+		),
+		'usesContext' => array(
+			'gopublish-carousel/slidesId',
+			'gopublish-carousel/rewind'
+		),
+		'supports' => array(
+			'html' => false,
+			'reusable' => false,
+			'interactivity' => true,
+			'align' => array(
+				'wide',
+				'full'
+			),
+			'layout' => array(
+				'default' => array(
+					'type' => 'flex',
+					'justifyContent' => 'right',
+					'flexWrap' => 'nowrap'
+				),
+				'allowSwitching' => false,
+				'allowInheriting' => false,
+				'allowOrientation' => false,
+				'allowVerticalAlignment' => false,
+				'allowJustification' => true,
+				'allowSizingOnChildren' => false
+			),
+			'spacing' => array(
+				'margin' => array(
+					'top',
+					'bottom'
+				),
+				'padding' => true
+			)
+		),
+		'textdomain' => 'gopublish-carousel',
+		'editorScript' => 'file:./index.js',
+		'render' => 'file:./render.php'
+	),
+	'carousel-pagination' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'gopublish/carousel-pagination',
+		'version' => '0.4.0',
+		'title' => 'Carousel Pagination',
+		'category' => 'widgets',
+		'icon' => 'ellipsis',
+		'description' => 'Dots for jumping to a position in a carousel.',
+		'parent' => array(
+			'gopublish/carousel'
+		),
+		'usesContext' => array(
+			'gopublish-carousel/slidesId',
+			'gopublish-carousel/itemsTotal'
+		),
+		'supports' => array(
+			'html' => false,
+			'reusable' => false,
+			'interactivity' => true,
+			'align' => array(
+				'wide',
+				'full'
+			),
+			'layout' => array(
+				'default' => array(
+					'type' => 'flex',
+					'justifyContent' => 'center',
+					'flexWrap' => 'wrap'
+				),
+				'allowSwitching' => false,
+				'allowInheriting' => false,
+				'allowOrientation' => false,
+				'allowVerticalAlignment' => false,
+				'allowJustification' => true,
+				'allowSizingOnChildren' => false
+			),
+			'spacing' => array(
+				'margin' => array(
+					'top',
+					'bottom'
+				),
+				'padding' => true
+			)
+		),
+		'textdomain' => 'gopublish-carousel',
+		'editorScript' => 'file:./index.js',
+		'render' => 'file:./render.php'
 	),
 	'carousel-slide' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',

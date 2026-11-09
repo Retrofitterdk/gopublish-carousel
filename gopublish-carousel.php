@@ -51,7 +51,7 @@ function gopublish_carousel_block_init() {
 	// Core only looks for them in wp-content/languages/, so point the editor
 	// scripts to the plugin's own folder.
 	$registry = WP_Block_Type_Registry::get_instance();
-	foreach ( array( 'gopublish/carousel', 'gopublish/carousel-slide' ) as $block_name ) {
+	foreach ( array( 'gopublish/carousel', 'gopublish/carousel-slides', 'gopublish/carousel-slide', 'gopublish/carousel-navigation', 'gopublish/carousel-pagination' ) as $block_name ) {
 		$block_type = $registry->get_registered( $block_name );
 		foreach ( $block_type ? $block_type->editor_script_handles : array() as $handle ) {
 			wp_set_script_translations( $handle, 'gopublish-carousel', __DIR__ . '/languages' );
@@ -529,4 +529,58 @@ function gopublish_carousel_count_slides( $html ) {
 		}
 	}
 	return 0;
+}
+
+/**
+ * Render a carousel's navigation: the Previous and Next buttons.
+ *
+ * Used by the Carousel Navigation block, and by the Carousel itself for
+ * carousels from before 0.5.0. Hidden (hidden attribute) while all slides fit
+ * in view; the Interactivity API keeps that and the buttons' disabled state
+ * up to date (context of the surrounding carousel, see view.js).
+ *
+ * @param string $slides_id            ID of the carousel's slides, for
+ *                                     aria-controls.
+ * @param string $container_attributes Attributes for the container element,
+ *                                     already escaped.
+ * @return string HTML.
+ */
+function gopublish_carousel_render_navigation( $slides_id, $container_attributes ) {
+	// Accessible names for the buttons (they only contain an icon). Always
+	// singular, like the W3C example: how many slides a button moves can
+	// differ per viewport.
+	$buttons = array(
+		array(
+			'class'    => 'carousel-prev',
+			'label'    => __( 'Previous slide', 'gopublish-carousel' ),
+			'disabled' => 'context.prevDisabled',
+			'action'   => 'actions.moveBack',
+		),
+		array(
+			'class'    => 'carousel-next',
+			'label'    => __( 'Next slide', 'gopublish-carousel' ),
+			'disabled' => 'context.nextDisabled',
+			'action'   => 'actions.moveForward',
+		),
+	);
+
+	ob_start();
+	?>
+	<div <?php echo $container_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by the caller. ?>>
+		<?php foreach ( $buttons as $button ) : ?>
+			<button type="button" class="<?php echo esc_attr( $button['class'] ); ?>"
+				aria-label="<?php echo esc_attr( $button['label'] ); ?>"
+				<?php if ( '' !== $slides_id ) : ?>
+					aria-controls="<?php echo esc_attr( $slides_id ); ?>"
+				<?php endif; ?>
+				data-wp-bind--aria-disabled="<?php echo esc_attr( $button['disabled'] ); ?>"
+				data-wp-on--click="<?php echo esc_attr( $button['action'] ); ?>">
+				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
+					<path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+			</button>
+		<?php endforeach; ?>
+	</div>
+	<?php
+	return ob_get_clean();
 }

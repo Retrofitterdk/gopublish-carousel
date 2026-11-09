@@ -2,9 +2,9 @@
 /**
  * Front-end markup for the Carousel block.
  *
- * Renders the navigation, the live region and the inner blocks (Carousel
- * Slides: the slides in a native scroll area with CSS scroll snap, see
- * style.scss). view.js (store: gopublish-carousel) adds the buttons'
+ * Renders the live region and the inner blocks: Carousel Navigation and
+ * Carousel Slides (the slides in a native scroll area with CSS scroll snap,
+ * see style.scss). view.js (store: gopublish-carousel) adds the buttons'
  * behaviour and keeps the state in the context up to date (can scroll, at
  * start/end, the announcement).
  *
@@ -20,10 +20,11 @@
 $carousel_id = wp_unique_id( 'gopublish-carousel-' );
 $slides_id   = $carousel_id . '-slides';
 
-// The inner blocks: Carousel Slides (the scroll area with the slides). They
-// get the slides' ID through the block context. Carousels from before 0.5.0
-// have the slides directly inside; they're rendered as if they were wrapped
-// in a Carousel Slides block.
+// The inner blocks: Carousel Slides (the scroll area with the slides),
+// Carousel Navigation and Carousel Pagination. They get the slides' ID and
+// the number of slides through the block context. Carousels from before 0.5.0
+// have the slides directly inside; they're rendered as before: the navigation
+// above the slides.
 $is_legacy = false;
 foreach ( $block->inner_blocks as $inner_block ) {
 	if ( 'gopublish/carousel-slide' === $inner_block->name ) {
@@ -32,15 +33,31 @@ foreach ( $block->inner_blocks as $inner_block ) {
 	}
 }
 if ( $is_legacy ) {
-	$inner_html = gopublish_carousel_render_slides( $block->inner_blocks, $block, 'class="carousel-container" id="' . esc_attr( $slides_id ) . '"' );
+	$inner_html  = gopublish_carousel_render_navigation( $slides_id, 'class="navigation-container" data-wp-bind--hidden="!context.canScroll"' );
+	$inner_html .= gopublish_carousel_render_slides( $block->inner_blocks, $block, 'class="carousel-container" id="' . esc_attr( $slides_id ) . '"' );
+	$real_slides = gopublish_carousel_count_slides( $inner_html );
 } else {
-	$inner_html = '';
-	foreach ( $block->inner_blocks as $inner_block ) {
-		$inner_block->context['gopublish-carousel/slidesId'] = $slides_id;
-		$inner_html .= gopublish_carousel_render_inner_block( $inner_block, $block );
+	// Carousel Slides first: the other blocks need the number of slides.
+	$parts = array();
+	foreach ( $block->inner_blocks as $index => $inner_block ) {
+		if ( 'gopublish/carousel-slides' === $inner_block->name ) {
+			$inner_block->context['gopublish-carousel/slidesId'] = $slides_id;
+
+			$parts[ $index ] = gopublish_carousel_render_inner_block( $inner_block, $block );
+		}
 	}
+	$real_slides = gopublish_carousel_count_slides( implode( '', $parts ) );
+	foreach ( $block->inner_blocks as $index => $inner_block ) {
+		if ( ! isset( $parts[ $index ] ) ) {
+			$inner_block->context['gopublish-carousel/slidesId']   = $slides_id;
+			$inner_block->context['gopublish-carousel/itemsTotal'] = $real_slides;
+
+			$parts[ $index ] = gopublish_carousel_render_inner_block( $inner_block, $block );
+		}
+	}
+	ksort( $parts );
+	$inner_html = implode( '', $parts );
 }
-$real_slides = gopublish_carousel_count_slides( $inner_html );
 
 // No slides (or all hidden): render nothing, rather than an empty carousel
 // that screen readers would still announce.
@@ -97,12 +114,6 @@ if ( $viewport_rules ) {
 $fewest_visible = min( array_column( $layouts, 'visible' ) );
 $can_scroll     = $real_slides > 1 && $real_slides > $fewest_visible;
 
-// Accessible names for the navigation buttons (they only contain an icon).
-// Always singular, like the W3C example: how many slides a button moves can
-// differ per viewport.
-$label_prev = __( 'Previous slide', 'gopublish-carousel' );
-$label_next = __( 'Next slide', 'gopublish-carousel' );
-
 // Carousel semantics (W3C APG carousel pattern). With a label, the carousel is
 // a named region (a landmark). Without one it's a group: an unnamed region is
 // ignored by screen readers, and a default "Carousel" label would be read as
@@ -151,6 +162,32 @@ $context = array(
 	'announcementRange'    => __( 'Slides %1$d to %2$d of %3$d', 'gopublish-carousel' ),
 );
 
+// Carousel Pagination: a dot per page (see getPages() in pages.js), bound to
+// context.dots.N in its markup. Rendered with a guess from the base layout
+// (every slide to scroll a page); view.js measures the real layout on load.
+$has_pagination = false;
+foreach ( $block->inner_blocks as $inner_block ) {
+	if ( 'gopublish/carousel-pagination' === $inner_block->name ) {
+		$has_pagination = true;
+		break;
+	}
+}
+if ( $has_pagination ) {
+	$fully_visible = $base['peek'] ? 1 : (int) ceil( $base['visible'] );
+	$positions     = max( 1, $real_slides - $fully_visible + 1 );
+	$page_count    = 1 + (int) ceil( ( $positions - 1 ) / $base['scroll'] );
+	/* translators: Label of a pagination dot. %d: Number of the first slide it scrolls to. */
+	$context['dotLabelTemplate'] = __( 'Go to slide %d', 'gopublish-carousel' );
+	$context['dots']             = array();
+	for ( $dot = 0; $dot < $real_slides; $dot++ ) {
+		$context['dots'][] = array(
+			'current' => 0 === $dot,
+			'hidden'  => $dot >= $page_count,
+			'label'   => sprintf( $context['dotLabelTemplate'], min( $dot * $base['scroll'], $positions - 1 ) + 1 ),
+		);
+	}
+}
+
 $wrapper_attributes = get_block_wrapper_attributes(
 	$a11y_attributes + array(
 		'id'                           => $carousel_id,
@@ -168,26 +205,6 @@ $wrapper_attributes = get_block_wrapper_attributes(
 ?>
 <div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by get_block_wrapper_attributes(). ?>>
 	<?php if ( $real_slides > 1 ) : ?>
-		<div class="navigation-container" data-wp-bind--hidden="!context.canScroll">
-			<button type="button" class="carousel-prev"
-				aria-label="<?php echo esc_attr( $label_prev ); ?>"
-				aria-controls="<?php echo esc_attr( $slides_id ); ?>"
-				data-wp-bind--aria-disabled="context.prevDisabled"
-				data-wp-on--click="actions.moveBack">
-				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
-					<path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>
-			</button>
-			<button type="button" class="carousel-next"
-				aria-label="<?php echo esc_attr( $label_next ); ?>"
-				aria-controls="<?php echo esc_attr( $slides_id ); ?>"
-				data-wp-bind--aria-disabled="context.nextDisabled"
-				data-wp-on--click="actions.moveForward">
-				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
-					<path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>
-			</button>
-		</div>
 		<div class="carousel-status" aria-live="polite" aria-atomic="true" data-wp-text="context.announcement"></div>
 	<?php endif; ?>
 	<?php echo $inner_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered block HTML. ?>

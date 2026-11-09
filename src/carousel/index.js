@@ -15,10 +15,12 @@ registerBlockType( metadata.name, {
 	// deprecated in newer editor versions, and its replacement isn't
 	// available in WordPress 7.1 yet. Variations work in all versions.
 	deprecated: [
-		// Before 0.5.0, the slides were the Carousel's own inner blocks. The
-		// markup is the same (still valid), so isEligible picks these
-		// carousels out, and migrate wraps their slides in Carousel Slides.
-		// render.php handles the old structure until the post is saved.
+		// Before 0.5.0, the slides were the Carousel's own inner blocks and the
+		// Carousel rendered the navigation itself. The markup is the same
+		// (still valid), so isEligible picks these carousels out, and migrate
+		// adds a Carousel Navigation (full width, right-justified, as before)
+		// and wraps the slides in Carousel Slides. render.php handles the old
+		// structure until the post is saved.
 		{
 			attributes: metadata.attributes,
 			supports: metadata.supports,
@@ -31,6 +33,9 @@ registerBlockType( metadata.name, {
 			migrate: ( attributes, innerBlocks ) => [
 				attributes,
 				[
+					createBlock( 'gopublish/carousel-navigation', {
+						align: 'full',
+					} ),
 					createBlock(
 						'gopublish/carousel-slides',
 						{ lock: { remove: true } },
@@ -57,6 +62,7 @@ registerBlockType( metadata.name, {
 				},
 			},
 			innerBlocks: [
+				[ 'gopublish/carousel-navigation', { align: 'full' } ],
 				[
 					'gopublish/carousel-slides',
 					// The carousel needs its slides: Carousel Slides can't be
@@ -68,6 +74,7 @@ registerBlockType( metadata.name, {
 						[ 'gopublish/carousel-slide' ],
 					],
 				],
+				[ 'gopublish/carousel-pagination' ],
 			],
 		},
 	],

@@ -12,6 +12,14 @@
 		margin-block: 0;
 	}
 
+	// Carousel Navigation and Pagination while all slides fit: dimmed instead
+	// of hidden (as
+	// on the front end), so it can still be selected.
+	.wp-block-gopublish-carousel-navigation.is-inactive,
+	.wp-block-gopublish-carousel-pagination.is-inactive {
+		opacity: 0.4;
+	}
+
 	// Carousel view (default): the same scroll area as the front end, with
 	// gentler snapping while editing.
 	.carousel-track {

@@ -23,7 +23,7 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useRef, useState } from '@wordpress/element';
+import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 import {
@@ -31,10 +31,19 @@ import {
 	getLayouts,
 	getViewportOverrides,
 } from './layouts';
-import { scrollCarousel, useCarouselTrack } from './use-carousel-track';
 
-// The Carousel's inner blocks: Carousel Slides (the scroll area).
-const ALLOWED_BLOCKS = [ 'gopublish/carousel-slides' ];
+// The Carousel's inner blocks: Carousel Slides (the scroll area), Carousel
+// Navigation and Carousel Pagination.
+const ALLOWED_BLOCKS = [
+	'gopublish/carousel-navigation',
+	'gopublish/carousel-slides',
+	'gopublish/carousel-pagination',
+];
+
+// Alignments the inner blocks can choose (Navigation and Pagination width:
+// content, wide or full; see style.scss). The Carousel has no layout support,
+// so without this the editor wouldn't offer them.
+const INNER_LAYOUT = { type: 'default', alignments: [ 'wide', 'full' ] };
 
 // The layout's screen sizes and the editor's device preview names. The base
 // layout (Desktop) applies to every screen size unless Tablet or Mobile
@@ -79,33 +88,6 @@ function getGapValue( gap ) {
 	}
 	// A unitless 0 is invalid in calc() additions (the slide width formula).
 	return value === '0' ? '0px' : value;
-}
-
-/**
- * The arrow icon from render.php (the previous button rotates it via CSS).
- *
- * @return {Element} SVG icon.
- */
-function ArrowIcon() {
-	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="14"
-			height="14"
-			viewBox="0 0 14 14"
-			fill="none"
-			aria-hidden="true"
-			focusable="false"
-		>
-			<path
-				d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332"
-				stroke="currentColor"
-				strokeWidth="2"
-				strokeLinecap="round"
-				strokeLinejoin="round"
-			/>
-		</svg>
-	);
 }
 
 export default function Edit( { attributes, setAttributes, clientId } ) {
@@ -200,8 +182,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	// "Show all slides": an editor-only grid view (not saved).
 	const [ showAll, setShowAll ] = useState( false );
-	const wrapperRef = useRef();
-
 	// The Carousel Slides block, which the toolbar buttons work on.
 	const slidesClientId = useSelect(
 		( select ) => {
@@ -259,21 +239,9 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			slidesClientId
 		);
 
-	// Show the arrows only when the slides overflow, and track the start/end,
-	// like the front end. The row's width follows the editor canvas,
-	// including device previews.
-	const { track, canScroll, atStart, atEnd } = useCarouselTrack( wrapperRef, [
-		showAll,
-		slideCount,
-		viewportCSS,
-	] );
-	const scrollBySlides = ( direction ) =>
-		scrollCarousel( track, direction, { rewind, atStart, atEnd } );
-
 	// Same classes and widths as the front end (render.php), so the front-end
 	// styles apply in the editor too. Nothing here is saved.
 	const blockProps = useBlockProps( {
-		ref: wrapperRef,
 		className: [
 			`columns-${ layouts.base.columns }`,
 			layouts.base.cutoff ? 'cutoff' : 'no-cutoff',
@@ -296,6 +264,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			allowedBlocks: ALLOWED_BLOCKS,
 			templateLock: false,
 			renderAppender: false,
+			layout: INNER_LAYOUT,
 		}
 	);
 
@@ -442,32 +411,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					}
 				/>
 			</InspectorControls>
-
-			{ ! showAll && canScroll && (
-				<div className="navigation-container">
-					<button
-						type="button"
-						className="carousel-prev"
-						aria-label={ __(
-							'Previous slide',
-							'gopublish-carousel'
-						) }
-						aria-disabled={ ! rewind && atStart }
-						onClick={ () => scrollBySlides( -1 ) }
-					>
-						<ArrowIcon />
-					</button>
-					<button
-						type="button"
-						className="carousel-next"
-						aria-label={ __( 'Next slide', 'gopublish-carousel' ) }
-						aria-disabled={ ! rewind && atEnd }
-						onClick={ () => scrollBySlides( 1 ) }
-					>
-						<ArrowIcon />
-					</button>
-				</div>
-			) }
 
 			<div { ...innerBlocksProps } />
 		</div>
