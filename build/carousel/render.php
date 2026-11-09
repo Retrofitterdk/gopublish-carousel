@@ -21,8 +21,9 @@ $carousel_id = wp_unique_id( 'gopublish-carousel-' );
 $slides_id   = $carousel_id . '-slides';
 
 // The inner blocks: Carousel Slides (the scroll area with the slides),
-// Carousel Navigation and Carousel Pagination. They get the slides' ID and
-// the number of slides through the block context. Carousels from before 0.5.0
+// Carousel Navigation and Carousel Pagination, and headings and paragraphs
+// about the carousel. They get the slides' ID and the number of slides
+// through the block context. Carousels from before 0.5.0
 // have the slides directly inside; they're rendered as before: the navigation
 // above the slides.
 $is_legacy = false;
@@ -69,6 +70,27 @@ if ( $is_legacy ) {
 		}
 	}
 	ksort( $parts );
+
+	// A heading directly in the carousel (not in a slide) names it for
+	// screen readers when it has no Carousel label: the first one, given an
+	// ID if it has none (an HTML anchor is kept).
+	if ( '' === trim( (string) ( $attributes['ariaLabel'] ?? '' ) ) ) {
+		foreach ( $block->inner_blocks as $index => $inner_block ) {
+			if ( 'core/heading' !== $inner_block->name || '' === trim( wp_strip_all_tags( $parts[ $index ] ) ) ) {
+				continue;
+			}
+			$processor = new WP_HTML_Tag_Processor( $parts[ $index ] );
+			if ( $processor->next_tag() ) {
+				$heading_id = $processor->get_attribute( 'id' );
+				if ( ! is_string( $heading_id ) || '' === $heading_id ) {
+					$heading_id = $carousel_id . '-heading';
+					$processor->set_attribute( 'id', $heading_id );
+					$parts[ $index ] = $processor->get_updated_html();
+				}
+			}
+			break;
+		}
+	}
 	$inner_html = implode( '', $parts );
 }
 
@@ -127,18 +149,23 @@ if ( $viewport_rules ) {
 $fewest_visible = min( array_column( $layouts, 'visible' ) );
 $can_scroll     = $real_slides > 1 && $real_slides > $fewest_visible;
 
-// Carousel semantics (W3C APG carousel pattern). With a label, the carousel is
-// a named region (a landmark). Without one it's a group: an unnamed region is
+// Carousel semantics (W3C APG carousel pattern). With a label (the Carousel
+// label setting, or else its heading), the carousel is a named region (a
+// landmark). Without one it's a group: an unnamed region is
 // ignored by screen readers, and a default "Carousel" label would be read as
 // "Carousel carousel" together with the role description.
 $aria_label      = trim( (string) ( $attributes['ariaLabel'] ?? '' ) );
+$heading_id      = $heading_id ?? '';
 $a11y_attributes = array(
-	'role'                 => '' !== $aria_label ? 'region' : 'group',
+	'role'                 => '' !== $aria_label || '' !== $heading_id ? 'region' : 'group',
 	/* translators: Spoken by screen readers to describe the carousel block. */
 	'aria-roledescription' => __( 'carousel', 'gopublish-carousel' ),
 );
 if ( '' !== $aria_label ) {
 	$a11y_attributes['aria-label'] = $aria_label;
+} elseif ( '' !== $heading_id ) {
+	// Named by its heading (see above).
+	$a11y_attributes['aria-labelledby'] = $heading_id;
 }
 
 // Interactivity API wiring:

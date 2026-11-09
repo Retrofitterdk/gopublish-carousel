@@ -35,7 +35,7 @@ msgid "Next slide"
 msgstr "Næste dias"
 
 #. translators: Spoken by screen readers to describe the carousel block.
-#: build/carousel/render.php:138
+#: build/carousel/render.php:162
 msgid "carousel"
 msgstr "karrusel"
 
@@ -45,7 +45,7 @@ msgid "slide"
 msgstr "dias"
 
 #. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:173
+#: build/carousel/render.php:200
 #, php-format
 msgid "Slide %1$d of %2$d"
 msgstr "Dias %1$d af %2$d"
@@ -88,10 +88,6 @@ msgstr "Brug beskæringseffekt"
 msgid "Carousel label"
 msgstr "Karrusellens navn"
 
-#: build/carousel/index.js:4
-msgid "Describes the carousel for screen reader users, e.g. \"Customer testimonials\". With a label, the carousel becomes a landmark they can jump to."
-msgstr "Beskriver karrusellen for skærmlæserbrugere, f.eks. \"Kundeudtalelser\". Med et navn bliver karrusellen et landmærke, de kan springe direkte til."
-
 #: build/carousel-slide/block.json
 msgctxt "block title"
 msgid "Carousel Slide"
@@ -113,7 +109,7 @@ msgid "A carousel for blocks using the Interactivity API."
 msgstr "En karrusel til blokke, bygget med Interactivity API."
 
 #. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
-#: build/carousel/render.php:175
+#: build/carousel/render.php:202
 #, php-format
 msgid "Slides %1$d to %2$d of %3$d"
 msgstr "Dias %1$d til %2$d af %3$d"
@@ -207,7 +203,7 @@ msgid "Choose slide"
 msgstr "Vælg dias"
 
 #. translators: Label of a pagination dot. %d: Number of the first slide it scrolls to.
-#: build/carousel/render.php:193
+#: build/carousel/render.php:220
 #: build/carousel-pagination/index.js:2
 #, php-format,js-format
 msgid "Go to slide %d"
@@ -320,3 +316,15 @@ msgstr "Prikker"
 #: build/carousel-pagination/index.js:1
 msgid "Current dot"
 msgstr "Aktuel prik"
+
+#: build/carousel/index.js:3
+msgid "Heading"
+msgstr "Overskrift"
+
+#: build/carousel/index.js:3
+msgid "Paragraph"
+msgstr "Afsnit"
+
+#: build/carousel/index.js:4
+msgid "Describes the carousel for screen reader users, e.g. \"Customer testimonials\". With a label, the carousel becomes a landmark they can jump to. Leave empty to use the carousel's heading, if it has one."
+msgstr "Beskriver karrusellen for skærmlæserbrugere, f.eks. \"Kundeudtalelser\". Med et navn bliver karrusellen et landmærke, de kan springe direkte til. Lad feltet være tomt for at bruge karrusellens overskrift, hvis den har en."

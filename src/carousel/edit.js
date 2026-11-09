@@ -31,13 +31,18 @@ import {
 	getViewportOverrides,
 } from './layouts';
 
-// The Carousel's inner blocks: Carousel Slides (the scroll area), Carousel
+// The Carousel's parts: Carousel Slides (the scroll area), Carousel
 // Navigation and Carousel Pagination.
-const ALLOWED_BLOCKS = [
+const PARTS = [
 	'gopublish/carousel-navigation',
 	'gopublish/carousel-slides',
 	'gopublish/carousel-pagination',
 ];
+
+// The Carousel's inner blocks: its parts, and headings and paragraphs to
+// introduce or describe it (a heading also names it for screen readers; see
+// render.php).
+const ALLOWED_BLOCKS = [ ...PARTS, 'core/heading', 'core/paragraph' ];
 
 // Alignments the inner blocks can choose (Navigation and Pagination width:
 // content, wide or full; see style.scss). The Carousel has no layout support,
@@ -216,6 +221,17 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				: 0,
 		[ slidesClientId ]
 	);
+	// Where text goes: before the first part (after any heading or
+	// paragraph already above the parts).
+	const firstPartIndex = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).findIndex( ( id ) =>
+				PARTS.includes( getBlockName( id ) )
+			);
+		},
+		[ clientId ]
+	);
 	const slidesIndex = useSelect(
 		( select ) =>
 			select( blockEditorStore )
@@ -268,7 +284,8 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	// "Add to carousel": a slide at the end of Carousel Slides (it gets
 	// selected and scrolled into view; without Carousel Slides, one is added
 	// with the slide), Navigation before the slides, Pagination after them
-	// (each only if the carousel doesn't have one yet).
+	// (each only if the carousel doesn't have one yet), a heading at the top
+	// and a paragraph above the parts.
 	const addSlide = () =>
 		slidesClientId
 			? insertBlock(
@@ -285,6 +302,12 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					paginationIndex < 0 ? undefined : paginationIndex,
 					clientId
 				);
+	const addText = ( name, blockAttributes, atStart ) =>
+		insertBlock(
+			createBlock( name, blockAttributes ),
+			atStart || firstPartIndex < 0 ? 0 : firstPartIndex,
+			clientId
+		);
 	const addPart = ( name, before ) =>
 		insertBlock(
 			createBlock( name ),
@@ -353,6 +376,18 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 									'gopublish/carousel-pagination',
 									false
 								),
+						},
+						{
+							title: __( 'Heading', 'gopublish-carousel' ),
+							icon: 'heading',
+							onClick: () =>
+								addText( 'core/heading', { level: 2 }, true ),
+						},
+						{
+							title: __( 'Paragraph', 'gopublish-carousel' ),
+							icon: 'editor-paragraph',
+							onClick: () =>
+								addText( 'core/paragraph', {}, false ),
 						},
 					] }
 				/>
@@ -472,7 +507,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					__nextHasNoMarginBottom
 					label={ __( 'Carousel label', 'gopublish-carousel' ) }
 					help={ __(
-						'Describes the carousel for screen reader users, e.g. "Customer testimonials". With a label, the carousel becomes a landmark they can jump to.',
+						'Describes the carousel for screen reader users, e.g. "Customer testimonials". With a label, the carousel becomes a landmark they can jump to. Leave empty to use the carousel\'s heading, if it has one.',
 						'gopublish-carousel'
 					) }
 					value={ ariaLabel }

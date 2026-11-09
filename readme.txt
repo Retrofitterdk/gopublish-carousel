@@ -109,6 +109,10 @@ Select the Carousel and change Block spacing in the Dimensions panel. From WordP
 
 Yes, from WordPress 7.1. Select Carousel Navigation and click Choose icon in the Icon panel to pick any icon from WordPress's icon library (and collections your theme or plugins add). Previous and Next show the icon mirrored, pointing back and forward: an icon pointing left (e.g. Chevron left) works as well as one pointing right. Reset returns to the default arrow. The icon's size is set with the `--nav-button-icon-size` custom property (default 24 px).
 
+= Can I add a title or description to a carousel? =
+
+Yes. Select the Carousel and choose Add to carousel → Heading or Paragraph in its toolbar (or insert them between the carousel's parts). They sit inside the carousel, above the slides or wherever you move them, at content width. A heading also names the carousel for screen reader users (unless Carousel label is set).
+
 = Can the arrows sit on top of the slides? =
 
 Yes. Select Carousel Navigation and turn on Position → Over the slides. Previous and Next then sit at the left and right edges of the slides, vertically centred (Justification is set to Space between; Padding sets the distance from the edges). They're white buttons with a soft shadow, unless you choose colours. On mobile they're hidden: visitors swipe, and keyboard users still reach them. This needs a browser with CSS anchor positioning (current versions of all major browsers); older browsers show the navigation above or below the slides.
@@ -127,7 +131,7 @@ Yes. Select Carousel Navigation and open the Styles tab. In the Color panel, cho
 
 = How do I make the carousel accessible? =
 
-Most of it is built in. To help screen reader users, give the carousel a label that describes it, e.g. "Customer testimonials": select the Carousel block and open Advanced → Carousel label. Screen reader users can then jump to the carousel as a landmark. Leave it empty if the surrounding content (such as a heading right above it) already makes the purpose clear.
+Most of it is built in. To help screen reader users, give the carousel a label that describes it, e.g. "Customer testimonials": select the Carousel block and open Advanced → Carousel label. Screen reader users can then jump to the carousel as a landmark. Or add a heading inside the carousel (Add to carousel → Heading): without a label, the heading names the carousel, with the same effect. Leave both out if the surrounding content already makes the purpose clear.
 
 Avoid forms and other complex interactive content inside slides.
 
@@ -181,6 +185,7 @@ See README.md for more developer notes, including how to update translations.
 == Changelog ==
 
 = Unreleased =
+* New: headings and paragraphs directly in the Carousel, e.g. a title and a description above the slides (Add to carousel → Heading or Paragraph). They're content width (headings can be wide or full). Without a Carousel label, the carousel's heading names it for screen readers, making it a landmark.
 * New: navigation over the slides (Carousel Navigation → Position → Over the slides): Previous and Next at the edges of the slides, vertically centred, as white buttons with a shadow by default (the block's colours override them). Clicks and swipes outside the buttons reach the slides; a button that can't go further (Rewind off) is invisible but stays keyboard-focusable; hidden on mobile, where visitors swipe. Uses CSS anchor positioning (current Chrome, Edge, Safari and Firefox); older browsers show the navigation above or below the slides.
 * New: `--nav-overlay-*` and `--nav-button-shadow` custom properties.
 * New: colour and size settings for the pagination dots (Carousel Pagination → Styles): Dots and Current dot colours, Dot size and Dot spacing. Dots stay at least 24 px apart, centre to centre. The default look is unchanged.

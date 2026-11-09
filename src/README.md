@@ -10,9 +10,9 @@ The wrapper: settings, the Interactivity API context and the live region, around
 | --- | --- |
 | `block.json` | Block metadata, attributes and supports; provides Rewind at the end to the parts (block context). |
 | `index.js` | Registers the block: the default variation (Navigation, Carousel Slides with three slides, Pagination), the deprecation that converts carousels from before 0.5.0, and the filter that allows one of each part. |
-| `edit.js` | Editor UI: Layout panel (Screen size switch tied to the device preview, per-viewport settings), Navigation panel, "Add to carousel" in the toolbar, and the per-viewport CSS. |
+| `edit.js` | Editor UI: Layout panel (Screen size switch tied to the device preview, per-viewport settings), Navigation panel, "Add to carousel" in the toolbar (parts, Heading, Paragraph; the inner blocks allowed are the parts plus `core/heading` and `core/paragraph`), and the per-viewport CSS. |
 | `save.js` | Saves the inner blocks. The front end is rendered by `render.php`. |
-| `render.php` | Front-end markup: the live region and the parts (Carousel Slides first, then the others with the slides' ID and count in the block context), the layout and gap CSS, and the Interactivity API context. Renders carousels from before 0.5.0 as before. |
+| `render.php` | Front-end markup: the live region and the parts (Carousel Slides first, then the others with the slides' ID and count in the block context; headings and paragraphs too, the first heading naming the carousel via `aria-labelledby` without a Carousel label), the layout and gap CSS, and the Interactivity API context. Renders carousels from before 0.5.0 as before. |
 | `view.js` | Front-end behaviour: the `gopublish-carousel` store (button and dot scrolling, rewind, start/end state, pagination, announcements). Scrolling itself is native. |
 | `layouts.js` | Shared: the layout per viewport (columns, cutoff, slides to scroll, inheritance). Mirrors `gopublish_carousel_layouts()` in PHP. |
 | `pages.js` | Shared (`view.js` and the editor): measurements of the scroll area – the step between slides, the scroll direction, slides to scroll and the pagination's pages. |

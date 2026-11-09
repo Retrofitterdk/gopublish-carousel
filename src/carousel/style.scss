@@ -362,7 +362,11 @@
 }
 
 .wp-block-gopublish-carousel-navigation,
-.wp-block-gopublish-carousel-pagination {
+.wp-block-gopublish-carousel-pagination,
+// Headings and paragraphs directly in the carousel (in the editor, inside
+// the display: contents wrapper of the inner blocks).
+.wp-block-gopublish-carousel > :is(h1, h2, h3, h4, h5, h6, p),
+.wp-block-gopublish-carousel > .carousel-inner-blocks > :is(h1, h2, h3, h4, h5, h6, p) {
 
 	// Width: content width by default, wide or full (the carousel's width)
 	// with the alignment setting; centered in the carousel.
