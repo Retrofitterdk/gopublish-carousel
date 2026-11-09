@@ -52,11 +52,21 @@ npm run lint:php:fix   # phpcbf
 
 phpcs only checks PHP files (see `phpcs.xml.dist`); JavaScript and styles are linted by `wp-scripts`. All three linters currently pass without errors, so keep it that way: run them before committing.
 
-To create a translation template, use WP-CLI. It reads PHP, JavaScript and `block.json`:
+### Translations
+
+Translations ship with the plugin in `languages/` (currently Danish, `da_DK`), because WordPress.org doesn't provide them for a plugin that isn't in its directory. For PHP strings (front end, block titles), a translation in `wp-content/languages/plugins/` takes precedence; the editor JavaScript always uses the JSON files here.
+
+After changing strings, run `npm run build` first (the template is read from `build/`, so the editor's JSON files match the built scripts), then update with WP-CLI (`studio wp` on a WordPress Studio site):
 
 ```bash
-wp i18n make-pot . languages/gopublish-carousel.pot --exclude=node_modules,src
+wp i18n make-pot . languages/gopublish-carousel.pot --exclude=node_modules,vendor,src
+wp i18n update-po languages/gopublish-carousel.pot languages
+# Translate the new strings in languages/gopublish-carousel-da_DK.po, then:
+wp i18n make-mo languages
+wp i18n make-json languages --no-purge
 ```
+
+`--no-purge` keeps the JavaScript strings in the `.po`; the `.mo` and JSON files are generated, so don't edit them by hand.
 
 ### Project structure
 

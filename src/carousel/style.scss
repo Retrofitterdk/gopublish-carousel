@@ -29,6 +29,7 @@
 	--nav-button-outline-color: var(--nav-button-background-hover);
 	--nav-button-outline-width: 2px;
 	--nav-button-outline-offset: 2px;
+	--nav-button-disabled-opacity: 0.4;
 	// Space between slides. Set by the Block spacing setting (render.php);
 	// --slide--padding-right is still honoured for older theme CSS.
 	--carousel-gap: var(--slide--padding-right, 1rem);
@@ -77,8 +78,8 @@
 
 			// Keyboard focus gets the hover look plus an outline ring, so it's
 			// clearly visible (not only a colour change).
-			&:hover,
-			&:focus-visible {
+			&:hover:not([aria-disabled="true"]),
+			&:focus-visible:not([aria-disabled="true"]) {
 				background: var(--nav-button-background-hover);
 
 				svg path {
@@ -89,6 +90,13 @@
 			&:focus-visible {
 				outline: var(--nav-button-outline-width) solid var(--nav-button-outline-color);
 				outline-offset: var(--nav-button-outline-offset);
+			}
+
+			// At the start/end with Rewind off. Still focusable (aria-disabled,
+			// not disabled), so keyboard focus isn't lost when the end is reached.
+			&[aria-disabled="true"] {
+				cursor: default;
+				opacity: var(--nav-button-disabled-opacity);
 			}
 		}
 
@@ -108,9 +116,10 @@
 		@include visually-hidden;
 	}
 
-	// All slides fit in view (set by view.js): nothing to scroll, so hide the
-	// navigation.
-	&.is-static .navigation-container {
+	// All slides fit in view: nothing to scroll, so the navigation gets the
+	// hidden attribute (context.canScroll). display: flex above would
+	// otherwise override it.
+	.navigation-container[hidden] {
 		display: none;
 	}
 

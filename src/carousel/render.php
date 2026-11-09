@@ -4,7 +4,8 @@
  *
  * Renders the navigation, the live region and the slides. The slides sit in a
  * native scroll area with CSS scroll snap (style.scss); view.js (store:
- * gopublish-carousel) only adds the buttons' behaviour.
+ * gopublish-carousel) adds the buttons' behaviour and keeps the state in the
+ * context up to date (can scroll, at start/end, the announcement).
  *
  * @package GopublishCarousel
  *
@@ -28,6 +29,7 @@ $real_slides = count( $slides_html );
 $columns    = (int) ( $attributes['columns'] ?? 3 );
 $one_column = 1 === $columns;
 $cutoff     = (bool) ( $attributes['cutoff'] ?? false );
+$rewind     = (bool) ( $attributes['rewind'] ?? true );
 $scroll     = (int) ( $attributes['scroll'] ?? 1 );
 $classes    = 'columns-' . $columns . ( $cutoff ? ' cutoff' : ' no-cutoff' );
 
@@ -49,6 +51,14 @@ if ( is_string( $gap ) && str_starts_with( $gap, 'var:preset|spacing|' ) ) {
 if ( is_string( $gap ) && preg_match( '/^(?:0|\d*\.?\d+(?:px|em|rem|%|vw|vh|ch)|var\(--wp--preset--spacing--[a-z0-9-]+\))$/', $gap ) ) {
 	$style .= ' --carousel-gap: ' . $gap . ';';
 }
+
+// Best guess whether there is anything to scroll, so the server-rendered
+// markup is usually right before view.js measures it: more slides than fit
+// across on large screens (columns, or columns - 0.3 with cutoff) or on small
+// screens (Mobile slide width). The arrows are only hidden on load when the
+// slides fit on every screen size.
+$visible_columns = ( $cutoff && ! $one_column ) ? $columns - 0.3 : $columns;
+$can_scroll      = $real_slides > 1 && ( $real_slides > $visible_columns || $real_slides * $slide_width_mobile > 100 );
 
 // The scroll area must be reachable by keyboard. When no slide contains
 // anything focusable, the scroll area itself gets tabindex="0" (arrow keys
@@ -91,36 +101,59 @@ $slide_roledescription = __( 'slide', 'gopublish-carousel' );
 // - data-wp-interactive: the store namespace registered in view.js.
 // - data-wp-context: per-carousel state. Every directive inside this wrapper
 // (buttons, future navigation/pagination blocks) reads the same context.
-// - data-wp-init: runs callbacks.init once when the carousel is hydrated.
+// - data-wp-bind/data-wp-class: show the state below in the markup. WordPress
+// also applies them when rendering, so the HTML matches the initial state.
+// - data-wp-init/data-wp-on: on the scroll area, keep the state up to date.
 $context = array(
 	'scroll'               => $scroll,
 	'itemsTotal'           => $real_slides,
+	// Rewind at the end: Next on the last slide goes back to the first, and
+	// Previous on the first goes to the last. Off: the buttons are disabled
+	// at the ends.
+	'rewind'               => $rewind,
+	// Whether the slides overflow, i.e. the arrows are useful (view.js
+	// re-measures this whenever the scroll area changes size).
+	'canScroll'            => $can_scroll,
+	// Scroll position: at the first or the last scroll position.
+	'atStart'              => true,
+	'atEnd'                => ! $can_scroll,
+	// The buttons' aria-disabled: at the start/end with Rewind off (kept up
+	// to date by view.js together with atStart/atEnd).
+	'prevDisabled'         => ! $rewind,
+	'nextDisabled'         => ! $rewind && ! $can_scroll,
+	// Set by the buttons, so the next scroll end is announced.
+	'announcePending'      => false,
 	// Live region text, set by view.js (empty on load, so nothing is
 	// announced until the user navigates).
 	'announcement'         => '',
-	/* translators: Announced after moving the carousel. 1: Slide number, 2: Total number of slides. */
+	/* translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides. */
 	'announcementTemplate' => __( 'Slide %1$d of %2$d', 'gopublish-carousel' ),
+	/* translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides. */
+	'announcementRange'    => __( 'Slides %1$d to %2$d of %3$d', 'gopublish-carousel' ),
 );
 
 $wrapper_attributes = get_block_wrapper_attributes(
 	$a11y_attributes + array(
-		'id'                  => $carousel_id,
-		'class'               => $classes,
+		'id'                           => $carousel_id,
+		'class'                        => $classes,
 		// Merged with any styles WordPress adds from block supports (padding,
 		// min-height, etc.) into a single style attribute.
-		'style'               => $style,
-		'data-wp-interactive' => 'gopublish-carousel',
-		'data-wp-init'        => 'callbacks.init',
-		'data-wp-context'     => wp_json_encode( $context ),
+		'style'                        => $style,
+		'data-wp-interactive'          => 'gopublish-carousel',
+		'data-wp-context'              => wp_json_encode( $context ),
+		'data-wp-class--is-scrollable' => 'context.canScroll',
+		'data-wp-class--is-at-start'   => 'context.atStart',
+		'data-wp-class--is-at-end'     => 'context.atEnd',
 	)
 );
 ?>
 <div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by get_block_wrapper_attributes(). ?>>
 	<?php if ( $real_slides > 1 ) : ?>
-		<div class="navigation-container">
+		<div class="navigation-container" data-wp-bind--hidden="!context.canScroll">
 			<button type="button" class="carousel-prev"
 				aria-label="<?php echo esc_attr( $label_prev ); ?>"
 				aria-controls="<?php echo esc_attr( $slides_id ); ?>"
+				data-wp-bind--aria-disabled="context.prevDisabled"
 				data-wp-on--click="actions.moveBack">
 				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
 					<path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -129,6 +162,7 @@ $wrapper_attributes = get_block_wrapper_attributes(
 			<button type="button" class="carousel-next"
 				aria-label="<?php echo esc_attr( $label_next ); ?>"
 				aria-controls="<?php echo esc_attr( $slides_id ); ?>"
+				data-wp-bind--aria-disabled="context.nextDisabled"
 				data-wp-on--click="actions.moveForward">
 				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
 					<path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -138,7 +172,10 @@ $wrapper_attributes = get_block_wrapper_attributes(
 		<div class="carousel-status" aria-live="polite" aria-atomic="true" data-wp-text="context.announcement"></div>
 	<?php endif; ?>
 	<div class="carousel-container" id="<?php echo esc_attr( $slides_id ); ?>">
-		<div class="carousel-track"<?php echo $track_is_focusable ? ' tabindex="0"' : ''; ?>>
+		<div class="carousel-track"<?php echo $track_is_focusable ? ' tabindex="0"' : ''; ?>
+			data-wp-init="callbacks.initTrack"
+			data-wp-on-async--scroll="callbacks.onScroll"
+			data-wp-on--scrollend="callbacks.onScrollEnd">
 			<?php
 			foreach ( $slides_html as $index => $slide_html ) :
 				/* translators: 1: Slide number, 2: Total number of slides. */

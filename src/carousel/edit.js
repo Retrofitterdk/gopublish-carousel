@@ -60,13 +60,17 @@ function ArrowIcon() {
 }
 
 export default function Edit( { attributes, setAttributes, clientId } ) {
-	const { columns, scroll, cutoff, mobileWidth, ariaLabel } = attributes;
+	const { columns, scroll, cutoff, rewind, mobileWidth, ariaLabel } =
+		attributes;
 	const maxScroll = getMaxScroll( columns, cutoff );
 
 	// "Show all slides": an editor-only grid view (not saved).
 	const [ showAll, setShowAll ] = useState( false );
 	// Whether the slides overflow the row, i.e. there is something to scroll.
 	const [ canScroll, setCanScroll ] = useState( false );
+	// Scroll position: at the first or the last scroll position.
+	const [ atStart, setAtStart ] = useState( true );
+	const [ atEnd, setAtEnd ] = useState( false );
 	const trackRef = useRef();
 
 	const slideCount = useSelect(
@@ -83,27 +87,39 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			clientId
 		);
 
-	// Show the arrows only when the slides overflow, like the front end. The
-	// row's width follows the editor canvas, including device previews.
+	// Show the arrows only when the slides overflow, and track the start/end,
+	// like the front end. The row's width follows the editor canvas,
+	// including device previews.
 	useEffect( () => {
 		const track = trackRef.current;
 		if ( ! track || showAll ) {
 			return;
 		}
-		const update = () =>
-			setCanScroll( track.scrollWidth > track.clientWidth + 1 );
+		const update = () => {
+			const max = track.scrollWidth - track.clientWidth;
+			const position = Math.abs( track.scrollLeft );
+			setCanScroll( max > 1 );
+			setAtStart( position <= 1 );
+			setAtEnd( position >= max - 1 );
+		};
 		update();
 		const { ResizeObserver } = track.ownerDocument.defaultView;
 		const observer = new ResizeObserver( update );
 		observer.observe( track );
-		return () => observer.disconnect();
+		track.addEventListener( 'scroll', update, { passive: true } );
+		return () => {
+			observer.disconnect();
+			track.removeEventListener( 'scroll', update );
+		};
 	}, [ showAll, slideCount, columns, cutoff, mobileWidth ] );
 
-	// The arrows only scroll the row (by "Slides to scroll"); no looping.
+	// The arrows only scroll the row (by "Slides to scroll"), and rewind at
+	// the ends when Rewind is on.
 	const scrollBySlides = ( direction ) => {
 		const track = trackRef.current;
 		const [ first, second ] = track?.children ?? [];
-		if ( ! first ) {
+		const atEdge = direction > 0 ? atEnd : atStart;
+		if ( ! first || ( atEdge && ! rewind ) ) {
 			return;
 		}
 		// Distance from one slide to the next: slide width plus the gap.
@@ -113,10 +129,15 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		const reduceMotion = track.ownerDocument.defaultView.matchMedia(
 			'(prefers-reduced-motion: reduce)'
 		).matches;
-		track.scrollBy( {
-			left: direction * scroll * step,
-			behavior: reduceMotion ? 'auto' : 'smooth',
-		} );
+		const behavior = reduceMotion ? 'auto' : 'smooth';
+		if ( atEdge ) {
+			track.scrollTo( {
+				left: direction > 0 ? 0 : track.scrollWidth - track.clientWidth,
+				behavior,
+			} );
+			return;
+		}
+		track.scrollBy( { left: direction * scroll * step, behavior } );
 	};
 
 	// Keep "Slides to scroll" within the limit when columns or cutoff change.
@@ -223,6 +244,21 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 							updateLayout( { cutoff: value } )
 						}
 					/>
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __(
+							'Rewind at the end',
+							'gopublish-carousel'
+						) }
+						help={ __(
+							'On the last slide, Next goes back to the first, and Previous on the first slide goes to the last. When off, the buttons are disabled at the ends.',
+							'gopublish-carousel'
+						) }
+						checked={ rewind }
+						onChange={ ( value ) =>
+							setAttributes( { rewind: value } )
+						}
+					/>
 					<RangeControl
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
@@ -268,6 +304,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 							'Previous slide',
 							'gopublish-carousel'
 						) }
+						aria-disabled={ ! rewind && atStart }
 						onClick={ () => scrollBySlides( -1 ) }
 					>
 						<ArrowIcon />
@@ -276,6 +313,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						type="button"
 						className="carousel-next"
 						aria-label={ __( 'Next slide', 'gopublish-carousel' ) }
+						aria-disabled={ ! rewind && atEnd }
 						onClick={ () => scrollBySlides( 1 ) }
 					>
 						<ArrowIcon />

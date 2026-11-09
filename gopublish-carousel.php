@@ -9,6 +9,7 @@
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       gopublish-carousel
+ * Domain Path:       /languages
  *
  * @package           GopublishCarousel
  */
@@ -16,6 +17,19 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
+
+/**
+ * Load the plugin's own translations from languages/.
+ *
+ * The plugin isn't on WordPress.org, so WordPress doesn't download
+ * translations for it; they ship with the plugin instead. Translations in
+ * wp-content/languages/plugins/ (e.g. from Loco Translate) still win for PHP
+ * strings.
+ */
+function gopublish_carousel_load_textdomain() {
+	load_plugin_textdomain( 'gopublish-carousel', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}
+add_action( 'init', 'gopublish_carousel_load_textdomain', 5 );
 
 /**
  * Registers all blocks in build/ from the blocks manifest.
@@ -32,6 +46,17 @@ function gopublish_carousel_block_init() {
 		__DIR__ . '/build',
 		__DIR__ . '/build/blocks-manifest.php'
 	);
+
+	// Editor strings are translated from the JSON files in languages/.
+	// Core only looks for them in wp-content/languages/, so point the editor
+	// scripts to the plugin's own folder.
+	$registry = WP_Block_Type_Registry::get_instance();
+	foreach ( array( 'gopublish/carousel', 'gopublish/carousel-slide' ) as $block_name ) {
+		$block_type = $registry->get_registered( $block_name );
+		foreach ( $block_type ? $block_type->editor_script_handles : array() as $handle ) {
+			wp_set_script_translations( $handle, 'gopublish-carousel', __DIR__ . '/languages' );
+		}
+	}
 }
 add_action( 'init', 'gopublish_carousel_block_init', 9 );
 

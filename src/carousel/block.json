@@ -37,6 +37,10 @@
 			"type": "number",
 			"default": 1
 		},
+		"rewind": {
+			"type": "boolean",
+			"default": true
+		},
 		"mobileWidth": {
 			"type": "number",
 			"default": 75

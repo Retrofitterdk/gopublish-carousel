@@ -48,6 +48,10 @@ return array(
 				'type' => 'number',
 				'default' => 1
 			),
+			'rewind' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
 			'mobileWidth' => array(
 				'type' => 'number',
 				'default' => 75

@@ -119,6 +119,7 @@ See README.md for more developer notes.
 * New: the mobile/tablet breakpoint follows the theme's viewport settings (theme.json settings.viewport, WordPress 7.1).
 * Changed: requires WordPress 6.8. All blocks are registered from a blocks manifest.
 * Changed: a new carousel gets its three starting slides from a default block variation. Deleting every slide no longer adds three new ones automatically.
+* New: Danish translation (da_DK), including the screen reader texts ("karrusel", "dias", "Dias 4 af 9"). Translations ship with the plugin in languages/.
 * Development: updated to @wordpress/scripts 37.
 
 = 0.2.7 =
