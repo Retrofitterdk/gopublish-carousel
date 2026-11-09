@@ -355,16 +355,17 @@ add_action( 'init', 'gopublish_carousel_add_small_screen_styles', 20 );
 /**
  * Extra registration settings that block.json can't express.
  *
- * The carousel is registered with skip_inner_blocks: render.php renders the
- * slides itself (each in a slide wrapper), so core shouldn't render them first
- * into an unused $content.
+ * The Carousel and Carousel Slides blocks are registered with
+ * skip_inner_blocks: their render.php renders the inner blocks itself (the
+ * slides each in a slide wrapper), so core shouldn't render them first into an
+ * unused $content.
  *
  * @param array  $args       Block type registration arguments.
  * @param string $block_type Block type name, e.g. 'gopublish/carousel'.
  * @return array Filtered arguments.
  */
 function gopublish_carousel_block_type_args( $args, $block_type ) {
-	if ( 'gopublish/carousel' === $block_type ) {
+	if ( in_array( $block_type, array( 'gopublish/carousel', 'gopublish/carousel-slides' ), true ) ) {
 		$args['skip_inner_blocks'] = true;
 	}
 	return $args;
@@ -435,4 +436,97 @@ function gopublish_carousel_has_focusable_content( $html ) {
 		}
 	}
 	return false;
+}
+
+/**
+ * Render a carousel's slides: the scroll area (.carousel-track) inside its
+ * container, with each slide in a labelled wrapper ("2 of 9").
+ *
+ * Used by the Carousel Slides block, and by the Carousel itself for carousels
+ * from before 0.5.0, which have the slides directly inside. The scroll area
+ * gets data-carousel-items with the number of slides, which the Carousel
+ * reads (see gopublish_carousel_count_slides()).
+ *
+ * @param WP_Block[] $slide_blocks         The Carousel Slide blocks.
+ * @param WP_Block   $parent_block         The block that contains them.
+ * @param string     $container_attributes Attributes for the container
+ *                                         element, already escaped.
+ * @return string HTML, or an empty string if no slide renders anything.
+ */
+function gopublish_carousel_render_slides( $slide_blocks, WP_Block $parent_block, $container_attributes ) {
+	// Render each slide once, as a WP_Block, so it keeps the block context it
+	// inherits (e.g. postId inside a Query Loop) and the usual render filters
+	// run. Slides that render empty (e.g. hidden by a visibility plugin) are
+	// skipped.
+	$slides_html = array();
+	foreach ( $slide_blocks as $slide_block ) {
+		$html = gopublish_carousel_render_inner_block( $slide_block, $parent_block );
+		if ( '' !== trim( $html ) ) {
+			$slides_html[] = $html;
+		}
+	}
+	$total = count( $slides_html );
+	if ( 0 === $total ) {
+		return '';
+	}
+
+	// The scroll area must be reachable by keyboard. When no slide contains
+	// anything focusable, the scroll area itself gets tabindex="0" (arrow keys
+	// then scroll it).
+	$track_is_focusable = true;
+	foreach ( $slides_html as $slide_html ) {
+		if ( gopublish_carousel_has_focusable_content( $slide_html ) ) {
+			$track_is_focusable = false;
+			break;
+		}
+	}
+
+	/* translators: Spoken by screen readers to describe a single slide. */
+	$slide_roledescription = __( 'slide', 'gopublish-carousel' );
+
+	ob_start();
+	?>
+	<div <?php echo $container_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by the caller. ?>>
+		<div class="carousel-track"<?php echo $track_is_focusable ? ' tabindex="0"' : ''; ?>
+			data-carousel-items="<?php echo esc_attr( $total ); ?>"
+			data-wp-init="callbacks.initTrack"
+			data-wp-on-async--scroll="callbacks.onScroll"
+			data-wp-on--scrollend="callbacks.onScrollEnd">
+			<?php
+			foreach ( $slides_html as $index => $slide_html ) :
+				/* translators: 1: Slide number, 2: Total number of slides. */
+				$slide_label = sprintf( __( '%1$d of %2$d', 'gopublish-carousel' ), $index + 1, $total );
+				?>
+				<div class="carousel-slide"
+					role="group"
+					aria-roledescription="<?php echo esc_attr( $slide_roledescription ); ?>"
+					aria-label="<?php echo esc_attr( $slide_label ); ?>">
+					<?php echo $slide_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered block HTML. ?>
+				</div>
+				<?php
+			endforeach;
+			?>
+		</div>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * The number of slides in a carousel's rendered inner blocks: read from the
+ * first scroll area (gopublish_carousel_render_slides()), which is the
+ * carousel's own; nested carousels come later in the HTML.
+ *
+ * @param string $html Rendered inner blocks.
+ * @return int Number of slides (0 without a scroll area).
+ */
+function gopublish_carousel_count_slides( $html ) {
+	$processor = new WP_HTML_Tag_Processor( $html );
+	while ( $processor->next_tag() ) {
+		$items = $processor->get_attribute( 'data-carousel-items' );
+		if ( null !== $items ) {
+			return (int) $items;
+		}
+	}
+	return 0;
 }

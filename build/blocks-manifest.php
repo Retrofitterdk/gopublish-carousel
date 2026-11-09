@@ -77,7 +77,7 @@ return array(
 		'icon' => 'media-default',
 		'description' => 'A wrapper block for carousel slides',
 		'parent' => array(
-			'gopublish/carousel'
+			'gopublish/carousel-slides'
 		),
 		'supports' => array(
 			'align' => array(
@@ -104,5 +104,32 @@ return array(
 		'textdomain' => 'gopublish-carousel',
 		'editorScript' => 'file:./index.js',
 		'style' => 'file:./style-index.css'
+	),
+	'carousel-slides' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'gopublish/carousel-slides',
+		'version' => '0.4.0',
+		'title' => 'Carousel Slides',
+		'category' => 'widgets',
+		'icon' => 'slides',
+		'description' => 'The slides of a carousel, in a scrollable row.',
+		'parent' => array(
+			'gopublish/carousel'
+		),
+		'allowedBlocks' => array(
+			'gopublish/carousel-slide'
+		),
+		'usesContext' => array(
+			'gopublish-carousel/slidesId'
+		),
+		'supports' => array(
+			'html' => false,
+			'reusable' => false,
+			'interactivity' => true
+		),
+		'textdomain' => 'gopublish-carousel',
+		'editorScript' => 'file:./index.js',
+		'render' => 'file:./render.php'
 	)
 );

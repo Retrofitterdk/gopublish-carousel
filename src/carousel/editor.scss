@@ -2,6 +2,16 @@
 // (same classes, see edit.js); this file only adds what the editor needs.
 .wp-block-gopublish-carousel {
 
+	// The inner blocks' wrapper (edit.js) doesn't take part in the layout, so
+	// Carousel Slides is a direct flex child, as on the front end.
+	.carousel-inner-blocks {
+		display: contents;
+	}
+
+	.wp-block-gopublish-carousel-slides {
+		margin-block: 0;
+	}
+
 	// Carousel view (default): the same scroll area as the front end, with
 	// gentler snapping while editing.
 	.carousel-track {

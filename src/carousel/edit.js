@@ -23,7 +23,7 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useEffect, useRef, useState } from '@wordpress/element';
+import { useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 import {
@@ -31,8 +31,10 @@ import {
 	getLayouts,
 	getViewportOverrides,
 } from './layouts';
+import { scrollCarousel, useCarouselTrack } from './use-carousel-track';
 
-const ALLOWED_BLOCKS = [ 'gopublish/carousel-slide' ];
+// The Carousel's inner blocks: Carousel Slides (the scroll area).
+const ALLOWED_BLOCKS = [ 'gopublish/carousel-slides' ];
 
 // The layout's screen sizes and the editor's device preview names. The base
 // layout (Desktop) applies to every screen size unless Tablet or Mobile
@@ -198,16 +200,24 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	// "Show all slides": an editor-only grid view (not saved).
 	const [ showAll, setShowAll ] = useState( false );
-	// Whether the slides overflow the row, i.e. there is something to scroll.
-	const [ canScroll, setCanScroll ] = useState( false );
-	// Scroll position: at the first or the last scroll position.
-	const [ atStart, setAtStart ] = useState( true );
-	const [ atEnd, setAtEnd ] = useState( false );
-	const trackRef = useRef();
+	const wrapperRef = useRef();
 
-	const slideCount = useSelect(
-		( select ) => select( blockEditorStore ).getBlockCount( clientId ),
+	// The Carousel Slides block, which the toolbar buttons work on.
+	const slidesClientId = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).find(
+				( id ) => getBlockName( id ) === 'gopublish/carousel-slides'
+			);
+		},
 		[ clientId ]
+	);
+	const slideCount = useSelect(
+		( select ) =>
+			slidesClientId
+				? select( blockEditorStore ).getBlockCount( slidesClientId )
+				: 0,
+		[ slidesClientId ]
 	);
 	const { insertBlock } = useDispatch( blockEditorStore );
 
@@ -246,83 +256,24 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		insertBlock(
 			createBlock( 'gopublish/carousel-slide' ),
 			slideCount,
-			clientId
+			slidesClientId
 		);
 
 	// Show the arrows only when the slides overflow, and track the start/end,
 	// like the front end. The row's width follows the editor canvas,
 	// including device previews.
-	useEffect( () => {
-		const track = trackRef.current;
-		if ( ! track || showAll ) {
-			return;
-		}
-		const update = () => {
-			const max = track.scrollWidth - track.clientWidth;
-			const position = Math.abs( track.scrollLeft );
-			setCanScroll( max > 1 );
-			setAtStart( position <= 1 );
-			setAtEnd( position >= max - 1 );
-		};
-		update();
-		const { ResizeObserver } = track.ownerDocument.defaultView;
-		const observer = new ResizeObserver( update );
-		observer.observe( track );
-		track.addEventListener( 'scroll', update, { passive: true } );
-		return () => {
-			observer.disconnect();
-			track.removeEventListener( 'scroll', update );
-		};
-	}, [ showAll, slideCount, viewportCSS ] );
-
-	// The arrows only scroll the row (by "Slides to scroll"), and rewind at
-	// the ends when Rewind is on.
-	const scrollBySlides = ( direction ) => {
-		const track = trackRef.current;
-		const [ first, second ] = track?.children ?? [];
-		const atEdge = direction > 0 ? atEnd : atStart;
-		if ( ! first || ( atEdge && ! rewind ) ) {
-			return;
-		}
-		// Distance from one slide to the next: slide width plus the gap.
-		const step = second
-			? Math.abs( second.offsetLeft - first.offsetLeft )
-			: first.offsetWidth;
-		const reduceMotion = track.ownerDocument.defaultView.matchMedia(
-			'(prefers-reduced-motion: reduce)'
-		).matches;
-		const behavior = reduceMotion ? 'auto' : 'smooth';
-		// Right-to-left: forward scrolls to negative positions (see view.js).
-		const textDirection =
-			track.ownerDocument.defaultView.getComputedStyle( track )
-				.direction === 'rtl'
-				? -1
-				: 1;
-		if ( atEdge ) {
-			const maxPosition = track.scrollWidth - track.clientWidth;
-			track.scrollTo( {
-				left: direction > 0 ? 0 : textDirection * maxPosition,
-				behavior,
-			} );
-			return;
-		}
-		// Slides to scroll for the current preview size (see view.js).
-		const slides =
-			parseInt(
-				track.ownerDocument.defaultView
-					.getComputedStyle( track )
-					.getPropertyValue( '--slides-to-scroll' ),
-				10
-			) || 1;
-		track.scrollBy( {
-			left: textDirection * direction * slides * step,
-			behavior,
-		} );
-	};
+	const { track, canScroll, atStart, atEnd } = useCarouselTrack( wrapperRef, [
+		showAll,
+		slideCount,
+		viewportCSS,
+	] );
+	const scrollBySlides = ( direction ) =>
+		scrollCarousel( track, direction, { rewind, atStart, atEnd } );
 
 	// Same classes and widths as the front end (render.php), so the front-end
 	// styles apply in the editor too. Nothing here is saved.
 	const blockProps = useBlockProps( {
+		ref: wrapperRef,
 		className: [
 			`columns-${ layouts.base.columns }`,
 			layouts.base.cutoff ? 'cutoff' : 'no-cutoff',
@@ -337,13 +288,13 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		},
 	} );
 
+	// The inner blocks' wrapper is display: contents (editor.scss), so the
+	// Carousel Slides block lays out as on the front end.
 	const innerBlocksProps = useInnerBlocksProps(
-		{ className: 'carousel-track', ref: trackRef },
+		{ className: 'carousel-inner-blocks' },
 		{
 			allowedBlocks: ALLOWED_BLOCKS,
 			templateLock: false,
-			orientation: 'horizontal',
-			// Slides are added from the toolbar instead.
 			renderAppender: false,
 		}
 	);
@@ -357,6 +308,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						icon="plus-alt2"
 						label={ __( 'Add slide', 'gopublish-carousel' ) }
 						onClick={ addSlide }
+						disabled={ ! slidesClientId }
 					/>
 					<ToolbarButton
 						icon="grid-view"
@@ -517,9 +469,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				</div>
 			) }
 
-			<div className="carousel-container">
-				<div { ...innerBlocksProps } />
-			</div>
+			<div { ...innerBlocksProps } />
 		</div>
 	);
 }

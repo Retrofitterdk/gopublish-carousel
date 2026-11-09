@@ -1,4 +1,4 @@
-import { registerBlockType } from '@wordpress/blocks';
+import { createBlock, registerBlockType } from '@wordpress/blocks';
 
 import './style.scss';
 import './editor.scss';
@@ -14,6 +14,32 @@ registerBlockType( metadata.name, {
 	// used instead of an InnerBlocks `template`: the template prop is
 	// deprecated in newer editor versions, and its replacement isn't
 	// available in WordPress 7.1 yet. Variations work in all versions.
+	deprecated: [
+		// Before 0.5.0, the slides were the Carousel's own inner blocks. The
+		// markup is the same (still valid), so isEligible picks these
+		// carousels out, and migrate wraps their slides in Carousel Slides.
+		// render.php handles the old structure until the post is saved.
+		{
+			attributes: metadata.attributes,
+			supports: metadata.supports,
+			save,
+			isEligible: ( attributes, innerBlocks ) =>
+				innerBlocks.some(
+					( innerBlock ) =>
+						innerBlock.name === 'gopublish/carousel-slide'
+				),
+			migrate: ( attributes, innerBlocks ) => [
+				attributes,
+				[
+					createBlock(
+						'gopublish/carousel-slides',
+						{ lock: { remove: true } },
+						innerBlocks
+					),
+				],
+			],
+		},
+	],
 	variations: [
 		{
 			name: 'carousel',
@@ -31,9 +57,17 @@ registerBlockType( metadata.name, {
 				},
 			},
 			innerBlocks: [
-				[ 'gopublish/carousel-slide' ],
-				[ 'gopublish/carousel-slide' ],
-				[ 'gopublish/carousel-slide' ],
+				[
+					'gopublish/carousel-slides',
+					// The carousel needs its slides: Carousel Slides can't be
+					// removed on its own (only together with the Carousel).
+					{ lock: { remove: true } },
+					[
+						[ 'gopublish/carousel-slide' ],
+						[ 'gopublish/carousel-slide' ],
+						[ 'gopublish/carousel-slide' ],
+					],
+				],
 			],
 		},
 	],

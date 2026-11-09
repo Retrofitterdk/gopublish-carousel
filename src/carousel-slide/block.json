@@ -7,7 +7,7 @@
 	"category": "widgets",
 	"icon": "media-default",
 	"description": "A wrapper block for carousel slides",
-	"parent": [ "gopublish/carousel" ],
+	"parent": [ "gopublish/carousel-slides" ],
 	"supports": {
 		"align": [ "wide", "full" ],
 		"spacing": {

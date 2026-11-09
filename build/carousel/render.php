@@ -2,29 +2,45 @@
 /**
  * Front-end markup for the Carousel block.
  *
- * Renders the navigation, the live region and the slides. The slides sit in a
- * native scroll area with CSS scroll snap (style.scss); view.js (store:
- * gopublish-carousel) adds the buttons' behaviour and keeps the state in the
- * context up to date (can scroll, at start/end, the announcement).
+ * Renders the navigation, the live region and the inner blocks (Carousel
+ * Slides: the slides in a native scroll area with CSS scroll snap, see
+ * style.scss). view.js (store: gopublish-carousel) adds the buttons'
+ * behaviour and keeps the state in the context up to date (can scroll, at
+ * start/end, the announcement).
  *
  * @package GopublishCarousel
  *
  * @var array    $attributes Block attributes.
- * @var string   $content    Saved block content (unused: slides are rendered below).
+ * @var string   $content    Saved block content (unused: inner blocks are rendered below).
  * @var WP_Block $block      Block instance.
  */
 
-// Render each slide once, as a WP_Block, so it keeps the block context it
-// inherits (e.g. postId inside a Query Loop) and the usual render filters run.
-// Slides that render empty (e.g. hidden by a visibility plugin) are skipped.
-$slides_html = array();
+// Unique ID for this carousel instance. wp_unique_id() counts up per page
+// render, so the IDs are stable between page loads (unlike uniqid()).
+$carousel_id = wp_unique_id( 'gopublish-carousel-' );
+$slides_id   = $carousel_id . '-slides';
+
+// The inner blocks: Carousel Slides (the scroll area with the slides). They
+// get the slides' ID through the block context. Carousels from before 0.5.0
+// have the slides directly inside; they're rendered as if they were wrapped
+// in a Carousel Slides block.
+$is_legacy = false;
 foreach ( $block->inner_blocks as $inner_block ) {
-	$html = gopublish_carousel_render_inner_block( $inner_block, $block );
-	if ( '' !== trim( $html ) ) {
-		$slides_html[] = $html;
+	if ( 'gopublish/carousel-slide' === $inner_block->name ) {
+		$is_legacy = true;
+		break;
 	}
 }
-$real_slides = count( $slides_html );
+if ( $is_legacy ) {
+	$inner_html = gopublish_carousel_render_slides( $block->inner_blocks, $block, 'class="carousel-container" id="' . esc_attr( $slides_id ) . '"' );
+} else {
+	$inner_html = '';
+	foreach ( $block->inner_blocks as $inner_block ) {
+		$inner_block->context['gopublish-carousel/slidesId'] = $slides_id;
+		$inner_html .= gopublish_carousel_render_inner_block( $inner_block, $block );
+	}
+}
+$real_slides = gopublish_carousel_count_slides( $inner_html );
 
 // No slides (or all hidden): render nothing, rather than an empty carousel
 // that screen readers would still announce.
@@ -81,22 +97,6 @@ if ( $viewport_rules ) {
 $fewest_visible = min( array_column( $layouts, 'visible' ) );
 $can_scroll     = $real_slides > 1 && $real_slides > $fewest_visible;
 
-// The scroll area must be reachable by keyboard. When no slide contains
-// anything focusable, the scroll area itself gets tabindex="0" (arrow keys
-// then scroll it).
-$track_is_focusable = true;
-foreach ( $slides_html as $slide_html ) {
-	if ( gopublish_carousel_has_focusable_content( $slide_html ) ) {
-		$track_is_focusable = false;
-		break;
-	}
-}
-
-// Unique ID for this carousel instance. wp_unique_id() counts up per page
-// render, so the IDs are stable between page loads (unlike uniqid()).
-$carousel_id = wp_unique_id( 'gopublish-carousel-' );
-$slides_id   = $carousel_id . '-slides';
-
 // Accessible names for the navigation buttons (they only contain an icon).
 // Always singular, like the W3C example: how many slides a button moves can
 // differ per viewport.
@@ -116,9 +116,6 @@ $a11y_attributes = array(
 if ( '' !== $aria_label ) {
 	$a11y_attributes['aria-label'] = $aria_label;
 }
-
-/* translators: Spoken by screen readers to describe a single slide. */
-$slide_roledescription = __( 'slide', 'gopublish-carousel' );
 
 // Interactivity API wiring:
 // - data-wp-interactive: the store namespace registered in view.js.
@@ -193,25 +190,5 @@ $wrapper_attributes = get_block_wrapper_attributes(
 		</div>
 		<div class="carousel-status" aria-live="polite" aria-atomic="true" data-wp-text="context.announcement"></div>
 	<?php endif; ?>
-	<div class="carousel-container" id="<?php echo esc_attr( $slides_id ); ?>">
-		<div class="carousel-track"<?php echo $track_is_focusable ? ' tabindex="0"' : ''; ?>
-			data-wp-init="callbacks.initTrack"
-			data-wp-on-async--scroll="callbacks.onScroll"
-			data-wp-on--scrollend="callbacks.onScrollEnd">
-			<?php
-			foreach ( $slides_html as $index => $slide_html ) :
-				/* translators: 1: Slide number, 2: Total number of slides. */
-				$slide_label = sprintf( __( '%1$d of %2$d', 'gopublish-carousel' ), $index + 1, $real_slides );
-				?>
-				<div class="carousel-slide"
-					role="group"
-					aria-roledescription="<?php echo esc_attr( $slide_roledescription ); ?>"
-					aria-label="<?php echo esc_attr( $slide_label ); ?>">
-					<?php echo $slide_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered block HTML. ?>
-				</div>
-				<?php
-			endforeach;
-			?>
-		</div>
-	</div>
+	<?php echo $inner_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered block HTML. ?>
 </div>
