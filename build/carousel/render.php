@@ -26,6 +26,12 @@ foreach ( $block->inner_blocks as $inner_block ) {
 }
 $real_slides = count( $slides_html );
 
+// No slides (or all hidden): render nothing, rather than an empty carousel
+// that screen readers would still announce.
+if ( 0 === $real_slides ) {
+	return;
+}
+
 $columns    = (int) ( $attributes['columns'] ?? 3 );
 $one_column = 1 === $columns;
 $cutoff     = (bool) ( $attributes['cutoff'] ?? false );
@@ -63,7 +69,7 @@ $can_scroll      = $real_slides > 1 && ( $real_slides > $visible_columns || $rea
 // The scroll area must be reachable by keyboard. When no slide contains
 // anything focusable, the scroll area itself gets tabindex="0" (arrow keys
 // then scroll it).
-$track_is_focusable = $real_slides > 0;
+$track_is_focusable = true;
 foreach ( $slides_html as $slide_html ) {
 	if ( gopublish_carousel_has_focusable_content( $slide_html ) ) {
 		$track_is_focusable = false;

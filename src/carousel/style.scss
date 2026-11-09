@@ -42,6 +42,9 @@
 	--slide-width: calc((100% - (var(--columns, 3) - 1) * var(--carousel-gap)) / var(--visible));
 
 	position: relative;
+	// A column, so the slides can fill a minimum height (Dimensions setting).
+	display: flex;
+	flex-direction: column;
 
 	&.cutoff:not(.columns-1) {
 		--cutoff: 1;
@@ -104,10 +107,26 @@
 		.carousel-prev svg {
 			transform: rotate(-180deg);
 		}
+
+		// Right-to-left: the slides run the other way, so the arrows swap.
+		// :dir() also covers an RTL section on a left-to-right site, where
+		// WordPress doesn't load the generated -rtl stylesheet.
+		&:dir(rtl) {
+
+			.carousel-prev svg {
+				transform: none;
+			}
+
+			.carousel-next svg {
+				transform: rotate(-180deg);
+			}
+		}
 	}
 
 	.carousel-container {
 		position: relative;
+		display: flex;
+		flex: 1;
 	}
 
 	// Live region for screen readers: visually hidden, but still announced.
@@ -127,6 +146,7 @@
 	// touch swipes, momentum and snapping to the start of a slide.
 	.carousel-track {
 		display: flex;
+		flex: 1;
 		align-items: stretch;
 		gap: var(--carousel-gap);
 		overflow-x: auto;

@@ -42,6 +42,19 @@ function getStep( track ) {
 }
 
 /**
+ * Horizontal scroll direction: 1 left-to-right, -1 right-to-left.
+ *
+ * In right-to-left text, the slides run from right to left and scrollLeft
+ * counts down from 0, so "forward" means scrolling to negative positions.
+ *
+ * @param {HTMLElement} track The scroll area.
+ * @return {number} 1 or -1.
+ */
+function getScrollDirection( track ) {
+	return window.getComputedStyle( track ).direction === 'rtl' ? -1 : 1;
+}
+
+/**
  * Measure the scroll area and update canScroll, atStart and atEnd, and with
  * them the buttons' disabled state (prevDisabled, nextDisabled).
  *
@@ -146,14 +159,18 @@ function scrollBySlides( context, element, direction ) {
 	}
 	// Announce where the carousel ends up once the scroll has finished.
 	context.announcePending = true;
+	const textDirection = getScrollDirection( track );
 	if ( atEdge ) {
 		// Rewind: from the end back to the start, or from the start to the end.
+		const maxScroll = track.scrollWidth - track.clientWidth;
 		track.scrollTo( {
-			left: direction > 0 ? 0 : track.scrollWidth - track.clientWidth,
+			left: direction > 0 ? 0 : textDirection * maxScroll,
 		} );
 		return;
 	}
-	track.scrollBy( { left: direction * context.scroll * step } );
+	track.scrollBy( {
+		left: textDirection * direction * context.scroll * step,
+	} );
 }
 
 store( 'gopublish-carousel', {

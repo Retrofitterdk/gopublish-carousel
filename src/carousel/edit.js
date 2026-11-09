@@ -130,14 +130,24 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			'(prefers-reduced-motion: reduce)'
 		).matches;
 		const behavior = reduceMotion ? 'auto' : 'smooth';
+		// Right-to-left: forward scrolls to negative positions (see view.js).
+		const textDirection =
+			track.ownerDocument.defaultView.getComputedStyle( track )
+				.direction === 'rtl'
+				? -1
+				: 1;
 		if ( atEdge ) {
+			const maxPosition = track.scrollWidth - track.clientWidth;
 			track.scrollTo( {
-				left: direction > 0 ? 0 : track.scrollWidth - track.clientWidth,
+				left: direction > 0 ? 0 : textDirection * maxPosition,
 				behavior,
 			} );
 			return;
 		}
-		track.scrollBy( { left: direction * scroll * step, behavior } );
+		track.scrollBy( {
+			left: textDirection * direction * scroll * step,
+			behavior,
+		} );
 	};
 
 	// Keep "Slides to scroll" within the limit when columns or cutoff change.
