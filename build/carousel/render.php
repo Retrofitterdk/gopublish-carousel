@@ -190,8 +190,7 @@ $wrapper_attributes = get_block_wrapper_attributes(
 				<div class="carousel-slide"
 					role="group"
 					aria-roledescription="<?php echo esc_attr( $slide_roledescription ); ?>"
-					aria-label="<?php echo esc_attr( $slide_label ); ?>"
-					data-slide-index="<?php echo esc_attr( $index ); ?>">
+					aria-label="<?php echo esc_attr( $slide_label ); ?>">
 					<?php echo $slide_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered block HTML. ?>
 				</div>
 				<?php
