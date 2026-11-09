@@ -2,12 +2,32 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "gopublish/carousel-pagination",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"title": "Carousel Pagination",
 	"category": "widgets",
 	"icon": "ellipsis",
 	"description": "Dots for jumping to a position in a carousel.",
 	"parent": [ "gopublish/carousel" ],
+	"attributes": {
+		"dotColor": {
+			"type": "string"
+		},
+		"customDotColor": {
+			"type": "string"
+		},
+		"currentDotColor": {
+			"type": "string"
+		},
+		"customCurrentDotColor": {
+			"type": "string"
+		},
+		"dotSize": {
+			"type": "number"
+		},
+		"dotSpacing": {
+			"type": "number"
+		}
+	},
 	"usesContext": [
 		"gopublish-carousel/slidesId",
 		"gopublish-carousel/itemsTotal"

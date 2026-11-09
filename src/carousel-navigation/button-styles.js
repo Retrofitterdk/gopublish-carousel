@@ -48,6 +48,24 @@ function joinValues( values, defaultValue ) {
 }
 
 /**
+ * A colour setting as CSS, from a pair of attributes made by withColors(): a
+ * palette slug (name, e.g. 'iconColor') or a custom colour ('custom' + name).
+ * Mirrors gopublish_carousel_color_attribute() in PHP.
+ *
+ * @param {Object} attributes Block attributes.
+ * @param {string} name       Attribute name of the palette slug.
+ * @return {string} CSS value, or an empty string if unset.
+ */
+export function getColorAttribute( attributes, name ) {
+	return cssValue(
+		preset( attributes[ name ] ) ??
+			attributes[
+				`custom${ name.charAt( 0 ).toUpperCase() }${ name.slice( 1 ) }`
+			]
+	);
+}
+
+/**
  * Custom properties for the buttons, for the wrapper's style.
  *
  * @param {Object} attributes Block attributes (the colour attributes,
@@ -57,13 +75,7 @@ function joinValues( values, defaultValue ) {
 export function getButtonStyles( attributes ) {
 	const { borderColor, style = {} } = attributes;
 	const border = style.border ?? {};
-	const color = ( name ) =>
-		cssValue(
-			preset( attributes[ name ] ) ??
-				attributes[
-					`custom${ name.charAt( 0 ).toUpperCase() }${ name.slice( 1 ) }`
-				]
-		);
+	const color = ( name ) => getColorAttribute( attributes, name );
 
 	const icon = color( 'iconColor' );
 	const background = color( 'buttonColor' );

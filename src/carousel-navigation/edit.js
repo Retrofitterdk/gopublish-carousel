@@ -15,6 +15,7 @@ import {
 	FlexItem,
 	PanelBody,
 	RangeControl,
+	ToggleControl,
 	// Needed to add settings to the Dimensions panel, as core blocks do;
 	// WordPress 7.1 only ships it under its experimental name.
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -82,6 +83,8 @@ function pointsBack( name ) {
  *
  * The Icon panel picks the buttons' icon from the icon registry (WordPress
  * 7.1+); without a registry, it isn't shown and the default arrow is used.
+ * Over the slides (Position panel) places the buttons at the edges of the
+ * slides (style.scss); turning it on sets Justification to Space between.
  * The Color panel (Icon, Background and their hover colours), the Border
  * settings and Button padding and Icon size (in the Dimensions panel) style
  * the buttons.
@@ -115,7 +118,7 @@ function Edit( {
 	buttonHoverColor,
 	setButtonHoverColor,
 } ) {
-	const { icon, buttonPadding, iconSize } = attributes;
+	const { icon, overlay, buttonPadding, iconSize, layout } = attributes;
 	const [ isPickerOpen, setIsPickerOpen ] = useState( false );
 	const { hasIconRegistry, iconRecord } = useSelect(
 		( select ) => {
@@ -152,6 +155,7 @@ function Edit( {
 		className: [
 			'navigation-container',
 			pointsBack( icon ) ? 'has-backward-icon' : '',
+			overlay ? 'is-overlay' : '',
 			layoutClassNames,
 			canScroll ? '' : 'is-inactive',
 		]
@@ -167,6 +171,37 @@ function Edit( {
 
 	return (
 		<div { ...blockProps }>
+			<InspectorControls>
+				<PanelBody title={ __( 'Position', 'gopublish-carousel' ) }>
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __( 'Over the slides', 'gopublish-carousel' ) }
+						help={ __(
+							'Previous and Next at the edges of the slides. Hidden on mobile, where visitors swipe.',
+							'gopublish-carousel'
+						) }
+						checked={ !! overlay }
+						onChange={ ( value ) =>
+							setAttributes( {
+								overlay: value,
+								// Over the slides, the buttons usually sit at
+								// the edges: Justification → Space between.
+								...( value && {
+									// Keeps the block's default flex layout
+									// (an attribute without type is a flow
+									// layout).
+									layout: {
+										type: 'flex',
+										flexWrap: 'nowrap',
+										...layout,
+										justifyContent: 'space-between',
+									},
+								} ),
+							} )
+						}
+					/>
+				</PanelBody>
+			</InspectorControls>
 			{ hasIconRegistry && (
 				<InspectorControls>
 					<PanelBody title={ __( 'Icon', 'gopublish-carousel' ) }>

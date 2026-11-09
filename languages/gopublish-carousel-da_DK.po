@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Go:Publish Carousel 0.5.0\n"
+"Project-Id-Version: Go:Publish Carousel 0.6.0\n"
 "Report-Msgid-Bugs-To: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -24,12 +24,12 @@ msgstr ""
 msgid "Retrofitter"
 msgstr ""
 
-#: gopublish-carousel.php:756
+#: gopublish-carousel.php:835
 #: build/carousel-navigation/index.js:1
 msgid "Previous slide"
 msgstr "Forrige dias"
 
-#: gopublish-carousel.php:762
+#: gopublish-carousel.php:841
 #: build/carousel-navigation/index.js:1
 msgid "Next slide"
 msgstr "Næste dias"
@@ -40,7 +40,7 @@ msgid "carousel"
 msgstr "karrusel"
 
 #. translators: Spoken by screen readers to describe a single slide.
-#: gopublish-carousel.php:485
+#: gopublish-carousel.php:512
 msgid "slide"
 msgstr "dias"
 
@@ -51,7 +51,7 @@ msgid "Slide %1$d of %2$d"
 msgstr "Dias %1$d af %2$d"
 
 #. translators: 1: Slide number, 2: Total number of slides.
-#: gopublish-carousel.php:498
+#: gopublish-carousel.php:525
 #, php-format
 msgid "%1$d of %2$d"
 msgstr "%1$d af %2$d"
@@ -256,6 +256,7 @@ msgid "Reset"
 msgstr "Nulstil"
 
 #: build/carousel-navigation/index.js:1
+#: build/carousel-pagination/index.js:1
 msgid "Color"
 msgstr "Farve"
 
@@ -276,6 +277,7 @@ msgid "Icon size"
 msgstr "Ikonstørrelse"
 
 #: build/carousel-navigation/index.js:1
+#: build/carousel-pagination/index.js:1
 msgid "In pixels."
 msgstr "I pixels."
 
@@ -286,3 +288,35 @@ msgstr "Ikon (hover og fokus)"
 #: build/carousel-navigation/index.js:1
 msgid "Background (hover & focus)"
 msgstr "Baggrund (hover og fokus)"
+
+#: build/carousel-navigation/index.js:1
+msgid "Position"
+msgstr "Position"
+
+#: build/carousel-navigation/index.js:1
+msgid "Over the slides"
+msgstr "Oven på diasene"
+
+#: build/carousel-navigation/index.js:1
+msgid "Previous and Next at the edges of the slides. Hidden on mobile, where visitors swipe."
+msgstr "Forrige og Næste ved diasenes kanter. Skjult på mobil, hvor de besøgende swiper."
+
+#: build/carousel-pagination/index.js:1
+msgid "Dot size"
+msgstr "Prikstørrelse"
+
+#: build/carousel-pagination/index.js:1
+msgid "Dot spacing"
+msgstr "Afstand mellem prikker"
+
+#: build/carousel-pagination/index.js:1
+msgid "In pixels. Dots stay at least 24 pixels apart, centre to centre, so they are easy to tap."
+msgstr "I pixels. Prikkerne er mindst 24 pixels fra hinanden, målt fra midte til midte, så de er nemme at trykke på."
+
+#: build/carousel-pagination/index.js:1
+msgid "Dots"
+msgstr "Prikker"
+
+#: build/carousel-pagination/index.js:1
+msgid "Current dot"
+msgstr "Aktuel prik"

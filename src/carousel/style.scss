@@ -37,10 +37,24 @@
 	--nav-button-outline-width: 2px;
 	--nav-button-outline-offset: 2px;
 	--nav-button-disabled-opacity: 0.4;
+	--nav-button-shadow: none;
+	// Navigation over the slides (Carousel Navigation → Over the slides): a
+	// white button with a dark icon and a soft shadow, visible on photos.
+	// The block's own colours override them.
+	--nav-overlay-button-background: #fff;
+	--nav-overlay-button-background-hover: #000;
+	--nav-overlay-button-icon-color: #000;
+	--nav-overlay-button-icon-color-hover: #fff;
+	--nav-overlay-button-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+	--nav-overlay-inset: 0.75rem;
 	--pagination-gap: 0;
 	--pagination-dot-size: 10px;
 	--pagination-dot-color: currentcolor;
+	--pagination-dot-current-color: currentcolor;
 	--pagination-dot-opacity: 0.3;
+	// Space between dots; the dots stay at least 24 px apart, centre to
+	// centre (the minimum target size).
+	--pagination-dot-spacing: 14px;
 	// Space between slides. Set by the Block spacing setting (render.php);
 	// --slide--padding-right is still honoured for older theme CSS.
 	--carousel-gap: var(--slide--padding-right, 1rem);
@@ -60,6 +74,9 @@
 	--slide-width: calc((100% - var(--gaps) * var(--carousel-gap)) / var(--visible));
 
 	position: relative;
+	// The scroll area is the anchor for navigation over the slides; scoped,
+	// so a carousel inside a slide has its own.
+	anchor-scope: --gopublish-carousel-track;
 	// A column, so the slides can fill a minimum height (Dimensions setting).
 	display: flex;
 	flex-direction: column;
@@ -103,6 +120,7 @@
 			// currentcolor: the icon colour, also on hover.
 			border-color: var(--nav-button-border-color);
 			border-radius: var(--nav-button-radius);
+			box-shadow: var(--nav-button-shadow);
 			cursor: pointer;
 			transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 
@@ -123,6 +141,11 @@
 			&:focus-visible {
 				outline: var(--nav-button-outline-width) solid var(--nav-button-outline-color);
 				outline-offset: var(--nav-button-outline-offset);
+			}
+
+			// Focus from a click: no ring (themes often outline every :focus).
+			&:focus:not(:focus-visible) {
+				outline: none;
 			}
 
 			// At the start/end with Rewind off. Still focusable (aria-disabled,
@@ -197,6 +220,7 @@
 	// The slides sit in a native scroll area: the browser handles scrolling,
 	// touch swipes, momentum and snapping to the start of a slide.
 	.carousel-track {
+		anchor-name: --gopublish-carousel-track;
 		display: flex;
 		flex: 1;
 		align-items: stretch;
@@ -259,15 +283,20 @@
 .wp-block-gopublish-carousel-pagination {
 	padding: var(--nav-container-padding) 0;
 
-	// A 24px button (the minimum target size) with a smaller dot inside.
+	// A button around the dot: as wide as the dot plus the spacing, and at
+	// least 24 × 24 px (the minimum target size).
 	.carousel-dot {
 		display: inline-flex;
+		flex: none;
 		align-items: center;
+		position: relative;
 		justify-content: center;
-		width: 24px;
-		height: 24px;
+		box-sizing: border-box;
+		width: max(24px, calc(var(--pagination-dot-size) + var(--pagination-dot-spacing)));
+		height: max(24px, var(--pagination-dot-size));
 		padding: 0;
-		color: var(--pagination-dot-color);
+		// The surrounding text colour: the default dot colour (currentcolor).
+		color: inherit;
 		background: none;
 		border: 0;
 		border-radius: 50%;
@@ -277,23 +306,41 @@
 			content: "";
 			width: var(--pagination-dot-size);
 			height: var(--pagination-dot-size);
-			background: currentcolor;
+			background: var(--pagination-dot-color);
 			border-radius: 50%;
 			opacity: var(--pagination-dot-opacity);
-			transition: opacity 0.2s ease;
+			transition: opacity 0.2s ease, background-color 0.2s ease;
 		}
 
+		// Halfway to the current dot.
 		&:hover::before {
+			background: color-mix(in srgb, var(--pagination-dot-current-color), var(--pagination-dot-color));
 			opacity: calc((1 + var(--pagination-dot-opacity)) / 2);
 		}
 
 		&[aria-current="true"]::before {
+			background: var(--pagination-dot-current-color);
 			opacity: 1;
 		}
 
-		&:focus-visible {
+		// Keyboard focus: a ring around the dot itself, so it stays round
+		// however wide the button is. Focus from a click: no ring (themes
+		// often outline every :focus).
+		&:focus {
+			outline: none;
+		}
+
+		&:focus-visible::after {
+			content: "";
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			width: var(--pagination-dot-size);
+			height: var(--pagination-dot-size);
+			border-radius: 50%;
 			outline: var(--nav-button-outline-width) solid var(--nav-button-outline-color);
-			outline-offset: 0;
+			outline-offset: var(--nav-button-outline-offset);
+			transform: translate(-50%, -50%);
 		}
 
 		// Pages the current layout doesn't have.
@@ -331,6 +378,54 @@
 
 	&.alignfull {
 		max-width: none;
+	}
+}
+
+// Navigation over the slides (the block's Over the slides setting): Previous
+// and Next at the edges of the scroll area (justification, usually space
+// between), centred vertically, positioned with CSS anchor positioning so it
+// works wherever the block is in the carousel. Clicks and swipes outside the
+// buttons reach the slides. Browsers without anchor positioning show the
+// navigation above or below the slides as usual. Hidden on mobile (PHP, see
+// gopublish_carousel_add_small_screen_styles()).
+@supports (anchor-name: --a) {
+
+	.wp-block-gopublish-carousel .wp-block-gopublish-carousel-navigation.is-overlay {
+		// The overlay look; the block's colours (inline) override these.
+		--nav-button-background: var(--nav-overlay-button-background);
+		--nav-button-background-hover: var(--nav-overlay-button-background-hover);
+		--nav-button-icon-color: var(--nav-overlay-button-icon-color);
+		--nav-button-icon-color-hover: var(--nav-overlay-button-icon-color-hover);
+		--nav-button-outline-color: var(--nav-overlay-button-background-hover);
+		--nav-button-shadow: var(--nav-overlay-button-shadow);
+
+		position: absolute;
+		z-index: 2;
+		top: anchor(--gopublish-carousel-track top);
+		right: anchor(--gopublish-carousel-track right);
+		bottom: anchor(--gopublish-carousel-track bottom);
+		left: anchor(--gopublish-carousel-track left);
+		display: flex;
+		flex-wrap: nowrap;
+		align-items: center;
+		width: auto;
+		max-width: none;
+		margin: 0;
+		// The distance from the edges; the block's Padding setting overrides it.
+		padding: 0 var(--nav-overlay-inset);
+		pointer-events: none;
+
+		.carousel-prev,
+		.carousel-next {
+			pointer-events: auto;
+
+			// At the start/end with Rewind off: invisible, but still in place
+			// and focusable, so keyboard focus isn't lost (shown when focused).
+			&[aria-disabled="true"]:not(:focus-visible) {
+				opacity: 0;
+				pointer-events: none;
+			}
+		}
 	}
 }
 

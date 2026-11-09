@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Go:Publish Carousel
  * Description:       A carousel block for any blocks, built on native scrolling and the Interactivity API.
- * Version:           0.5.0
+ * Version:           0.6.0
  * Requires at least: 6.8
  * Requires PHP:      7.2
  * Author:            Retrofitter
@@ -348,6 +348,29 @@ function gopublish_carousel_add_small_screen_styles() {
 }
 CSS;
 
+	// Navigation over the slides: hidden on mobile (any pointer), where it
+	// would cover much of a slide and visitors swipe. Only visually, like
+	// above, so keyboard users can still reach it.
+	$mobile = gopublish_carousel_viewport_media_queries()['@mobile'] ?? '';
+	if ( '' !== $mobile ) {
+		$css .= <<<CSS
+
+{$mobile} {
+	.wp-block-gopublish-carousel:not(:has(:focus-visible)) .navigation-container.is-overlay {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
+	}
+}
+CSS;
+	}
+
 	wp_add_inline_style( $block_type->style_handles[0], $css );
 }
 add_action( 'init', 'gopublish_carousel_add_small_screen_styles', 20 );
@@ -456,10 +479,14 @@ function gopublish_carousel_has_focusable_content( $html ) {
 function gopublish_carousel_render_slides( $slide_blocks, WP_Block $parent_block, $container_attributes ) {
 	// Render each slide once, as a WP_Block, so it keeps the block context it
 	// inherits (e.g. postId inside a Query Loop) and the usual render filters
-	// run. Slides that render empty (e.g. hidden by a visibility plugin) are
-	// skipped.
+	// run. Slides without content are skipped: empty ones (no blocks inside,
+	// e.g. added with Add slide and never filled; they would show as a gap)
+	// and ones that render nothing (e.g. hidden by a visibility plugin).
 	$slides_html = array();
 	foreach ( $slide_blocks as $slide_block ) {
+		if ( 0 === count( $slide_block->inner_blocks ) ) {
+			continue;
+		}
 		$html = gopublish_carousel_render_inner_block( $slide_block, $parent_block );
 		if ( '' !== trim( $html ) ) {
 			$slides_html[] = $html;
@@ -553,6 +580,63 @@ function gopublish_carousel_css_value( $value ) {
 }
 
 /**
+ * A colour setting as CSS, from a pair of attributes made by withColors() in
+ * the editor: a palette slug ($name, e.g. 'iconColor') or a custom colour
+ * ('custom' + $name, e.g. 'customIconColor').
+ *
+ * @param array  $attributes Block attributes.
+ * @param string $name       Attribute name of the palette slug.
+ * @return string CSS value, or an empty string if unset.
+ */
+function gopublish_carousel_color_attribute( $attributes, $name ) {
+	$slug = $attributes[ $name ] ?? null;
+	if ( is_string( $slug ) && '' !== $slug ) {
+		return gopublish_carousel_css_value( 'var:preset|color|' . $slug );
+	}
+	return gopublish_carousel_css_value( $attributes[ 'custom' . ucfirst( $name ) ] ?? '' );
+}
+
+/**
+ * The Carousel Pagination block's settings as the dots' custom properties
+ * (style.scss), set on the block's wrapper: Dots and Current dot colours, dot
+ * size and the space between dots (both in pixels).
+ *
+ * A chosen Dots colour is shown as is (full opacity); without it, dots are
+ * the text colour, faded. The current dot is the text colour unless Current
+ * dot is set.
+ *
+ * Mirrors getPaginationStyles() in src/carousel-pagination/dot-styles.js:
+ * keep them in sync.
+ *
+ * @param array $attributes Block attributes.
+ * @return string CSS declarations for a style attribute.
+ */
+function gopublish_carousel_pagination_styles( $attributes ) {
+	$properties = array();
+	$dot        = gopublish_carousel_color_attribute( $attributes, 'dotColor' );
+	if ( '' !== $dot ) {
+		$properties['--pagination-dot-color']   = $dot;
+		$properties['--pagination-dot-opacity'] = '1';
+	}
+	$current = gopublish_carousel_color_attribute( $attributes, 'currentDotColor' );
+	if ( '' !== $current ) {
+		$properties['--pagination-dot-current-color'] = $current;
+	}
+	if ( is_numeric( $attributes['dotSize'] ?? null ) ) {
+		$properties['--pagination-dot-size'] = max( 4, min( 32, (int) $attributes['dotSize'] ) ) . 'px';
+	}
+	if ( is_numeric( $attributes['dotSpacing'] ?? null ) ) {
+		$properties['--pagination-dot-spacing'] = max( 0, min( 48, (int) $attributes['dotSpacing'] ) ) . 'px';
+	}
+
+	$css = '';
+	foreach ( $properties as $property => $value ) {
+		$css .= $property . ':' . $value . ';';
+	}
+	return $css;
+}
+
+/**
  * The Carousel Navigation block's colour and border settings as the buttons'
  * custom properties (style.scss), set on the block's wrapper.
  *
@@ -577,16 +661,11 @@ function gopublish_carousel_navigation_button_styles( $attributes ) {
 	$preset = static function ( $slug ) {
 		return is_string( $slug ) && '' !== $slug ? 'var:preset|color|' . $slug : null;
 	};
-	$color  = static function ( $name ) use ( $attributes, $preset ) {
-		return gopublish_carousel_css_value(
-			$preset( $attributes[ $name ] ?? null ) ?? ( $attributes[ 'custom' . ucfirst( $name ) ] ?? '' )
-		);
-	};
 
-	$icon             = $color( 'iconColor' );
-	$background       = $color( 'buttonColor' );
-	$icon_hover       = $color( 'iconHoverColor' );
-	$background_hover = $color( 'buttonHoverColor' );
+	$icon             = gopublish_carousel_color_attribute( $attributes, 'iconColor' );
+	$background       = gopublish_carousel_color_attribute( $attributes, 'buttonColor' );
+	$icon_hover       = gopublish_carousel_color_attribute( $attributes, 'iconHoverColor' );
+	$background_hover = gopublish_carousel_color_attribute( $attributes, 'buttonHoverColor' );
 	if ( '' === $background_hover ) {
 		$background_hover = $icon;
 	}

@@ -20,7 +20,17 @@ echo gopublish_carousel_render_navigation( // phpcs:ignore WordPress.Security.Es
 	(string) ( $block->context['gopublish-carousel/slidesId'] ?? '' ),
 	get_block_wrapper_attributes(
 		array(
-			'class'                => 'navigation-container' . ( gopublish_carousel_icon_points_back( (string) ( $attributes['icon'] ?? '' ) ) ? ' has-backward-icon' : '' ),
+			'class'                => implode(
+				' ',
+				array_filter(
+					array(
+						'navigation-container',
+						gopublish_carousel_icon_points_back( (string) ( $attributes['icon'] ?? '' ) ) ? 'has-backward-icon' : '',
+						// Over the slides, at their edges (style.scss).
+						! empty( $attributes['overlay'] ) ? 'is-overlay' : '',
+					)
+				)
+			),
 			// Colour and border settings, for the buttons.
 			'style'                => gopublish_carousel_navigation_button_styles( $attributes ),
 			// Hidden while all slides fit in view (nothing to navigate).

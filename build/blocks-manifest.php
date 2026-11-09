@@ -5,7 +5,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel',
-		'version' => '0.5.0',
+		'version' => '0.6.0',
 		'title' => 'Carousel',
 		'category' => 'widgets',
 		'icon' => 'slides',
@@ -74,7 +74,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel-navigation',
-		'version' => '0.5.0',
+		'version' => '0.6.0',
 		'title' => 'Carousel Navigation',
 		'category' => 'widgets',
 		'icon' => 'leftright',
@@ -85,6 +85,10 @@ return array(
 		'attributes' => array(
 			'icon' => array(
 				'type' => 'string'
+			),
+			'overlay' => array(
+				'type' => 'boolean',
+				'default' => false
 			),
 			'iconColor' => array(
 				'type' => 'string'
@@ -170,13 +174,33 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel-pagination',
-		'version' => '0.5.0',
+		'version' => '0.6.0',
 		'title' => 'Carousel Pagination',
 		'category' => 'widgets',
 		'icon' => 'ellipsis',
 		'description' => 'Dots for jumping to a position in a carousel.',
 		'parent' => array(
 			'gopublish/carousel'
+		),
+		'attributes' => array(
+			'dotColor' => array(
+				'type' => 'string'
+			),
+			'customDotColor' => array(
+				'type' => 'string'
+			),
+			'currentDotColor' => array(
+				'type' => 'string'
+			),
+			'customCurrentDotColor' => array(
+				'type' => 'string'
+			),
+			'dotSize' => array(
+				'type' => 'number'
+			),
+			'dotSpacing' => array(
+				'type' => 'number'
+			)
 		),
 		'usesContext' => array(
 			'gopublish-carousel/slidesId',
@@ -219,7 +243,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel-slide',
-		'version' => '0.5.0',
+		'version' => '0.6.0',
 		'title' => 'Carousel Slide',
 		'category' => 'widgets',
 		'icon' => 'media-default',
@@ -257,7 +281,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel-slides',
-		'version' => '0.5.0',
+		'version' => '0.6.0',
 		'title' => 'Carousel Slides',
 		'category' => 'widgets',
 		'icon' => 'images-alt2',

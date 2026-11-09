@@ -29,6 +29,8 @@ $wrapper_attributes = get_block_wrapper_attributes(
 		'class'                => 'carousel-pagination',
 		'role'                 => 'group',
 		'aria-label'           => __( 'Choose slide', 'gopublish-carousel' ),
+		// Colour and size settings, for the dots.
+		'style'                => gopublish_carousel_pagination_styles( $attributes ),
 		// Hidden while all slides fit in view (nothing to choose).
 		'data-wp-bind--hidden' => '!context.canScroll',
 	)

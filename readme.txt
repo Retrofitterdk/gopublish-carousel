@@ -4,7 +4,7 @@ Tags:              carousel, slider, block, interactivity api
 Requires at least: 6.8
 Tested up to:      7.1
 Requires PHP:      7.2
-Stable tag:        0.5.0
+Stable tag:        0.6.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -109,6 +109,14 @@ Select the Carousel and change Block spacing in the Dimensions panel. From WordP
 
 Yes, from WordPress 7.1. Select Carousel Navigation and click Choose icon in the Icon panel to pick any icon from WordPress's icon library (and collections your theme or plugins add). Previous and Next show the icon mirrored, pointing back and forward: an icon pointing left (e.g. Chevron left) works as well as one pointing right. Reset returns to the default arrow. The icon's size is set with the `--nav-button-icon-size` custom property (default 24 px).
 
+= Can the arrows sit on top of the slides? =
+
+Yes. Select Carousel Navigation and turn on Position → Over the slides. Previous and Next then sit at the left and right edges of the slides, vertically centred (Justification is set to Space between; Padding sets the distance from the edges). They're white buttons with a soft shadow, unless you choose colours. On mobile they're hidden: visitors swipe, and keyboard users still reach them. This needs a browser with CSS anchor positioning (current versions of all major browsers); older browsers show the navigation above or below the slides.
+
+= Can I change the dots? =
+
+Yes. Select Carousel Pagination and open the Styles tab. In the Color panel, choose the colour of the Dots and of the Current dot (hovering a dot shows a colour halfway between them). Under Dimensions, set Dot size and Dot spacing. Dots stay at least 24 px apart, centre to centre, so they're easy to tap: with large dots, a small spacing can't go lower than that. Without a Dots colour, the dots are the text colour, faded.
+
 = Can I change the size of the arrows? =
 
 Yes. Select Carousel Navigation, open the Styles tab and use Icon size and Button padding in the Dimensions panel. The buttons grow to fit the icon plus the padding (by default a 24 px icon with 4 px padding: 32 px buttons) and are never smaller than 24 × 24 px. Padding (above them) is the space around the whole navigation.
@@ -138,12 +146,14 @@ Available properties:
 * `--nav-button-background`, `--nav-button-background-hover`
 * `--nav-button-icon-color`, `--nav-button-icon-color-hover`, `--nav-button-icon-size` (default `24px`)
 * `--nav-button-outline-color`, `--nav-button-outline-width`, `--nav-button-outline-offset` (keyboard focus ring)
+* `--nav-button-shadow` (default `none`)
+* `--nav-overlay-button-background`, `--nav-overlay-button-background-hover`, `--nav-overlay-button-icon-color`, `--nav-overlay-button-icon-color-hover`, `--nav-overlay-button-shadow`, `--nav-overlay-inset` (navigation over the slides)
 * `--nav-button-disabled-opacity` (buttons at the ends, with Rewind at the end off)
 * `--carousel-gap` (space between slides; normally set with Block spacing). The older `--slide--padding-right` still works as a fallback.
-* `--pagination-dot-size` (default `10px`), `--pagination-dot-color` (default: the text colour), `--pagination-dot-opacity` (inactive dots, default `0.3`), `--pagination-gap` (default `0`; each dot is a 24 px button)
+* `--pagination-dot-size` (default `10px`), `--pagination-dot-spacing` (space between dots, default `14px`; dots stay at least 24 px apart, centre to centre), `--pagination-dot-color` (default: the text colour), `--pagination-dot-current-color` (default: the text colour), `--pagination-dot-opacity` (dots other than the current one, default `0.3`), `--pagination-gap` (extra space between the dot buttons, default `0`)
 * `--cutoff-amount` (how much of a slide the cutoff effect cuts off the last visible slide, or shows of the next one with one column; default `0.3`, from 0 to 0.9).
 
-The space between the buttons and between the dots is set with `--nav-container-gap` and `--pagination-gap` rather than in the editor, so themes control it.
+The space between the navigation buttons is set with `--nav-container-gap` rather than in the editor, so themes control it. The dots' size, spacing and colours are block settings (see above).
 
 The carousel also has classes for its state: `is-scrollable` (the slides don't all fit), `is-at-start` and `is-at-end`, plus `columns-N` and `cutoff` or `no-cutoff` for its settings.
 
@@ -171,6 +181,14 @@ See README.md for more developer notes, including how to update translations.
 == Changelog ==
 
 = Unreleased =
+* New: navigation over the slides (Carousel Navigation → Position → Over the slides): Previous and Next at the edges of the slides, vertically centred, as white buttons with a shadow by default (the block's colours override them). Clicks and swipes outside the buttons reach the slides; a button that can't go further (Rewind off) is invisible but stays keyboard-focusable; hidden on mobile, where visitors swipe. Uses CSS anchor positioning (current Chrome, Edge, Safari and Firefox); older browsers show the navigation above or below the slides.
+* New: `--nav-overlay-*` and `--nav-button-shadow` custom properties.
+* New: colour and size settings for the pagination dots (Carousel Pagination → Styles): Dots and Current dot colours, Dot size and Dot spacing. Dots stay at least 24 px apart, centre to centre. The default look is unchanged.
+* New: `--pagination-dot-current-color` and `--pagination-dot-spacing` custom properties.
+* Fixed: clicking a dot or a navigation button left the theme's focus outline around it (around a wide dot button, an ellipse). Focus from a click shows no ring; keyboard focus shows a round ring around the dot itself.
+* Fixed: empty slides (no blocks inside, e.g. added with Add slide and never filled) showed as a blank gap, at the end of the carousel looking like the slides had run out. They're left out on the front end, and don't count as slides or get a dot.
+
+= 0.6.0 =
 * New: choose the navigation's icon from WordPress's icon library (WordPress 7.1): an Icon panel on Carousel Navigation with a searchable picker. Previous and Next show it mirrored, pointing back and forward, whether the icon points left or right.
 * New: `--nav-button-icon-size` custom property (default 24 px). The default arrow looks as before.
 * Changed: the icon colour is set as the button's text colour, so filled and outlined icons both follow `--nav-button-icon-color`; Previous mirrors the icon instead of rotating it.
@@ -270,6 +288,9 @@ See README.md for more developer notes, including how to update translations.
 * First release, as demo-carousel.
 
 == Upgrade Notice ==
+
+= 0.6.0 =
+The navigation buttons get icon, colour, border and size settings. The default look is unchanged; themes that set `--nav-button-width` or `--nav-button-height`: these are now minimum sizes (the button fits the icon plus padding).
 
 = 0.5.0 =
 Navigation and pagination are now separate blocks. Existing carousels are converted when opened in the editor and look the same; save them to keep the new structure.
