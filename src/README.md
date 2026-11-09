@@ -32,7 +32,7 @@ A static wrapper block for one slide. It can only be placed inside Carousel Slid
 
 ## `carousel-navigation/` – Carousel Navigation (`gopublish/carousel-navigation`)
 
-The Previous and Next buttons, only inside a Carousel (one per carousel). A dynamic block (`save` returns nothing); `render.php` uses `gopublish_carousel_render_navigation()`. Justification (flex layout support), width (`align`), margin and padding are block settings; the buttons' behaviour comes from the Carousel's store.
+The Previous and Next buttons, only inside a Carousel (one per carousel). A dynamic block (`save` returns nothing); `render.php` uses `gopublish_carousel_render_navigation()`. Justification (flex layout support), width (`align`), margin and padding are block settings, and the icon (`icon` attribute, picked in `icon-picker.js` from WordPress's icon registry). The Color panel (own attributes, `withColors`), Button padding and Icon size (own attributes in the Dimensions panel) and the Border settings style the buttons, as `--nav-button-*` custom properties on the wrapper (`button-styles.js`, mirroring `gopublish_carousel_navigation_button_styles()`); the buttons' behaviour comes from the Carousel's store.
 
 ## `carousel-pagination/` – Carousel Pagination (`gopublish/carousel-pagination`)
 

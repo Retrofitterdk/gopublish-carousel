@@ -24,18 +24,18 @@ msgstr ""
 msgid "Retrofitter"
 msgstr ""
 
-#: gopublish-carousel.php:555
+#: gopublish-carousel.php:756
 #: build/carousel-navigation/index.js:1
 msgid "Previous slide"
 msgstr "Forrige dias"
 
-#: gopublish-carousel.php:561
+#: gopublish-carousel.php:762
 #: build/carousel-navigation/index.js:1
 msgid "Next slide"
 msgstr "Næste dias"
 
 #. translators: Spoken by screen readers to describe the carousel block.
-#: build/carousel/render.php:133
+#: build/carousel/render.php:138
 msgid "carousel"
 msgstr "karrusel"
 
@@ -45,7 +45,7 @@ msgid "slide"
 msgstr "dias"
 
 #. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:168
+#: build/carousel/render.php:173
 #, php-format
 msgid "Slide %1$d of %2$d"
 msgstr "Dias %1$d af %2$d"
@@ -113,7 +113,7 @@ msgid "A carousel for blocks using the Interactivity API."
 msgstr "En karrusel til blokke, bygget med Interactivity API."
 
 #. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
-#: build/carousel/render.php:170
+#: build/carousel/render.php:175
 #, php-format
 msgid "Slides %1$d to %2$d of %3$d"
 msgstr "Dias %1$d til %2$d af %3$d"
@@ -207,7 +207,7 @@ msgid "Choose slide"
 msgstr "Vælg dias"
 
 #. translators: Label of a pagination dot. %d: Number of the first slide it scrolls to.
-#: build/carousel/render.php:188
+#: build/carousel/render.php:193
 #: build/carousel-pagination/index.js:2
 #, php-format,js-format
 msgid "Go to slide %d"
@@ -234,3 +234,55 @@ msgstr "Dias"
 #: build/carousel/index.js:3
 msgid "Pagination"
 msgstr "Paginering"
+
+#: build/carousel-navigation/index.js:1
+msgid "Choose icon"
+msgstr "Vælg ikon"
+
+#: build/carousel-navigation/index.js:1
+msgid "Search icons"
+msgstr "Søg efter ikoner"
+
+#: build/carousel-navigation/index.js:1
+msgid "No icons found."
+msgstr "Ingen ikoner fundet."
+
+#: build/carousel-navigation/index.js:1
+msgid "Icon"
+msgstr "Ikon"
+
+#: build/carousel-navigation/index.js:1
+msgid "Reset"
+msgstr "Nulstil"
+
+#: build/carousel-navigation/index.js:1
+msgid "Color"
+msgstr "Farve"
+
+#: build/carousel-navigation/index.js:1
+msgid "Background"
+msgstr "Baggrund"
+
+#: build/carousel-navigation/index.js:1
+msgid "Previous and Next show the icon mirrored: left- and right-pointing icons both work."
+msgstr "Forrige og Næste viser ikonet spejlvendt: ikoner, der peger til venstre eller højre, virker begge."
+
+#: build/carousel-navigation/index.js:1
+msgid "Button padding"
+msgstr "Knappens indre margen"
+
+#: build/carousel-navigation/index.js:1
+msgid "Icon size"
+msgstr "Ikonstørrelse"
+
+#: build/carousel-navigation/index.js:1
+msgid "In pixels."
+msgstr "I pixels."
+
+#: build/carousel-navigation/index.js:1
+msgid "Icon (hover & focus)"
+msgstr "Ikon (hover og fokus)"
+
+#: build/carousel-navigation/index.js:1
+msgid "Background (hover & focus)"
+msgstr "Baggrund (hover og fokus)"

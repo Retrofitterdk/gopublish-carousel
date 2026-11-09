@@ -105,6 +105,18 @@ No. On a computer, use the buttons, scroll sideways with a trackpad or with Shif
 
 Select the Carousel and change Block spacing in the Dimensions panel. From WordPress 7.1, you can set a different value for tablet and mobile. Themes can also set the `--carousel-gap` custom property.
 
+= Can I change the arrows? =
+
+Yes, from WordPress 7.1. Select Carousel Navigation and click Choose icon in the Icon panel to pick any icon from WordPress's icon library (and collections your theme or plugins add). Previous and Next show the icon mirrored, pointing back and forward: an icon pointing left (e.g. Chevron left) works as well as one pointing right. Reset returns to the default arrow. The icon's size is set with the `--nav-button-icon-size` custom property (default 24 px).
+
+= Can I change the size of the arrows? =
+
+Yes. Select Carousel Navigation, open the Styles tab and use Icon size and Button padding in the Dimensions panel. The buttons grow to fit the icon plus the padding (by default a 24 px icon with 4 px padding: 32 px buttons) and are never smaller than 24 × 24 px. Padding (above them) is the space around the whole navigation.
+
+= Can I change the colours of the arrows? =
+
+Yes. Select Carousel Navigation and open the Styles tab. In the Color panel, choose the Icon and Background colours and, if you like, their colours on hover and keyboard focus: Icon (hover & focus) and Background (hover & focus). Without hover colours, the icon and background colours swap on hover; with only an icon colour, the background takes the icon colour. Borders adds a border around each button (outside the button, so it doesn't cover the background) and rounds the corners: the buttons are 32 px, so a radius of 16 px or more makes them round, like the default. Themes can set the same through custom properties (see below). The Border settings for Carousel Navigation under Styles → Blocks in the Site Editor don't reach the buttons, so use custom properties for site-wide styles.
+
 = How do I make the carousel accessible? =
 
 Most of it is built in. To help screen reader users, give the carousel a label that describes it, e.g. "Customer testimonials": select the Carousel block and open Advanced → Carousel label. Screen reader users can then jump to the carousel as a landmark. Leave it empty if the surrounding content (such as a heading right above it) already makes the purpose clear.
@@ -121,9 +133,10 @@ Available properties:
 
 * `--nav-container-padding`, `--nav-container-padding-left`, `--nav-container-padding-right`
 * `--nav-container-justify-content`, `--nav-container-gap`, `--nav-container-text-align`
-* `--nav-button-width`, `--nav-button-height`, `--nav-button-radius`
+* `--nav-button-width`, `--nav-button-height` (minimum size, default `24px`; the button fits the icon plus padding), `--nav-button-padding` (default `4px`), `--nav-button-radius`
+* `--nav-button-border-width` (default `0`), `--nav-button-border-style` (default `solid`), `--nav-button-border-color` (default `currentcolor`, the icon colour)
 * `--nav-button-background`, `--nav-button-background-hover`
-* `--nav-button-icon-color`, `--nav-button-icon-color-hover`
+* `--nav-button-icon-color`, `--nav-button-icon-color-hover`, `--nav-button-icon-size` (default `24px`)
 * `--nav-button-outline-color`, `--nav-button-outline-width`, `--nav-button-outline-offset` (keyboard focus ring)
 * `--nav-button-disabled-opacity` (buttons at the ends, with Rewind at the end off)
 * `--carousel-gap` (space between slides; normally set with Block spacing). The older `--slide--padding-right` still works as a fallback.
@@ -156,6 +169,15 @@ Source files are in `src/`, and the compiled blocks in `build/` are what WordPre
 See README.md for more developer notes, including how to update translations.
 
 == Changelog ==
+
+= Unreleased =
+* New: choose the navigation's icon from WordPress's icon library (WordPress 7.1): an Icon panel on Carousel Navigation with a searchable picker. Previous and Next show it mirrored, pointing back and forward, whether the icon points left or right.
+* New: `--nav-button-icon-size` custom property (default 24 px). The default arrow looks as before.
+* Changed: the icon colour is set as the button's text colour, so filled and outlined icons both follow `--nav-button-icon-color`; Previous mirrors the icon instead of rotating it.
+* New: colour and border settings for the navigation buttons (Carousel Navigation → Styles): icon and background colours, also on hover, and border colour, width, style and radius. Without hover colours, hover and focus swap the icon and background colours. A border is added outside the button.
+* New: Icon size and Button padding settings for the navigation buttons (Carousel Navigation → Styles → Dimensions). The buttons now fit the icon plus padding; `--nav-button-width` and `--nav-button-height` are minimum sizes (default 24 px), and `--nav-button-padding` is new (default 4 px). The default look is unchanged.
+* New: `--nav-button-border-width`, `--nav-button-border-style` and `--nav-button-border-color` custom properties.
+* Fixed: a carousel with an empty Carousel Slides before the one with slides (possible in content edited during 0.5.0 development) showed nothing; the first Carousel Slides with slides is used.
 
 = 0.5.0 =
 * New: Carousel Navigation and Carousel Pagination blocks. The buttons and the new dots are separate blocks inside the Carousel: place them above or below the slides, justify them (left, center, right, space between) and choose their width (content, wide or full).

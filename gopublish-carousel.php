@@ -532,6 +532,203 @@ function gopublish_carousel_count_slides( $html ) {
 }
 
 /**
+ * A colour or border value from block attributes as CSS: preset references
+ * ('var:preset|color|accent-1') become custom properties
+ * ('var(--wp--preset--color--accent-1)'), like the style engine does.
+ *
+ * @param mixed $value Attribute value.
+ * @return string CSS value, or an empty string if unset or unsafe.
+ */
+function gopublish_carousel_css_value( $value ) {
+	if ( ! is_string( $value ) && ! is_numeric( $value ) ) {
+		return '';
+	}
+	$value = trim( (string) $value );
+	if ( str_starts_with( $value, 'var:' ) ) {
+		$path  = array_map( '_wp_to_kebab_case', explode( '|', substr( $value, 4 ) ) );
+		$value = 'var(--wp--' . implode( '--', $path ) . ')';
+	}
+	// A single value: nothing that could end the declaration.
+	return preg_match( '/[;{}<>"\\\\]/', $value ) ? '' : $value;
+}
+
+/**
+ * The Carousel Navigation block's colour and border settings as the buttons'
+ * custom properties (style.scss), set on the block's wrapper.
+ *
+ * Button padding and icon size are the block's own settings too (in the
+ * Dimensions panel). Colours are the block's own settings (Icon, Background and their hover
+ * colours: a palette slug or a custom colour each). Without hover colours,
+ * hovering swaps the icon and background colours (with only an icon colour,
+ * the background takes the icon colour). The keyboard focus ring follows the
+ * hover background. Borders are WordPress's Border settings, applied to the
+ * buttons instead of the wrapper (serialization is skipped in block.json).
+ * As custom properties, the hover and focus rules in style.scss keep working.
+ *
+ * Mirrors getButtonStyles() in src/carousel-navigation/button-styles.js:
+ * keep them in sync.
+ *
+ * @param array $attributes Block attributes.
+ * @return string CSS declarations for a style attribute.
+ */
+function gopublish_carousel_navigation_button_styles( $attributes ) {
+	$style  = is_array( $attributes['style'] ?? null ) ? $attributes['style'] : array();
+	$border = is_array( $style['border'] ?? null ) ? $style['border'] : array();
+	$preset = static function ( $slug ) {
+		return is_string( $slug ) && '' !== $slug ? 'var:preset|color|' . $slug : null;
+	};
+	$color  = static function ( $name ) use ( $attributes, $preset ) {
+		return gopublish_carousel_css_value(
+			$preset( $attributes[ $name ] ?? null ) ?? ( $attributes[ 'custom' . ucfirst( $name ) ] ?? '' )
+		);
+	};
+
+	$icon             = $color( 'iconColor' );
+	$background       = $color( 'buttonColor' );
+	$icon_hover       = $color( 'iconHoverColor' );
+	$background_hover = $color( 'buttonHoverColor' );
+	if ( '' === $background_hover ) {
+		$background_hover = $icon;
+	}
+	if ( '' === $icon_hover && '' !== $icon ) {
+		$icon_hover = $background;
+	}
+
+	$properties = array_filter(
+		array(
+			'--nav-button-icon-color'       => $icon,
+			'--nav-button-background'       => $background,
+			'--nav-button-icon-color-hover' => $icon_hover,
+			'--nav-button-background-hover' => $background_hover,
+			'--nav-button-outline-color'    => $background_hover,
+		),
+		'strlen'
+	);
+
+	// Space between the icon and the button's edge, per side (a spacing
+	// preset or a custom size), and the icon's size in pixels.
+	$padding = is_array( $attributes['buttonPadding'] ?? null ) ? $attributes['buttonPadding'] : array();
+	foreach ( array( 'top', 'right', 'bottom', 'left' ) as $side ) {
+		$value = gopublish_carousel_css_value( $padding[ $side ] ?? '' );
+		if ( '' !== $value ) {
+			$properties[ '--nav-button-padding-' . $side ] = $value;
+		}
+	}
+	if ( is_numeric( $attributes['iconSize'] ?? null ) ) {
+		$properties['--nav-button-icon-size'] = max( 8, min( 128, (int) $attributes['iconSize'] ) ) . 'px';
+	}
+
+	// Border colour, style and width: one value for all sides, or one per
+	// side (top, right, bottom, left) when the sides are set separately.
+	$defaults = array(
+		'color' => 'currentcolor',
+		'style' => 'solid',
+		'width' => '0',
+	);
+	$values   = array();
+	foreach ( $defaults as $feature => $default ) {
+		$linked = 'color' === $feature ? $preset( $attributes['borderColor'] ?? null ) : null;
+		$linked = gopublish_carousel_css_value( $linked ?? ( $border[ $feature ] ?? '' ) );
+		if ( '' !== $linked ) {
+			$values[ $feature ] = $linked;
+			continue;
+		}
+		$sides = array();
+		foreach ( array( 'top', 'right', 'bottom', 'left' ) as $side ) {
+			$sides[] = gopublish_carousel_css_value( $border[ $side ][ $feature ] ?? '' );
+		}
+		if ( array_filter( $sides, 'strlen' ) ) {
+			$values[ $feature ] = implode(
+				' ',
+				array_map(
+					static function ( $value ) use ( $default ) {
+						return '' !== $value ? $value : $default;
+					},
+					$sides
+				)
+			);
+		}
+	}
+	// A colour or style without a width: a thin border, so it shows.
+	if ( $values && ! isset( $values['width'] ) ) {
+		$values['width'] = '1px';
+	}
+	foreach ( $values as $feature => $value ) {
+		$properties[ '--nav-button-border-' . $feature ] = $value;
+	}
+
+	// Corner radius: one value, or one per corner.
+	$radius = $border['radius'] ?? '';
+	if ( is_array( $radius ) ) {
+		$corners = array();
+		foreach ( array( 'topLeft', 'topRight', 'bottomRight', 'bottomLeft' ) as $corner ) {
+			$corners[] = gopublish_carousel_css_value( $radius[ $corner ] ?? '' );
+		}
+		$radius = array_filter( $corners, 'strlen' )
+			? implode(
+				' ',
+				array_map(
+					static function ( $value ) {
+						return '' !== $value ? $value : '0';
+					},
+					$corners
+				)
+			)
+			: '';
+	} else {
+		$radius = gopublish_carousel_css_value( $radius );
+	}
+	if ( '' !== $radius ) {
+		$properties['--nav-button-radius'] = $radius;
+	}
+
+	$css = '';
+	foreach ( $properties as $property => $value ) {
+		$css .= $property . ':' . $value . ';';
+	}
+	return $css;
+}
+
+/**
+ * Whether a navigation icon points back (left), judging by its name, e.g.
+ * 'core/chevron-left', 'core/arrow-up-left' or 'core/previous'. The buttons
+ * expect an icon pointing forward; a backward one is mirrored the other way
+ * round (the has-backward-icon class, style.scss), so either works.
+ *
+ * Mirrors pointsBack() in src/carousel-navigation/edit.js.
+ *
+ * @param string $icon Namespaced icon name.
+ * @return bool Whether it points back.
+ */
+function gopublish_carousel_icon_points_back( $icon ) {
+	return (bool) preg_match( '#(^|[/-])(left|previous|back)(-|$)#', $icon );
+}
+
+/**
+ * The SVG for the navigation buttons: an icon from the icon registry
+ * (WordPress 7.1+, e.g. 'core/chevron-right'), drawn pointing forward; the
+ * Previous button mirrors it (style.scss). Falls back to the plugin's own
+ * arrow when no icon is chosen, the icon isn't registered (any more) or the
+ * WordPress version has no icon registry.
+ *
+ * The default arrow sits in a 24px canvas with padding, like the registry's
+ * icons, so --nav-button-icon-size sizes both the same way.
+ *
+ * @param string $icon Namespaced icon name, or an empty string for the default.
+ * @return string SVG markup, hidden from screen readers (the button has the
+ *                accessible name).
+ */
+function gopublish_carousel_navigation_icon( $icon ) {
+	if ( '' !== $icon && function_exists( 'wp_get_icon' ) ) {
+		$svg = wp_get_icon( $icon, array( 'size' => 24 ) );
+		if ( '' !== $svg ) {
+			return $svg;
+		}
+	}
+	return '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-5 -5 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+/**
  * Render a carousel's navigation: the Previous and Next buttons.
  *
  * Used by the Carousel Navigation block, and by the Carousel itself for
@@ -543,9 +740,13 @@ function gopublish_carousel_count_slides( $html ) {
  *                                     aria-controls.
  * @param string $container_attributes Attributes for the container element,
  *                                     already escaped.
+ * @param string $icon                 Icon for the buttons (see
+ *                                     gopublish_carousel_navigation_icon()).
  * @return string HTML.
  */
-function gopublish_carousel_render_navigation( $slides_id, $container_attributes ) {
+function gopublish_carousel_render_navigation( $slides_id, $container_attributes, $icon = '' ) {
+	$svg = gopublish_carousel_navigation_icon( $icon );
+
 	// Accessible names for the buttons (they only contain an icon). Always
 	// singular, like the W3C example: how many slides a button moves can
 	// differ per viewport.
@@ -575,9 +776,7 @@ function gopublish_carousel_render_navigation( $slides_id, $container_attributes
 				<?php endif; ?>
 				data-wp-bind--aria-disabled="<?php echo esc_attr( $button['disabled'] ); ?>"
 				data-wp-on--click="<?php echo esc_attr( $button['action'] ); ?>">
-				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
-					<path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>
+				<?php echo $svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG from the icon registry or the plugin itself. ?>
 			</button>
 		<?php endforeach; ?>
 	</div>

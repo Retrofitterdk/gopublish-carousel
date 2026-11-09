@@ -5,7 +5,9 @@
  *
  * Justification (layout support) and width (align support) are applied by
  * WordPress to the wrapper; the buttons' behaviour comes from the carousel's
- * store (view.js).
+ * store (view.js). The icon attribute picks the buttons' icon from the icon
+ * registry; the Color and Border settings style the buttons (see
+ * gopublish_carousel_navigation_button_styles()).
  *
  * @package GopublishCarousel
  *
@@ -18,9 +20,12 @@ echo gopublish_carousel_render_navigation( // phpcs:ignore WordPress.Security.Es
 	(string) ( $block->context['gopublish-carousel/slidesId'] ?? '' ),
 	get_block_wrapper_attributes(
 		array(
-			'class'                => 'navigation-container',
+			'class'                => 'navigation-container' . ( gopublish_carousel_icon_points_back( (string) ( $attributes['icon'] ?? '' ) ) ? ' has-backward-icon' : '' ),
+			// Colour and border settings, for the buttons.
+			'style'                => gopublish_carousel_navigation_button_styles( $attributes ),
 			// Hidden while all slides fit in view (nothing to navigate).
 			'data-wp-bind--hidden' => '!context.canScroll',
 		)
-	)
+	),
+	(string) ( $attributes['icon'] ?? '' )
 );

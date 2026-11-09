@@ -82,6 +82,41 @@ return array(
 		'parent' => array(
 			'gopublish/carousel'
 		),
+		'attributes' => array(
+			'icon' => array(
+				'type' => 'string'
+			),
+			'iconColor' => array(
+				'type' => 'string'
+			),
+			'customIconColor' => array(
+				'type' => 'string'
+			),
+			'iconHoverColor' => array(
+				'type' => 'string'
+			),
+			'customIconHoverColor' => array(
+				'type' => 'string'
+			),
+			'buttonColor' => array(
+				'type' => 'string'
+			),
+			'customButtonColor' => array(
+				'type' => 'string'
+			),
+			'buttonHoverColor' => array(
+				'type' => 'string'
+			),
+			'customButtonHoverColor' => array(
+				'type' => 'string'
+			),
+			'buttonPadding' => array(
+				'type' => 'object'
+			),
+			'iconSize' => array(
+				'type' => 'number'
+			)
+		),
 		'usesContext' => array(
 			'gopublish-carousel/slidesId',
 			'gopublish-carousel/rewind'
@@ -93,6 +128,18 @@ return array(
 			'align' => array(
 				'wide',
 				'full'
+			),
+			'__experimentalBorder' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalSkipSerialization' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => true,
+					'radius' => true,
+					'width' => true
+				)
 			),
 			'layout' => array(
 				'default' => array(

@@ -38,23 +38,28 @@ if ( $is_legacy ) {
 	$real_slides = gopublish_carousel_count_slides( $inner_html );
 } else {
 	// Carousel Slides first: the other blocks need the number of slides. A
-	// carousel has one scroll area: any further Carousel Slides blocks (the
-	// editor doesn't allow them, but markup can be pasted) are skipped.
-	$parts      = array();
-	$has_slides = false;
+	// carousel has one scroll area: the first Carousel Slides with slides is
+	// used, and any other (empty, or a second one; the editor doesn't allow
+	// them, but older or pasted content can have them) is skipped.
+	$parts       = array();
+	$real_slides = 0;
 	foreach ( $block->inner_blocks as $index => $inner_block ) {
-		if ( 'gopublish/carousel-slides' === $inner_block->name ) {
-			if ( $has_slides ) {
-				$parts[ $index ] = '';
-				continue;
-			}
-			$has_slides = true;
-			$inner_block->context['gopublish-carousel/slidesId'] = $slides_id;
+		if ( 'gopublish/carousel-slides' !== $inner_block->name ) {
+			continue;
+		}
+		$parts[ $index ] = '';
+		if ( $real_slides > 0 ) {
+			continue;
+		}
+		$inner_block->context['gopublish-carousel/slidesId'] = $slides_id;
 
-			$parts[ $index ] = gopublish_carousel_render_inner_block( $inner_block, $block );
+		$html  = gopublish_carousel_render_inner_block( $inner_block, $block );
+		$count = gopublish_carousel_count_slides( $html );
+		if ( $count > 0 ) {
+			$parts[ $index ] = $html;
+			$real_slides     = $count;
 		}
 	}
-	$real_slides = gopublish_carousel_count_slides( implode( '', $parts ) );
 	foreach ( $block->inner_blocks as $index => $inner_block ) {
 		if ( ! isset( $parts[ $index ] ) ) {
 			$inner_block->context['gopublish-carousel/slidesId']   = $slides_id;

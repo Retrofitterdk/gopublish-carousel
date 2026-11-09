@@ -45,3 +45,35 @@
 		overflow-x: visible;
 	}
 }
+
+// Carousel Navigation's Icon panel and icon picker (outside the carousel, in
+// the editor's own document).
+.gopublish-carousel-icon-preview {
+	display: inline-flex;
+	padding: 4px;
+	border: 1px solid #ddd;
+	border-radius: 2px;
+
+	svg {
+		width: 24px;
+		height: 24px;
+	}
+}
+
+.gopublish-carousel-icon-picker__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+	gap: 8px;
+	margin-top: 16px;
+
+	.gopublish-carousel-icon-picker__icon {
+		justify-content: center;
+		width: 48px;
+		height: 48px;
+
+		svg {
+			width: 24px;
+			height: 24px;
+		}
+	}
+}

@@ -19,13 +19,20 @@
 	--nav-container-justify-content: flex-end;
 	--nav-container-gap: 1rem;
 	--nav-container-text-align: right;
-	--nav-button-width: 32px;
-	--nav-button-height: 32px;
+	// Minimum button size; the button fits the icon plus padding, and is at
+	// least 24 × 24 px (the minimum target size).
+	--nav-button-width: 24px;
+	--nav-button-height: 24px;
+	--nav-button-padding: 4px;
 	--nav-button-radius: 100%;
 	--nav-button-background: transparent;
 	--nav-button-background-hover: #000;
 	--nav-button-icon-color: #000;
 	--nav-button-icon-color-hover: #fff;
+	--nav-button-icon-size: 24px;
+	--nav-button-border-width: 0;
+	--nav-button-border-style: solid;
+	--nav-button-border-color: currentcolor;
 	--nav-button-outline-color: var(--nav-button-background-hover);
 	--nav-button-outline-width: 2px;
 	--nav-button-outline-offset: 2px;
@@ -74,32 +81,43 @@
 		.carousel-prev,
 		.carousel-next {
 			position: relative;
-			width: var(--nav-button-width);
-			height: var(--nav-button-height);
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			// The icon plus padding (per side from the block's Button padding
+			// setting) and border: a border adds to the size, so it doesn't
+			// cover the background or the icon.
+			box-sizing: border-box;
+			min-width: max(24px, var(--nav-button-width));
+			min-height: max(24px, var(--nav-button-height));
+			padding:
+				var(--nav-button-padding-top, var(--nav-button-padding))
+				var(--nav-button-padding-right, var(--nav-button-padding))
+				var(--nav-button-padding-bottom, var(--nav-button-padding))
+				var(--nav-button-padding-left, var(--nav-button-padding));
+			// The icon (filled or stroked) is drawn in currentColor.
+			color: var(--nav-button-icon-color);
 			background: var(--nav-button-background);
-			border: none;
+			border-width: var(--nav-button-border-width);
+			border-style: var(--nav-button-border-style);
+			// currentcolor: the icon colour, also on hover.
+			border-color: var(--nav-button-border-color);
 			border-radius: var(--nav-button-radius);
 			cursor: pointer;
-			transition: background 0.3s ease;
+			transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 
 			svg {
-				margin: 0 auto;
-			}
-
-			svg path {
-				stroke: var(--nav-button-icon-color);
-				transition: stroke 0.3s ease;
+				flex: none;
+				width: var(--nav-button-icon-size);
+				height: var(--nav-button-icon-size);
 			}
 
 			// Keyboard focus gets the hover look plus an outline ring, so it's
 			// clearly visible (not only a colour change).
 			&:hover:not([aria-disabled="true"]),
 			&:focus-visible:not([aria-disabled="true"]) {
+				color: var(--nav-button-icon-color-hover);
 				background: var(--nav-button-background-hover);
-
-				svg path {
-					stroke: var(--nav-button-icon-color-hover);
-				}
 			}
 
 			&:focus-visible {
@@ -115,9 +133,9 @@
 			}
 		}
 
-		// Both buttons use the same arrow icon; point the first one back.
+		// The icon points forward (Next); Previous mirrors it.
 		.carousel-prev svg {
-			transform: rotate(-180deg);
+			transform: scaleX(-1);
 		}
 
 		// Right-to-left: the slides run the other way, so the arrows swap.
@@ -130,7 +148,30 @@
 			}
 
 			.carousel-next svg {
-				transform: rotate(-180deg);
+				transform: scaleX(-1);
+			}
+		}
+
+		// An icon pointing back (e.g. a left chevron): Next mirrors it instead.
+		&.has-backward-icon {
+
+			.carousel-prev svg {
+				transform: none;
+			}
+
+			.carousel-next svg {
+				transform: scaleX(-1);
+			}
+
+			&:dir(rtl) {
+
+				.carousel-prev svg {
+					transform: scaleX(-1);
+				}
+
+				.carousel-next svg {
+					transform: none;
+				}
 			}
 		}
 	}
