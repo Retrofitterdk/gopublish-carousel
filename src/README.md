@@ -10,12 +10,13 @@ A dynamic block. Its output is rendered in PHP, and it runs in the browser with 
 | --- | --- |
 | `block.json` | Block metadata, attributes and supports. |
 | `index.js` | Registers the block in the editor, with a default variation that inserts three slides. |
-| `edit.js` | Editor UI: settings, toolbar (Add slide, Show all slides), and a front-end-like carousel view with scroll-only arrows. |
+| `layouts.js` | The layout per viewport (columns, cutoff, slides to scroll, inheritance). Mirrors `gopublish_carousel_layouts()` in PHP. |
+| `edit.js` | Editor UI: Layout panel (Screen size switch tied to the device preview, per-viewport settings), Navigation panel, toolbar (Add slide, Show all slides), and a front-end-like carousel view. |
 | `save.js` | Saves the inner blocks. The front end is rendered by `render.php`. |
-| `render.php` | Front-end markup: navigation, slides, clones for looping and the Interactivity API context. |
-| `view.js` | Front-end behaviour: the `gopublish-carousel` store (moving, looping, swipe and drag). |
-| `style.scss` | Front-end and editor styles. Small-screen styles are generated in PHP (see `gopublish_carousel_add_small_screen_styles()`). |
-| `editor.scss` | Editor-only styles: the scrollable row and the "Show all slides" grid. |
+| `render.php` | Front-end markup: navigation, live region, the slides in a scroll area, the gap, and the Interactivity API context. |
+| `view.js` | Front-end behaviour: the `gopublish-carousel` store (button scrolling, rewind, start/end state, announcements). Scrolling itself is native. |
+| `style.scss` | Front-end and editor styles: the scroll-snap area and slide widths. Small-screen and per-viewport gap styles are generated in PHP (in `gopublish-carousel.php`). |
+| `editor.scss` | Editor-only styles: softer snapping while editing and the "Show all slides" grid. |
 
 All blocks are registered from `build/blocks-manifest.php`, which `npm run build` generates. The carousel gets `skip_inner_blocks` through the `register_block_type_args` filter. `render.php` renders each slide once with `gopublish_carousel_render_inner_block()` (in `gopublish-carousel.php`), so the slides keep their inherited block context.
 

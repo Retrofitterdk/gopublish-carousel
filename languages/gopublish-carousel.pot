@@ -1,0 +1,182 @@
+# Copyright (C) 2026 Retrofitter
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Go:Publish Carousel 0.4.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-11-09T13:57:45+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: gopublish-carousel\n"
+
+#. Plugin Name of the plugin
+#: gopublish-carousel.php
+msgid "Go:Publish Carousel"
+msgstr ""
+
+#. Description of the plugin
+#: gopublish-carousel.php
+msgid "A carousel block for any blocks, built on native scrolling and the Interactivity API."
+msgstr ""
+
+#. Author of the plugin
+#: gopublish-carousel.php
+msgid "Retrofitter"
+msgstr ""
+
+#: build/carousel/render.php:103
+#: build/carousel/index.js:4
+msgid "Previous slide"
+msgstr ""
+
+#: build/carousel/render.php:104
+#: build/carousel/index.js:4
+msgid "Next slide"
+msgstr ""
+
+#. translators: Spoken by screen readers to describe the carousel block.
+#: build/carousel/render.php:114
+msgid "carousel"
+msgstr ""
+
+#. translators: Spoken by screen readers to describe a single slide.
+#: build/carousel/render.php:121
+msgid "slide"
+msgstr ""
+
+#. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
+#: build/carousel/render.php:152
+#, php-format
+msgid "Slide %1$d of %2$d"
+msgstr ""
+
+#. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
+#: build/carousel/render.php:154
+#, php-format
+msgid "Slides %1$d to %2$d of %3$d"
+msgstr ""
+
+#. translators: 1: Slide number, 2: Total number of slides.
+#: build/carousel/render.php:204
+#, php-format
+msgid "%1$d of %2$d"
+msgstr ""
+
+#: build/carousel/index.js:1
+msgid "Desktop"
+msgstr ""
+
+#: build/carousel/index.js:1
+msgid "Tablet"
+msgstr ""
+
+#: build/carousel/index.js:1
+msgid "Mobile"
+msgstr ""
+
+#. translators: %s: Screen size, e.g. "Tablet".
+#: build/carousel/index.js:2
+#, js-format
+msgid "Changed for %s."
+msgstr ""
+
+#. translators: %s: Larger screen size, e.g. "Desktop".
+#: build/carousel/index.js:3
+#, js-format
+msgid "Same as %s."
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Add slide"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Show all slides"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Layout"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Screen size"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Desktop settings apply to every screen size unless Tablet or Mobile changes them. Also switches the editor preview."
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Columns"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Number of slides visible at once."
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Use cutoff effect"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Partly show the last visible slide (or, with one column, the next slide), hinting that there are more slides to scroll through."
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Slides to scroll"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Number of slides to move when navigating. With the cutoff effect, it must be lower than the number of columns."
+msgstr ""
+
+#. translators: %s: Larger screen size, e.g. "Desktop".
+#: build/carousel/index.js:4
+#, js-format
+msgid "Reset to %s"
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "Navigation"
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "Rewind at the end"
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "On the last slide, Next goes back to the first, and Previous on the first slide goes to the last. When off, the buttons are disabled at the ends."
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "Carousel label"
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "Describes the carousel for screen reader users, e.g. \"Customer testimonials\". With a label, the carousel becomes a landmark they can jump to."
+msgstr ""
+
+#: build/carousel-slide/block.json
+msgctxt "block title"
+msgid "Carousel Slide"
+msgstr ""
+
+#: build/carousel-slide/block.json
+msgctxt "block description"
+msgid "A wrapper block for carousel slides"
+msgstr ""
+
+#: build/carousel/block.json
+msgctxt "block title"
+msgid "Carousel"
+msgstr ""
+
+#: build/carousel/block.json
+msgctxt "block description"
+msgid "A carousel for blocks using the Interactivity API."
+msgstr ""

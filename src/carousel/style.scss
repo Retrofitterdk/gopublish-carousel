@@ -29,9 +29,29 @@
 	--nav-button-outline-color: var(--nav-button-background-hover);
 	--nav-button-outline-width: 2px;
 	--nav-button-outline-offset: 2px;
-	--slide--padding-right: 1rem;
+	--nav-button-disabled-opacity: 0.4;
+	// Space between slides. Set by the Block spacing setting (render.php);
+	// --slide--padding-right is still honoured for older theme CSS.
+	--carousel-gap: var(--slide--padding-right, 1rem);
+
+	// How much of a slide the cutoff effect cuts off the last visible slide
+	// (2+ columns) or shows of the next one (1 column). Themes can change it
+	// (0–0.9).
+	--cutoff-amount: 0.3;
+
+	// Slide width: --visible slides fit across, with --gaps gaps between
+	// them. render.php/edit.js set --columns, --cutoff-trim and --cutoff-peek
+	// (0 or 1) per viewport, e.g. 3 columns with cutoff: 2.7 slides and 2
+	// gaps; 1 column with cutoff: 1.3 slides and 1 gap.
+	--cutoff-delta: calc((var(--cutoff-peek, 0) - var(--cutoff-trim, 0)) * clamp(0, var(--cutoff-amount), 0.9));
+	--visible: calc(var(--columns, 3) + var(--cutoff-delta));
+	--gaps: calc(var(--columns, 3) - 1 + var(--cutoff-peek, 0));
+	--slide-width: calc((100% - var(--gaps) * var(--carousel-gap)) / var(--visible));
 
 	position: relative;
+	// A column, so the slides can fill a minimum height (Dimensions setting).
+	display: flex;
+	flex-direction: column;
 
 	.navigation-container {
 		display: flex;
@@ -64,8 +84,8 @@
 
 			// Keyboard focus gets the hover look plus an outline ring, so it's
 			// clearly visible (not only a colour change).
-			&:hover,
-			&:focus-visible {
+			&:hover:not([aria-disabled="true"]),
+			&:focus-visible:not([aria-disabled="true"]) {
 				background: var(--nav-button-background-hover);
 
 				svg path {
@@ -77,17 +97,38 @@
 				outline: var(--nav-button-outline-width) solid var(--nav-button-outline-color);
 				outline-offset: var(--nav-button-outline-offset);
 			}
+
+			// At the start/end with Rewind off. Still focusable (aria-disabled,
+			// not disabled), so keyboard focus isn't lost when the end is reached.
+			&[aria-disabled="true"] {
+				cursor: default;
+				opacity: var(--nav-button-disabled-opacity);
+			}
 		}
 
 		// Both buttons use the same arrow icon; point the first one back.
 		.carousel-prev svg {
 			transform: rotate(-180deg);
 		}
+
+		// Right-to-left: the slides run the other way, so the arrows swap.
+		// :dir() also covers an RTL section on a left-to-right site, where
+		// WordPress doesn't load the generated -rtl stylesheet.
+		&:dir(rtl) {
+
+			.carousel-prev svg {
+				transform: none;
+			}
+
+			.carousel-next svg {
+				transform: rotate(-180deg);
+			}
+		}
 	}
 
 	.carousel-container {
-		position: relative;
-		overflow-x: clip;
+		display: flex;
+		flex: 1;
 	}
 
 	// Live region for screen readers: visually hidden, but still announced.
@@ -96,28 +137,47 @@
 		@include visually-hidden;
 	}
 
-	// All slides fit in view at this breakpoint (set by view.js):
-	// nothing to scroll, so hide the clones and the navigation.
-	&.is-static {
+	// All slides fit in view: nothing to scroll, so the navigation gets the
+	// hidden attribute (context.canScroll). display: flex above would
+	// otherwise override it.
+	.navigation-container[hidden] {
+		display: none;
+	}
 
-		.carousel-clone,
-		.navigation-container {
+	// The slides sit in a native scroll area: the browser handles scrolling,
+	// touch swipes, momentum and snapping to the start of a slide.
+	.carousel-track {
+		display: flex;
+		flex: 1;
+		align-items: stretch;
+		gap: var(--carousel-gap);
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scroll-snap-type: x mandatory;
+		scroll-behavior: smooth;
+		// Hide the scrollbar; the buttons, swiping and the trackpad scroll.
+		scrollbar-width: none;
+
+		&::-webkit-scrollbar {
 			display: none;
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			scroll-behavior: auto;
+		}
+
+		// When it has tabindex="0" (slides without focusable content).
+		&:focus-visible {
+			outline: var(--nav-button-outline-width) solid var(--nav-button-outline-color);
+			outline-offset: calc(-1 * var(--nav-button-outline-width));
 		}
 	}
 
-	// The transition is set inline by view.js (none with reduced motion).
-	.carousel-track {
-		display: flex;
-		align-items: stretch;
-	}
-
-	// The width of each slide is set inline by render.php.
 	.carousel-slide {
 		display: flex;
-		flex-shrink: 0;
+		flex: 0 0 var(--slide-width);
 		box-sizing: border-box;
-		padding-right: var(--slide--padding-right);
+		scroll-snap-align: start;
 	}
 
 	.wp-block-gopublish-carousel-slide {
@@ -131,12 +191,8 @@
 	&.alignfull .wp-block-gopublish-carousel-slide {
 		max-width: 100vw;
 	}
-
-	&.columns-1 .carousel-slide {
-		padding-right: 0;
-	}
 }
 
-// Small-screen styles (slide width, drag cursor, touch navigation) are
-// generated in PHP, so their media query follows the theme's viewport
+// Small-screen styles (mobile slide width, touch navigation) are generated in
+// PHP, so their media query follows the theme's viewport
 // settings: see gopublish_carousel_add_small_screen_styles().

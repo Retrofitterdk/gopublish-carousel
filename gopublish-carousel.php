@@ -1,14 +1,15 @@
 <?php
 /**
  * Plugin Name:       Go:Publish Carousel
- * Description:       A looping carousel block for any blocks, built on the Interactivity API.
- * Version:           0.2.8
+ * Description:       A carousel block for any blocks, built on native scrolling and the Interactivity API.
+ * Version:           0.4.0
  * Requires at least: 6.8
  * Requires PHP:      7.2
  * Author:            Retrofitter
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       gopublish-carousel
+ * Domain Path:       /languages
  *
  * @package           GopublishCarousel
  */
@@ -16,6 +17,19 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
+
+/**
+ * Load the plugin's own translations from languages/.
+ *
+ * The plugin isn't on WordPress.org, so WordPress doesn't download
+ * translations for it; they ship with the plugin instead. Translations in
+ * wp-content/languages/plugins/ (e.g. from Loco Translate) still win for PHP
+ * strings.
+ */
+function gopublish_carousel_load_textdomain() {
+	load_plugin_textdomain( 'gopublish-carousel', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}
+add_action( 'init', 'gopublish_carousel_load_textdomain', 5 );
 
 /**
  * Registers all blocks in build/ from the blocks manifest.
@@ -32,6 +46,17 @@ function gopublish_carousel_block_init() {
 		__DIR__ . '/build',
 		__DIR__ . '/build/blocks-manifest.php'
 	);
+
+	// Editor strings are translated from the JSON files in languages/.
+	// Core only looks for them in wp-content/languages/, so point the editor
+	// scripts to the plugin's own folder.
+	$registry = WP_Block_Type_Registry::get_instance();
+	foreach ( array( 'gopublish/carousel', 'gopublish/carousel-slide' ) as $block_name ) {
+		$block_type = $registry->get_registered( $block_name );
+		foreach ( $block_type ? $block_type->editor_script_handles : array() as $handle ) {
+			wp_set_script_translations( $handle, 'gopublish-carousel', __DIR__ . '/languages' );
+		}
+	}
 }
 add_action( 'init', 'gopublish_carousel_block_init', 9 );
 
@@ -65,14 +90,226 @@ function gopublish_carousel_small_screen_max_width() {
 /**
  * Media query (without "@media") that matches small screens.
  *
- * Used for the small-screen CSS below and passed to view.js, so CSS and JS
- * always switch layouts at the same width.
- *
  * @return string Media query, e.g. '(width <= 782px)'.
  */
 function gopublish_carousel_small_screen_query() {
 	return '(width <= ' . gopublish_carousel_small_screen_max_width() . ')';
 }
+
+/**
+ * Media queries for the viewports a block can have its own styles for,
+ * e.g. '@mobile' => '@media (width <= 480px)'.
+ *
+ * The same queries core uses for per-viewport block styles (WordPress 7.1+,
+ * following the theme's settings.viewport), so the carousel's per-viewport
+ * layout and gap switch at the same widths as its padding etc. Older
+ * WordPress versions get core's default breakpoints.
+ *
+ * @return array<string, string> Media queries keyed by viewport.
+ */
+function gopublish_carousel_viewport_media_queries() {
+	if ( ! method_exists( 'WP_Theme_JSON', 'get_viewport_media_queries' ) ) {
+		return array(
+			'@mobile' => '@media (width <= 480px)',
+			'@tablet' => '@media (480px < width <= 782px)',
+		);
+	}
+	return WP_Theme_JSON::get_viewport_media_queries( wp_get_global_settings( array( 'viewport' ) ) );
+}
+
+/**
+ * The carousel's layout (columns, cutoff effect, slides to scroll) for the
+ * base and each viewport.
+ *
+ * The block attributes columns, cutoff and scroll are the base values, used
+ * on every screen size unless a viewport overrides them in the viewports
+ * attribute, e.g. { "@tablet": { "columns": 2 }, "@mobile": { "columns": 1 } }.
+ * Each viewport inherits from the next larger one: mobile from tablet, tablet
+ * from the base. Keep in sync with getLayouts() in edit.js.
+ *
+ * Carousels from before per-viewport layouts (no viewports attribute) get
+ * tablet min(2, columns) and mobile 1 column, both with the cutoff effect;
+ * on large screens, the cutoff effect stays off with 1 column, where it had
+ * no effect before.
+ *
+ * @param array $attributes Block attributes.
+ * @return array<string, array> Layouts keyed by 'base', '@tablet' and
+ *                              '@mobile', each with columns, cutoff, scroll,
+ *                              visible (slides across, e.g. 2.7 with cutoff)
+ *                              and gaps (gaps within the visible width).
+ */
+function gopublish_carousel_layouts( $attributes ) {
+	$base = array(
+		'columns' => $attributes['columns'] ?? 3,
+		'cutoff'  => $attributes['cutoff'] ?? true,
+		'scroll'  => $attributes['scroll'] ?? 1,
+	);
+
+	$viewports = $attributes['viewports'] ?? null;
+	if ( ! is_array( $viewports ) ) {
+		if ( 1 === (int) $base['columns'] ) {
+			$base['cutoff'] = false;
+		}
+		$viewports = array(
+			'@tablet' => array(
+				'columns' => min( 2, (int) $base['columns'] ),
+				'cutoff'  => true,
+			),
+			'@mobile' => array(
+				'columns' => 1,
+				'cutoff'  => true,
+			),
+		);
+	}
+
+	$layouts = array( 'base' => gopublish_carousel_complete_layout( $base ) );
+	$current = $base;
+	foreach ( array( '@tablet', '@mobile' ) as $viewport ) {
+		$override = is_array( $viewports[ $viewport ] ?? null ) ? $viewports[ $viewport ] : array();
+		foreach ( array( 'columns', 'cutoff', 'scroll' ) as $key ) {
+			if ( isset( $override[ $key ] ) ) {
+				$current[ $key ] = $override[ $key ];
+			}
+		}
+		$layouts[ $viewport ] = gopublish_carousel_complete_layout( $current );
+	}
+	return $layouts;
+}
+
+/**
+ * Sanitize a layout and add the values the CSS needs.
+ *
+ * With the cutoff effect, 2+ columns trim the last visible slide (columns
+ * - 0.3 slides), and 1 column lets the next slide peek in (1.3 slides). The
+ * amount (0.3) is the --cutoff-amount custom property, which themes can
+ * change: style.scss computes the slide width from trim/peek; visible and
+ * gaps here use the default, for the server's can-scroll guess. Slides to
+ * scroll is at most the number of fully visible slides.
+ *
+ * @param array $layout Columns, cutoff and scroll.
+ * @return array The layout, with trim, peek, visible and gaps added.
+ */
+function gopublish_carousel_complete_layout( $layout ) {
+	$columns = max( 1, min( 6, (int) $layout['columns'] ) );
+	$cutoff  = (bool) $layout['cutoff'];
+	$visible = $columns;
+	if ( $cutoff ) {
+		$visible = $columns > 1 ? $columns - 0.3 : 1.3;
+	}
+	$max_scroll = ( $cutoff && $columns > 1 ) ? $columns - 1 : $columns;
+
+	return array(
+		'columns' => $columns,
+		'cutoff'  => $cutoff,
+		'scroll'  => max( 1, min( $max_scroll, (int) $layout['scroll'] ) ),
+		'trim'    => $cutoff && $columns > 1,
+		'peek'    => $cutoff && 1 === $columns,
+		'visible' => $visible,
+		'gaps'    => (int) ceil( $visible ) - 1,
+	);
+}
+
+/**
+ * CSS custom properties for a layout (see gopublish_carousel_layouts()).
+ *
+ * @param array $layout A completed layout.
+ * @return array<string, string> Custom properties for style.scss.
+ */
+function gopublish_carousel_layout_properties( $layout ) {
+	return array(
+		'--columns'          => (string) $layout['columns'],
+		'--cutoff-trim'      => $layout['trim'] ? '1' : '0',
+		'--cutoff-peek'      => $layout['peek'] ? '1' : '0',
+		'--slides-to-scroll' => (string) $layout['scroll'],
+	);
+}
+
+/**
+ * The CSS value for a Block spacing (blockGap) setting, for --carousel-gap.
+ *
+ * Converts spacing presets ('var:preset|spacing|30') to their CSS variable
+ * and only accepts plain lengths or preset variables, so a crafted value
+ * can't inject other CSS.
+ *
+ * @param mixed $gap The blockGap value from the block's style attribute.
+ * @return string|null CSS value, or null if unset or invalid.
+ */
+function gopublish_carousel_gap_value( $gap ) {
+	// A gap with separate values per axis: the space between slides is the
+	// horizontal one.
+	if ( is_array( $gap ) ) {
+		$gap = $gap['left'] ?? null;
+	}
+	if ( ! is_string( $gap ) ) {
+		return null;
+	}
+	if ( str_starts_with( $gap, 'var:preset|spacing|' ) ) {
+		$gap = 'var(--wp--preset--spacing--' . _wp_to_kebab_case( substr( $gap, strrpos( $gap, '|' ) + 1 ) ) . ')';
+	}
+	if ( ! preg_match( '/^(?:0|\d*\.?\d+(?:px|em|rem|%|vw|vh|ch)|var\(--wp--preset--spacing--[a-z0-9-]+\))$/', $gap ) ) {
+		return null;
+	}
+	// A unitless 0 is invalid in calc() additions (the slide width formula).
+	return '0' === $gap ? '0px' : $gap;
+}
+
+/**
+ * Add per-viewport CSS custom properties to the carousel's stylesheet (once
+ * per class, shared by carousels with the same values). They're !important,
+ * so they win over the base values in the wrapper's inline style.
+ *
+ * Added with wp_add_inline_style() rather than the style engine's
+ * block-supports store: with the Gutenberg plugin active, that store is
+ * printed from Gutenberg's own copy of the style engine, and rules added to
+ * core's store never reach the page.
+ *
+ * @param string $class_name Class on the carousel wrapper.
+ * @param array  $rules      Custom properties keyed by media query. Values
+ *                           must already be safe CSS (numbers, or gaps
+ *                           validated by gopublish_carousel_gap_value()).
+ */
+function gopublish_carousel_add_viewport_styles( $class_name, $rules ) {
+	static $added = array();
+	if ( isset( $added[ $class_name ] ) ) {
+		return;
+	}
+	$added[ $class_name ] = true;
+
+	$block_type = WP_Block_Type_Registry::get_instance()->get_registered( 'gopublish/carousel' );
+	if ( ! $block_type || empty( $block_type->style_handles ) ) {
+		return;
+	}
+
+	$css = '';
+	foreach ( $rules as $media_query => $properties ) {
+		$declarations = '';
+		foreach ( $properties as $property => $value ) {
+			$declarations .= "{$property}:{$value} !important;";
+		}
+		$css .= "{$media_query}{.{$class_name}{{$declarations}}}";
+	}
+	wp_add_inline_style( $block_type->style_handles[0], $css );
+}
+
+/**
+ * Pass the viewport media queries to the editor script, so the editor applies
+ * per-viewport layouts and gaps at exactly the same widths as the front end (read in
+ * edit.js as window.gopublishCarousel.mediaQueries). Block editor settings
+ * can't carry them: the editor only passes on settings it knows.
+ */
+function gopublish_carousel_editor_data() {
+	$block_type = WP_Block_Type_Registry::get_instance()->get_registered( 'gopublish/carousel' );
+	if ( ! $block_type || empty( $block_type->editor_script_handles ) ) {
+		return;
+	}
+	$data = array( 'mediaQueries' => (object) gopublish_carousel_viewport_media_queries() );
+	wp_add_inline_script(
+		$block_type->editor_script_handles[0],
+		'window.gopublishCarousel = ' . wp_json_encode( $data ) . ';',
+		'before'
+	);
+}
+add_action( 'enqueue_block_editor_assets', 'gopublish_carousel_editor_data' );
 
 /**
  * Add the small-screen styles to the carousel's stylesheet.
@@ -90,21 +327,6 @@ function gopublish_carousel_add_small_screen_styles() {
 
 	$query = gopublish_carousel_small_screen_query();
 	$css   = <<<CSS
-@media {$query} {
-	.wp-block-gopublish-carousel .carousel-slide {
-		width: var(--mobile-width) !important; /* Overrides the inline desktop width from render.php. */
-		cursor: grab;
-		-webkit-user-select: none;
-		user-select: none;
-	}
-	.wp-block-gopublish-carousel .carousel-slide:active {
-		cursor: grabbing;
-	}
-	/* A single column with cutoff needs the gap to the next, partly visible slide. */
-	.wp-block-gopublish-carousel.columns-1.cutoff .carousel-slide {
-		padding-right: var(--slide--padding-right);
-	}
-}
 /*
  * Small touch screens: navigate by swiping. The buttons are only visually
  * hidden, so keyboard, switch and screen reader users can still reach them,
@@ -134,8 +356,8 @@ add_action( 'init', 'gopublish_carousel_add_small_screen_styles', 20 );
  * Extra registration settings that block.json can't express.
  *
  * The carousel is registered with skip_inner_blocks: render.php renders the
- * slides itself (with clones), so core shouldn't render them first into an
- * unused $content.
+ * slides itself (each in a slide wrapper), so core shouldn't render them first
+ * into an unused $content.
  *
  * @param array  $args       Block type registration arguments.
  * @param string $block_type Block type name, e.g. 'gopublish/carousel'.
@@ -186,28 +408,31 @@ function gopublish_carousel_render_inner_block( WP_Block $inner_block, WP_Block 
 }
 
 /**
- * Prepare a slide's HTML for use as a loop clone.
+ * Whether some HTML contains anything keyboard-focusable (links, buttons,
+ * form fields, media controls, elements with a tabindex, etc.).
  *
- * Clones are visual copies only. Their wrapper gets aria-hidden="true" (in
- * render.php), so screen readers skip them, and every focusable element inside
- * gets tabindex="-1", so keyboard users don't tab into duplicates. Mouse
- * clicks still work, because clones can be visible next to the real slides.
+ * Used to decide whether the carousel's scroll area needs tabindex="0": a
+ * scroll area must be reachable by keyboard, which it already is through its
+ * content when that content is focusable.
  *
- * @param string $html Rendered slide HTML.
- * @return string HTML with focusable elements removed from the tab order.
+ * @param string $html Rendered HTML.
+ * @return bool Whether a focusable element was found.
  */
-function gopublish_carousel_clone_html( $html ) {
-	$focusable_tags = array( 'A', 'AREA', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'IFRAME', 'SUMMARY', 'AUDIO', 'VIDEO', 'EMBED', 'OBJECT' );
+function gopublish_carousel_has_focusable_content( $html ) {
+	$focusable_tags = array( 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'IFRAME', 'SUMMARY', 'AUDIO', 'VIDEO', 'EMBED', 'OBJECT' );
 
 	$processor = new WP_HTML_Tag_Processor( $html );
 	while ( $processor->next_tag() ) {
+		$tag = $processor->get_tag();
 		if (
-			in_array( $processor->get_tag(), $focusable_tags, true ) ||
-			null !== $processor->get_attribute( 'tabindex' ) ||
-			null !== $processor->get_attribute( 'contenteditable' )
+			in_array( $tag, $focusable_tags, true ) ||
+			// Links are only focusable with an href.
+			( in_array( $tag, array( 'A', 'AREA' ), true ) && null !== $processor->get_attribute( 'href' ) ) ||
+			null !== $processor->get_attribute( 'contenteditable' ) ||
+			( null !== $processor->get_attribute( 'tabindex' ) && '-1' !== $processor->get_attribute( 'tabindex' ) )
 		) {
-			$processor->set_attribute( 'tabindex', '-1' );
+			return true;
 		}
 	}
-	return $processor->get_updated_html();
+	return false;
 }

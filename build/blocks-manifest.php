@@ -5,7 +5,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel',
-		'version' => '0.2.7',
+		'version' => '0.4.0',
 		'title' => 'Carousel',
 		'category' => 'widgets',
 		'icon' => 'slides',
@@ -48,9 +48,12 @@ return array(
 				'type' => 'number',
 				'default' => 1
 			),
-			'mobileWidth' => array(
-				'type' => 'number',
-				'default' => 75
+			'rewind' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'viewports' => array(
+				'type' => 'object'
 			),
 			'ariaLabel' => array(
 				'type' => 'string',
@@ -68,7 +71,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel-slide',
-		'version' => '0.2.7',
+		'version' => '0.4.0',
 		'title' => 'Carousel Slide',
 		'category' => 'widgets',
 		'icon' => 'media-default',

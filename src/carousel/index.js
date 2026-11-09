@@ -22,6 +22,14 @@ registerBlockType( metadata.name, {
 			icon: metadata.icon,
 			isDefault: true,
 			scope: [ 'inserter' ],
+			// 3 columns on large screens, 2 on tablet and 1 on mobile (all
+			// with the cutoff effect, the block's default).
+			attributes: {
+				viewports: {
+					'@tablet': { columns: 2 },
+					'@mobile': { columns: 1 },
+				},
+			},
 			innerBlocks: [
 				[ 'gopublish/carousel-slide' ],
 				[ 'gopublish/carousel-slide' ],
