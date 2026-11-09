@@ -33,18 +33,6 @@ function getMaxScroll( columns, cutoff ) {
 }
 
 /**
- * Desktop slide width in percent. Mirrors render.php: with the cutoff effect,
- * slides are wider, so the last visible slide is only partly shown.
- *
- * @param {number}  columns Number of columns.
- * @param {boolean} cutoff  Whether the cutoff effect is on.
- * @return {number} Slide width in percent.
- */
-function getSlideWidth( columns, cutoff ) {
-	return cutoff && columns > 1 ? 100 / ( columns - 0.3 ) : 100 / columns;
-}
-
-/**
  * The arrow icon from render.php (the previous button rotates it via CSS).
  *
  * @return {Element} SVG icon.
@@ -114,15 +102,19 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	// The arrows only scroll the row (by "Slides to scroll"); no looping.
 	const scrollBySlides = ( direction ) => {
 		const track = trackRef.current;
-		const slide = track?.firstElementChild;
-		if ( ! slide ) {
+		const [ first, second ] = track?.children ?? [];
+		if ( ! first ) {
 			return;
 		}
+		// Distance from one slide to the next: slide width plus the gap.
+		const step = second
+			? Math.abs( second.offsetLeft - first.offsetLeft )
+			: first.offsetWidth;
 		const reduceMotion = track.ownerDocument.defaultView.matchMedia(
 			'(prefers-reduced-motion: reduce)'
 		).matches;
 		track.scrollBy( {
-			left: direction * scroll * slide.getBoundingClientRect().width,
+			left: direction * scroll * step,
 			behavior: reduceMotion ? 'auto' : 'smooth',
 		} );
 	};
@@ -149,7 +141,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			.join( ' ' ),
 		style: {
 			'--columns': columns,
-			'--slide-width': `${ getSlideWidth( columns, cutoff ) }%`,
 			'--mobile-width': `${ mobileWidth }%`,
 		},
 	} );

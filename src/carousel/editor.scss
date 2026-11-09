@@ -2,24 +2,19 @@
 // (same classes, see edit.js); this file only adds what the editor needs.
 .wp-block-gopublish-carousel {
 
-	// Carousel view (default): one row, like the front end, but scrollable
-	// instead of clipped, so every slide can be reached and edited.
+	// Carousel view (default): the same scroll area as the front end, with
+	// gentler snapping while editing.
 	.carousel-track {
-		overflow-x: auto;
 		scroll-snap-type: x proximity;
 		// Room for the block outlines, which the scroll area would clip.
 		padding-block: 2px;
 
 		> .carousel-slide {
-			// The front end sets the width inline (render.php); the small-screen
-			// styles override it with --mobile-width, as on the front end.
-			width: var(--slide-width);
 			// The slide is the block wrapper here, so undo the front-end rules
 			// meant for the inner slide element and the editor's flow margins.
 			display: block;
 			max-width: none;
 			margin: 0;
-			scroll-snap-align: start;
 		}
 	}
 
@@ -31,10 +26,5 @@
 		gap: 10px;
 		overflow-x: visible;
 
-		> .carousel-slide {
-			// Beats the small-screen width rule, which is !important too.
-			width: auto !important;
-			padding-right: 0;
-		}
 	}
 }

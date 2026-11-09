@@ -65,9 +65,6 @@ function gopublish_carousel_small_screen_max_width() {
 /**
  * Media query (without "@media") that matches small screens.
  *
- * Used for the small-screen CSS below and passed to view.js, so CSS and JS
- * always switch layouts at the same width.
- *
  * @return string Media query, e.g. '(width <= 782px)'.
  */
 function gopublish_carousel_small_screen_query() {
@@ -90,19 +87,10 @@ function gopublish_carousel_add_small_screen_styles() {
 
 	$query = gopublish_carousel_small_screen_query();
 	$css   = <<<CSS
+/* Mobile slide width (Mobile slide width setting, set as --mobile-width). */
 @media {$query} {
-	.wp-block-gopublish-carousel .carousel-slide {
-		width: var(--mobile-width) !important; /* Overrides the inline desktop width from render.php. */
-		cursor: grab;
-		-webkit-user-select: none;
-		user-select: none;
-	}
-	.wp-block-gopublish-carousel .carousel-slide:active {
-		cursor: grabbing;
-	}
-	/* A single column with cutoff needs the gap to the next, partly visible slide. */
-	.wp-block-gopublish-carousel.columns-1.cutoff .carousel-slide {
-		padding-right: var(--slide--padding-right);
+	.wp-block-gopublish-carousel {
+		--slide-width: var(--mobile-width);
 	}
 }
 /*
@@ -134,8 +122,8 @@ add_action( 'init', 'gopublish_carousel_add_small_screen_styles', 20 );
  * Extra registration settings that block.json can't express.
  *
  * The carousel is registered with skip_inner_blocks: render.php renders the
- * slides itself (with clones), so core shouldn't render them first into an
- * unused $content.
+ * slides itself (each in a slide wrapper), so core shouldn't render them first
+ * into an unused $content.
  *
  * @param array  $args       Block type registration arguments.
  * @param string $block_type Block type name, e.g. 'gopublish/carousel'.
@@ -186,28 +174,31 @@ function gopublish_carousel_render_inner_block( WP_Block $inner_block, WP_Block 
 }
 
 /**
- * Prepare a slide's HTML for use as a loop clone.
+ * Whether some HTML contains anything keyboard-focusable (links, buttons,
+ * form fields, media controls, elements with a tabindex, etc.).
  *
- * Clones are visual copies only. Their wrapper gets aria-hidden="true" (in
- * render.php), so screen readers skip them, and every focusable element inside
- * gets tabindex="-1", so keyboard users don't tab into duplicates. Mouse
- * clicks still work, because clones can be visible next to the real slides.
+ * Used to decide whether the carousel's scroll area needs tabindex="0": a
+ * scroll area must be reachable by keyboard, which it already is through its
+ * content when that content is focusable.
  *
- * @param string $html Rendered slide HTML.
- * @return string HTML with focusable elements removed from the tab order.
+ * @param string $html Rendered HTML.
+ * @return bool Whether a focusable element was found.
  */
-function gopublish_carousel_clone_html( $html ) {
-	$focusable_tags = array( 'A', 'AREA', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'IFRAME', 'SUMMARY', 'AUDIO', 'VIDEO', 'EMBED', 'OBJECT' );
+function gopublish_carousel_has_focusable_content( $html ) {
+	$focusable_tags = array( 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'IFRAME', 'SUMMARY', 'AUDIO', 'VIDEO', 'EMBED', 'OBJECT' );
 
 	$processor = new WP_HTML_Tag_Processor( $html );
 	while ( $processor->next_tag() ) {
+		$tag = $processor->get_tag();
 		if (
-			in_array( $processor->get_tag(), $focusable_tags, true ) ||
-			null !== $processor->get_attribute( 'tabindex' ) ||
-			null !== $processor->get_attribute( 'contenteditable' )
+			in_array( $tag, $focusable_tags, true ) ||
+			// Links are only focusable with an href.
+			( in_array( $tag, array( 'A', 'AREA' ), true ) && null !== $processor->get_attribute( 'href' ) ) ||
+			null !== $processor->get_attribute( 'contenteditable' ) ||
+			( null !== $processor->get_attribute( 'tabindex' ) && '-1' !== $processor->get_attribute( 'tabindex' ) )
 		) {
-			$processor->set_attribute( 'tabindex', '-1' );
+			return true;
 		}
 	}
-	return $processor->get_updated_html();
+	return false;
 }
