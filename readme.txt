@@ -4,7 +4,7 @@ Tags:              carousel, slider, block, interactivity api
 Requires at least: 6.8
 Tested up to:      7.1
 Requires PHP:      7.2
-Stable tag:        0.3.0
+Stable tag:        0.4.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,8 +21,8 @@ Features:
 * Slides can contain any blocks.
 * 1–6 slides visible at once (Columns).
 * Choose how many slides to move per step (Slides to scroll).
-* Cutoff effect: the last visible slide is partly shown, hinting that there is more to scroll through.
-* Separate slide width on mobile and tablet (in percent of the carousel width).
+* Cutoff effect: the last visible slide is partly shown (with one column, the next slide peeks in), hinting that there is more to scroll through.
+* Columns, cutoff effect and slides to scroll can be set separately for desktop, tablet and mobile. New carousels start with 3, 2 and 1 columns.
 * Rewind at the end: on the last slide, Next goes back to the first (and Previous on the first goes to the last). Turn it off to stop at the ends instead.
 * Previous/next buttons, touch swipe, trackpad and keyboard scrolling, all snapping to the start of a slide.
 * If every slide fits in view, the navigation is hidden.
@@ -68,13 +68,19 @@ Select the Carousel block and click Add slide (+) in the block toolbar. The new 
 
 The editor shows the carousel as a scrollable row, like on the front end; use the arrows or scroll sideways to reach the other slides. To see every slide at once, click Show all slides in the Carousel's block toolbar. This grid view is only shown in the editor and is handy for rearranging slides. Click the button again to return to the carousel view.
 
-= Does the editor show the mobile layout? =
+= How do I set a different layout for tablet and mobile? =
 
-Yes. Switch the editor's preview to Tablet or Mobile, and the slides use the mobile slide width and any per-viewport spacing, as on the front end.
+Select the Carousel and choose Tablet or Mobile under Screen size in the Layout panel. Columns, Use cutoff effect and Slides to scroll then apply to that screen size only. The editor preview switches along, so you see the layout you're changing.
+
+Desktop settings apply to every screen size unless Tablet or Mobile changes them, and Mobile inherits from Tablet. Each setting shows whether it's the same as the larger screen size or changed; "Reset to Desktop" (or "Reset to Tablet") removes the changes.
+
+= Does the editor show the tablet and mobile layout? =
+
+Yes. Switch the editor's preview to Tablet or Mobile, and the carousel uses that screen size's columns, slides to scroll and spacing, as on the front end.
 
 = What happens at the end of the carousel? =
 
-With Rewind at the end turned on (the default), Next on the last slide scrolls back to the first, and Previous on the first slide scrolls to the last. The carousel doesn't loop endlessly: it scrolls back through the slides. If that feels jarring, e.g. with many slides, turn Rewind at the end off in the Carousel settings. The buttons then stop at the ends and are shown dimmed.
+With Rewind at the end turned on (the default), Next on the last slide scrolls back to the first, and Previous on the first slide scrolls to the last. The carousel doesn't loop endlessly: it scrolls back through the slides. If that feels jarring, e.g. with many slides, turn Rewind at the end off in the Navigation panel. The buttons then stop at the ends and are shown dimmed.
 
 = Can I drag the carousel with the mouse? =
 
@@ -106,6 +112,7 @@ Available properties:
 * `--nav-button-outline-color`, `--nav-button-outline-width`, `--nav-button-outline-offset` (keyboard focus ring)
 * `--nav-button-disabled-opacity` (buttons at the ends, with Rewind at the end off)
 * `--carousel-gap` (space between slides; normally set with Block spacing). The older `--slide--padding-right` still works as a fallback.
+* `--cutoff-amount` (how much of a slide the cutoff effect cuts off the last visible slide, or shows of the next one with one column; default `0.3`, from 0 to 0.9).
 
 The carousel also has classes for its state: `is-scrollable` (the slides don't all fit), `is-at-start` and `is-at-end`, plus `columns-N` and `cutoff` or `no-cutoff` for its settings.
 
@@ -113,9 +120,9 @@ The carousel also has classes for its state: `is-scrollable` (the slides don't a
 
 On small touch screens the carousel is navigated by swiping, so the buttons are visually hidden. They appear as soon as someone uses a keyboard or switch device to move focus into the carousel, and screen readers can always reach them. On any screen size where all slides fit in view, there is nothing to navigate and the buttons are hidden.
 
-= What is the breakpoint for mobile? =
+= What are the breakpoints for tablet and mobile? =
 
-The mobile slide width and touch navigation apply to mobile and tablet screens: everything up to the theme's tablet viewport. By default that is 782 px. From WordPress 7.1, themes can change it in theme.json (settings.viewport), and the carousel follows.
+The same as WordPress uses for its own per-screen-size settings: mobile up to 480 px, tablet from 480 to 782 px, and desktop above that. From WordPress 7.1, themes can change them in theme.json (settings.viewport), and the carousel follows. Touch navigation (hidden buttons) applies to tablet and mobile.
 
 == Development ==
 
@@ -131,6 +138,15 @@ Source files are in `src/`, and the compiled blocks in `build/` are what WordPre
 See README.md for more developer notes, including how to update translations.
 
 == Changelog ==
+
+= 0.4.0 =
+* New: columns, cutoff effect and slides to scroll per screen size (desktop, tablet, mobile), with a Screen size switch in the Layout panel that also switches the editor preview. Tablet and mobile inherit from the larger screen size unless changed.
+* New: with one column, the cutoff effect lets the next slide peek in.
+* New: the `--cutoff-amount` custom property, so themes can change how much the cutoff effect shows (default 0.3 of a slide).
+* Changed: replaces the Mobile slide width setting. Existing carousels get 2 columns on tablet (1 if they have 1) and 1 column with the cutoff effect on mobile, which looks almost the same as the old default of 75 %. Custom mobile widths are not carried over.
+* Changed: the settings are split into a Layout and a Navigation panel.
+* Changed: the navigation buttons are always labelled "Previous slide" and "Next slide", as the number of slides they move can differ per screen size.
+* Fix: a Block spacing of 0 broke the slide widths.
 
 = 0.3.0 =
 * Changed: the carousel is built on native scrolling (CSS scroll snap) instead of moving the slides with transforms. Swiping, trackpad scrolling and momentum are handled by the browser, and the carousel needs far less JavaScript.
@@ -207,6 +223,9 @@ See README.md for more developer notes, including how to update translations.
 * First release, as demo-carousel.
 
 == Upgrade Notice ==
+
+= 0.4.0 =
+Columns per screen size replace the Mobile slide width setting. Existing carousels get 2 columns on tablet and 1 on mobile; check carousels that used a custom mobile width.
 
 = 0.3.0 =
 New scrolling engine: endless looping is replaced by rewinding (Rewind at the end setting), and mouse dragging is removed. Theme CSS that targeted the old slide copies or the track's transform no longer applies. Requires WordPress 6.8.

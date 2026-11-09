@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Go:Publish Carousel 0.3.0\n"
+"Project-Id-Version: Go:Publish Carousel 0.4.0\n"
 "Report-Msgid-Bugs-To: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -24,91 +24,71 @@ msgstr ""
 msgid "Retrofitter"
 msgstr ""
 
-#: build/carousel/render.php:101
-#: build/carousel/index.js:1
+#: build/carousel/render.php:103
+#: build/carousel/index.js:4
 msgid "Previous slide"
-msgid_plural "Previous slides"
-msgstr[0] "Forrige dias"
-msgstr[1] "Forrige dias"
+msgstr "Forrige dias"
 
-#: build/carousel/render.php:102
-#: build/carousel/index.js:1
+#: build/carousel/render.php:104
+#: build/carousel/index.js:4
 msgid "Next slide"
-msgid_plural "Next slides"
-msgstr[0] "Næste dias"
-msgstr[1] "Næste dias"
+msgstr "Næste dias"
 
 #. translators: Spoken by screen readers to describe the carousel block.
-#: build/carousel/render.php:112
+#: build/carousel/render.php:114
 msgid "carousel"
 msgstr "karrusel"
 
 #. translators: Spoken by screen readers to describe a single slide.
-#: build/carousel/render.php:119
+#: build/carousel/render.php:121
 msgid "slide"
 msgstr "dias"
 
 #. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:151
+#: build/carousel/render.php:152
 #, php-format
 msgid "Slide %1$d of %2$d"
 msgstr "Dias %1$d af %2$d"
 
 #. translators: 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:203
+#: build/carousel/render.php:204
 #, php-format
 msgid "%1$d of %2$d"
 msgstr "%1$d af %2$d"
 
-#: build/carousel/index.js:1
+#: build/carousel/index.js:3
 msgid "Add slide"
 msgstr "Tilføj dias"
 
-#: build/carousel/index.js:1
+#: build/carousel/index.js:3
 msgid "Show all slides"
 msgstr "Vis alle dias"
 
-#: build/carousel/index.js:1
-msgid "Carousel settings"
-msgstr "Karruselindstillinger"
-
-#: build/carousel/index.js:1
+#: build/carousel/index.js:3
 msgid "Columns"
 msgstr "Kolonner"
 
-#: build/carousel/index.js:1
+#: build/carousel/index.js:3
 msgid "Number of slides visible at once."
 msgstr "Antal dias, der er synlige ad gangen."
 
-#: build/carousel/index.js:1
+#: build/carousel/index.js:3
 msgid "Slides to scroll"
 msgstr "Dias pr. skift"
 
-#: build/carousel/index.js:1
+#: build/carousel/index.js:3
 msgid "Number of slides to move when navigating. With the cutoff effect, it must be lower than the number of columns."
 msgstr "Antal dias, der flyttes ved hvert skift. Med beskæringseffekten skal det være lavere end antallet af kolonner."
 
-#: build/carousel/index.js:1
+#: build/carousel/index.js:3
 msgid "Use cutoff effect"
 msgstr "Brug beskæringseffekt"
 
-#: build/carousel/index.js:1
-msgid "Partly show the last visible slide, hinting that there are more slides to scroll through."
-msgstr "Vis det sidste synlige dias delvist, så det antydes, at der er flere dias at bladre igennem."
-
-#: build/carousel/index.js:1
-msgid "Mobile slide width (%)"
-msgstr "Diasbredde på mobil (%)"
-
-#: build/carousel/index.js:1
-msgid "Width of each slide on mobile and tablet screens, as a percentage of the carousel width."
-msgstr "Bredden af hvert dias på mobil og tablet i procent af karrusellens bredde."
-
-#: build/carousel/index.js:1
+#: build/carousel/index.js:4
 msgid "Carousel label"
 msgstr "Karrusellens navn"
 
-#: build/carousel/index.js:1
+#: build/carousel/index.js:4
 msgid "Describes the carousel for screen reader users, e.g. \"Customer testimonials\". With a label, the carousel becomes a landmark they can jump to."
 msgstr "Beskriver karrusellen for skærmlæserbrugere, f.eks. \"Kundeudtalelser\". Med et navn bliver karrusellen et landmærke, de kan springe direkte til."
 
@@ -133,16 +113,16 @@ msgid "A carousel for blocks using the Interactivity API."
 msgstr "En karrusel til blokke, bygget med Interactivity API."
 
 #. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
-#: build/carousel/render.php:153
+#: build/carousel/render.php:154
 #, php-format
 msgid "Slides %1$d to %2$d of %3$d"
 msgstr "Dias %1$d til %2$d af %3$d"
 
-#: build/carousel/index.js:1
+#: build/carousel/index.js:4
 msgid "Rewind at the end"
 msgstr "Start forfra ved slutningen"
 
-#: build/carousel/index.js:1
+#: build/carousel/index.js:4
 msgid "On the last slide, Next goes back to the first, and Previous on the first slide goes to the last. When off, the buttons are disabled at the ends."
 msgstr "På sidste dias går Næste tilbage til det første, og Forrige på første dias går til det sidste. Når den er slået fra, er knapperne deaktiveret ved enderne."
 
@@ -150,3 +130,53 @@ msgstr "På sidste dias går Næste tilbage til det første, og Forrige på før
 #: gopublish-carousel.php
 msgid "A carousel block for any blocks, built on native scrolling and the Interactivity API."
 msgstr "En karruselblok til alle slags blokke, bygget på browserens egen scrolling og Interactivity API."
+
+#: build/carousel/index.js:1
+msgid "Desktop"
+msgstr "Computer"
+
+#: build/carousel/index.js:1
+msgid "Tablet"
+msgstr "Tablet"
+
+#: build/carousel/index.js:1
+msgid "Mobile"
+msgstr "Mobil"
+
+#. translators: %s: Screen size, e.g. "Tablet".
+#: build/carousel/index.js:2
+#, js-format
+msgid "Changed for %s."
+msgstr "Ændret for %s."
+
+#. translators: %s: Larger screen size, e.g. "Desktop".
+#: build/carousel/index.js:3
+#, js-format
+msgid "Same as %s."
+msgstr "Samme som %s."
+
+#: build/carousel/index.js:3
+msgid "Layout"
+msgstr "Layout"
+
+#: build/carousel/index.js:3
+msgid "Screen size"
+msgstr "Skærmstørrelse"
+
+#: build/carousel/index.js:3
+msgid "Desktop settings apply to every screen size unless Tablet or Mobile changes them. Also switches the editor preview."
+msgstr "Indstillingerne for Computer gælder for alle skærmstørrelser, medmindre Tablet eller Mobil ændrer dem. Skifter også forhåndsvisningen i editoren."
+
+#: build/carousel/index.js:3
+msgid "Partly show the last visible slide (or, with one column, the next slide), hinting that there are more slides to scroll through."
+msgstr "Vis det sidste synlige dias delvist (eller, med én kolonne, det næste dias), så det antydes, at der er flere dias at bladre igennem."
+
+#. translators: %s: Larger screen size, e.g. "Desktop".
+#: build/carousel/index.js:4
+#, js-format
+msgid "Reset to %s"
+msgstr "Nulstil til %s"
+
+#: build/carousel/index.js:4
+msgid "Navigation"
+msgstr "Navigation"

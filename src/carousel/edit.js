@@ -8,18 +8,52 @@ import {
 } from '@wordpress/block-editor';
 import { createBlock } from '@wordpress/blocks';
 import {
+	Button,
 	PanelBody,
 	RangeControl,
 	TextControl,
 	ToggleControl,
 	ToolbarButton,
 	ToolbarGroup,
+	// WordPress 7.1 still only ships these under their experimental names
+	// (the stable names exist in the npm package, not in core).
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToggleGroupControl as ToggleGroupControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useRef, useState } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
+
+import {
+	getLayoutProperties,
+	getLayouts,
+	getViewportOverrides,
+} from './layouts';
 
 const ALLOWED_BLOCKS = [ 'gopublish/carousel-slide' ];
+
+// The layout's screen sizes and the editor's device preview names. The base
+// layout (Desktop) applies to every screen size unless Tablet or Mobile
+// changes it; each inherits from the one before it.
+const SCREEN_SIZES = [
+	{
+		viewport: 'base',
+		device: 'Desktop',
+		label: __( 'Desktop', 'gopublish-carousel' ),
+	},
+	{
+		viewport: '@tablet',
+		device: 'Tablet',
+		label: __( 'Tablet', 'gopublish-carousel' ),
+	},
+	{
+		viewport: '@mobile',
+		device: 'Mobile',
+		label: __( 'Mobile', 'gopublish-carousel' ),
+	},
+];
 
 // Plain lengths or spacing preset variables (same check as
 // gopublish_carousel_gap_value() in PHP).
@@ -38,19 +72,11 @@ function getGapValue( gap ) {
 	const value = getSpacingPresetCssVar(
 		gap && typeof gap === 'object' ? gap.left : gap
 	);
-	return value && GAP_PATTERN.test( value ) ? value : undefined;
-}
-
-/**
- * The largest allowed "Slides to scroll" value. Mirrors render.php: with the
- * cutoff effect, one slide fewer than the number of columns.
- *
- * @param {number}  columns Number of columns.
- * @param {boolean} cutoff  Whether the cutoff effect is on.
- * @return {number} Maximum slides to scroll.
- */
-function getMaxScroll( columns, cutoff ) {
-	return cutoff && columns > 1 ? columns - 1 : columns;
+	if ( ! value || ! GAP_PATTERN.test( value ) ) {
+		return undefined;
+	}
+	// A unitless 0 is invalid in calc() additions (the slide width formula).
+	return value === '0' ? '0px' : value;
 }
 
 /**
@@ -81,9 +107,94 @@ function ArrowIcon() {
 }
 
 export default function Edit( { attributes, setAttributes, clientId } ) {
-	const { columns, scroll, cutoff, rewind, mobileWidth, ariaLabel, style } =
-		attributes;
-	const maxScroll = getMaxScroll( columns, cutoff );
+	const { rewind, ariaLabel, style } = attributes;
+	// Layout per viewport (layouts.js, same as render.php). The base layout
+	// applies to all screen sizes unless tablet or mobile override it.
+	const layouts = getLayouts( attributes );
+	const overrides = getViewportOverrides( attributes );
+
+	// The screen size whose layout the settings edit. It follows the editor's
+	// device preview (and switching it switches the preview), so you always
+	// see the layout you're changing. Editors without a device preview keep
+	// their own choice.
+	const deviceType = useSelect(
+		( select ) => select( 'core/editor' )?.getDeviceType?.(),
+		[]
+	);
+	const { setDeviceType } = useDispatch( 'core/editor' ) ?? {};
+	const [ localViewport, setLocalViewport ] = useState( 'base' );
+	const screenSize =
+		SCREEN_SIZES.find( ( size ) =>
+			deviceType
+				? size.device === deviceType
+				: size.viewport === localViewport
+		) ?? SCREEN_SIZES[ 0 ];
+	const { viewport } = screenSize;
+	const layout = layouts[ viewport ];
+	const parentSize =
+		SCREEN_SIZES[ SCREEN_SIZES.indexOf( screenSize ) - 1 ] ?? null;
+
+	const selectScreenSize = ( value ) => {
+		const size = SCREEN_SIZES.find( ( item ) => item.viewport === value );
+		if ( setDeviceType && deviceType ) {
+			setDeviceType( size.device );
+		} else {
+			setLocalViewport( value );
+		}
+	};
+
+	// Old carousels (no viewports attribute) get their layout written out on
+	// the first change, so it doesn't jump: the tablet/mobile defaults, and
+	// the base cutoff effect as it was shown (off with 1 column).
+	const getWrittenOutLayout = () =>
+		attributes.viewports
+			? { viewports: { ...attributes.viewports } }
+			: {
+					cutoff: layouts.base.cutoff,
+					viewports: { ...overrides },
+				};
+
+	// Change columns, cutoff or scroll for the selected screen size.
+	const setLayoutValue = ( key, value ) => {
+		const changes = getWrittenOutLayout();
+		if ( viewport === 'base' ) {
+			changes[ key ] = value;
+		} else {
+			changes.viewports[ viewport ] = {
+				...changes.viewports[ viewport ],
+				[ key ]: value,
+			};
+		}
+		setAttributes( changes );
+	};
+
+	// Tablet/mobile: drop the overrides, so it inherits everything again.
+	const isOverridden = ( key ) =>
+		viewport !== 'base' && overrides[ viewport ]?.[ key ] !== undefined;
+	const hasOverrides = [ 'columns', 'cutoff', 'scroll' ].some( isOverridden );
+	const resetScreenSize = () => {
+		const changes = getWrittenOutLayout();
+		delete changes.viewports[ viewport ];
+		setAttributes( changes );
+	};
+
+	// Help text: the description on Desktop, the inheritance on tablet/mobile.
+	const getHelp = ( key, description ) => {
+		if ( ! parentSize ) {
+			return description;
+		}
+		return isOverridden( key )
+			? sprintf(
+					/* translators: %s: Screen size, e.g. "Tablet". */
+					__( 'Changed for %s.', 'gopublish-carousel' ),
+					screenSize.label
+				)
+			: sprintf(
+					/* translators: %s: Larger screen size, e.g. "Desktop". */
+					__( 'Same as %s.', 'gopublish-carousel' ),
+					parentSize.label
+				);
+	};
 
 	// "Show all slides": an editor-only grid view (not saved).
 	const [ showAll, setShowAll ] = useState( false );
@@ -100,19 +211,32 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	);
 	const { insertBlock } = useDispatch( blockEditorStore );
 
-	// Block spacing sets the gap between slides, like on the front end
-	// (render.php): the base value inline, and per-viewport values (WordPress
-	// 7.1+) in a style element with the same media queries as the front end,
-	// passed from PHP (gopublish_carousel_editor_data()). In the editor
-	// canvas, they apply in Tablet and Mobile preview.
+	// Like on the front end (render.php): the base layout and Block spacing
+	// inline, and the per-viewport layouts and gaps in a style element with
+	// the same media queries as the front end, passed from PHP
+	// (gopublish_carousel_editor_data()). In the editor canvas, they apply in
+	// Tablet and Mobile preview.
 	const mediaQueries = window.gopublishCarousel?.mediaQueries;
 	const gap = getGapValue( style?.spacing?.blockGap );
-	const gapClass = `gopublish-carousel-gap-${ clientId }`;
-	const viewportGapCSS = Object.entries( mediaQueries ?? {} )
-		.map( ( [ viewport, mediaQuery ] ) => {
-			const value = getGapValue( style?.[ viewport ]?.spacing?.blockGap );
-			return value
-				? `${ mediaQuery }{.${ gapClass }{--carousel-gap:${ value } !important}}`
+	const viewportClass = `gopublish-carousel-${ clientId }`;
+	const viewportCSS = Object.entries( mediaQueries ?? {} )
+		.map( ( [ screen, mediaQuery ] ) => {
+			const properties = layouts[ screen ]
+				? getLayoutProperties( layouts[ screen ] )
+				: {};
+			const viewportGap = getGapValue(
+				style?.[ screen ]?.spacing?.blockGap
+			);
+			if ( viewportGap ) {
+				properties[ '--carousel-gap' ] = viewportGap;
+			}
+			const declarations = Object.entries( properties )
+				.map(
+					( [ name, value ] ) => `${ name }:${ value } !important;`
+				)
+				.join( '' );
+			return declarations
+				? `${ mediaQuery }{.${ viewportClass }{${ declarations }}}`
 				: '';
 		} )
 		.join( '' );
@@ -149,7 +273,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			observer.disconnect();
 			track.removeEventListener( 'scroll', update );
 		};
-	}, [ showAll, slideCount, columns, cutoff, mobileWidth ] );
+	}, [ showAll, slideCount, viewportCSS ] );
 
 	// The arrows only scroll the row (by "Slides to scroll"), and rewind at
 	// the ends when Rewind is on.
@@ -182,19 +306,17 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			} );
 			return;
 		}
+		// Slides to scroll for the current preview size (see view.js).
+		const slides =
+			parseInt(
+				track.ownerDocument.defaultView
+					.getComputedStyle( track )
+					.getPropertyValue( '--slides-to-scroll' ),
+				10
+			) || 1;
 		track.scrollBy( {
-			left: textDirection * direction * scroll * step,
+			left: textDirection * direction * slides * step,
 			behavior,
-		} );
-	};
-
-	// Keep "Slides to scroll" within the limit when columns or cutoff change.
-	const updateLayout = ( changes ) => {
-		const next = { columns, cutoff, ...changes };
-		const nextMax = getMaxScroll( next.columns, next.cutoff );
-		setAttributes( {
-			...changes,
-			scroll: Math.min( scroll, nextMax ),
 		} );
 	};
 
@@ -202,16 +324,15 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	// styles apply in the editor too. Nothing here is saved.
 	const blockProps = useBlockProps( {
 		className: [
-			`columns-${ columns }`,
-			cutoff ? 'cutoff' : 'no-cutoff',
+			`columns-${ layouts.base.columns }`,
+			layouts.base.cutoff ? 'cutoff' : 'no-cutoff',
 			showAll ? 'is-editor-grid' : '',
-			viewportGapCSS ? gapClass : '',
+			viewportCSS ? viewportClass : '',
 		]
 			.filter( Boolean )
 			.join( ' ' ),
 		style: {
-			'--columns': columns,
-			'--mobile-width': `${ mobileWidth }%`,
+			...getLayoutProperties( layouts.base ),
 			'--carousel-gap': gap,
 		},
 	} );
@@ -229,7 +350,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	return (
 		<div { ...blockProps }>
-			{ viewportGapCSS && <style>{ viewportGapCSS }</style> }
+			{ viewportCSS && <style>{ viewportCSS }</style> }
 			<BlockControls>
 				<ToolbarGroup>
 					<ToolbarButton
@@ -246,39 +367,44 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				</ToolbarGroup>
 			</BlockControls>
 			<InspectorControls>
-				<PanelBody
-					title={ __( 'Carousel settings', 'gopublish-carousel' ) }
-				>
+				<PanelBody title={ __( 'Layout', 'gopublish-carousel' ) }>
+					<ToggleGroupControl
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+						isBlock
+						label={ __( 'Screen size', 'gopublish-carousel' ) }
+						help={ __(
+							'Desktop settings apply to every screen size unless Tablet or Mobile changes them. Also switches the editor preview.',
+							'gopublish-carousel'
+						) }
+						value={ viewport }
+						onChange={ selectScreenSize }
+					>
+						{ SCREEN_SIZES.map( ( size ) => (
+							<ToggleGroupControlOption
+								key={ size.viewport }
+								value={ size.viewport }
+								label={ size.label }
+							/>
+						) ) }
+					</ToggleGroupControl>
 					<RangeControl
 						__next40pxDefaultSize
 						__nextHasNoMarginBottom
 						label={ __( 'Columns', 'gopublish-carousel' ) }
-						help={ __(
-							'Number of slides visible at once.',
-							'gopublish-carousel'
+						help={ getHelp(
+							'columns',
+							__(
+								'Number of slides visible at once.',
+								'gopublish-carousel'
+							)
 						) }
-						value={ columns }
+						value={ layout.columns }
 						onChange={ ( value ) =>
-							updateLayout( { columns: value } )
+							setLayoutValue( 'columns', value )
 						}
 						min={ 1 }
 						max={ 6 }
-					/>
-					<RangeControl
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
-						label={ __( 'Slides to scroll', 'gopublish-carousel' ) }
-						help={ __(
-							'Number of slides to move when navigating. With the cutoff effect, it must be lower than the number of columns.',
-							'gopublish-carousel'
-						) }
-						value={ scroll }
-						onChange={ ( value ) =>
-							setAttributes( { scroll: value } )
-						}
-						min={ 1 }
-						max={ maxScroll }
-						disabled={ maxScroll === 1 }
 					/>
 					<ToggleControl
 						__nextHasNoMarginBottom
@@ -286,15 +412,52 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 							'Use cutoff effect',
 							'gopublish-carousel'
 						) }
-						help={ __(
-							'Partly show the last visible slide, hinting that there are more slides to scroll through.',
-							'gopublish-carousel'
+						help={ getHelp(
+							'cutoff',
+							__(
+								'Partly show the last visible slide (or, with one column, the next slide), hinting that there are more slides to scroll through.',
+								'gopublish-carousel'
+							)
 						) }
-						checked={ cutoff }
+						checked={ layout.cutoff }
 						onChange={ ( value ) =>
-							updateLayout( { cutoff: value } )
+							setLayoutValue( 'cutoff', value )
 						}
 					/>
+					<RangeControl
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+						label={ __( 'Slides to scroll', 'gopublish-carousel' ) }
+						help={ getHelp(
+							'scroll',
+							__(
+								'Number of slides to move when navigating. With the cutoff effect, it must be lower than the number of columns.',
+								'gopublish-carousel'
+							)
+						) }
+						value={ layout.scroll }
+						onChange={ ( value ) =>
+							setLayoutValue( 'scroll', value )
+						}
+						min={ 1 }
+						max={ layout.maxScroll }
+						disabled={ layout.maxScroll === 1 }
+					/>
+					{ parentSize && hasOverrides && (
+						<Button
+							__next40pxDefaultSize
+							variant="secondary"
+							onClick={ resetScreenSize }
+						>
+							{ sprintf(
+								/* translators: %s: Larger screen size, e.g. "Desktop". */
+								__( 'Reset to %s', 'gopublish-carousel' ),
+								parentSize.label
+							) }
+						</Button>
+					) }
+				</PanelBody>
+				<PanelBody title={ __( 'Navigation', 'gopublish-carousel' ) }>
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={ __(
@@ -309,24 +472,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						onChange={ ( value ) =>
 							setAttributes( { rewind: value } )
 						}
-					/>
-					<RangeControl
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
-						label={ __(
-							'Mobile slide width (%)',
-							'gopublish-carousel'
-						) }
-						help={ __(
-							'Width of each slide on mobile and tablet screens, as a percentage of the carousel width.',
-							'gopublish-carousel'
-						) }
-						value={ mobileWidth }
-						onChange={ ( value ) =>
-							setAttributes( { mobileWidth: value } )
-						}
-						min={ 1 }
-						max={ 100 }
 					/>
 				</PanelBody>
 			</InspectorControls>

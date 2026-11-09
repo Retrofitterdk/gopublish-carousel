@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Go:Publish Carousel
  * Description:       A carousel block for any blocks, built on native scrolling and the Interactivity API.
- * Version:           0.3.0
+ * Version:           0.4.0
  * Requires at least: 6.8
  * Requires PHP:      7.2
  * Author:            Retrofitter
@@ -97,20 +97,131 @@ function gopublish_carousel_small_screen_query() {
 }
 
 /**
- * Media queries for the viewports a block can have its own styles for
- * (WordPress 7.1+), e.g. '@mobile' => '@media (width <= 480px)'.
+ * Media queries for the viewports a block can have its own styles for,
+ * e.g. '@mobile' => '@media (width <= 480px)'.
  *
- * The same queries core uses for per-viewport block styles, so the carousel's
- * per-viewport gap switches at the same widths as its padding etc.
+ * The same queries core uses for per-viewport block styles (WordPress 7.1+,
+ * following the theme's settings.viewport), so the carousel's per-viewport
+ * layout and gap switch at the same widths as its padding etc. Older
+ * WordPress versions get core's default breakpoints.
  *
- * @return array<string, string> Media queries keyed by viewport, or an empty
- *                               array on WordPress versions without them.
+ * @return array<string, string> Media queries keyed by viewport.
  */
 function gopublish_carousel_viewport_media_queries() {
 	if ( ! method_exists( 'WP_Theme_JSON', 'get_viewport_media_queries' ) ) {
-		return array();
+		return array(
+			'@mobile' => '@media (width <= 480px)',
+			'@tablet' => '@media (480px < width <= 782px)',
+		);
 	}
 	return WP_Theme_JSON::get_viewport_media_queries( wp_get_global_settings( array( 'viewport' ) ) );
+}
+
+/**
+ * The carousel's layout (columns, cutoff effect, slides to scroll) for the
+ * base and each viewport.
+ *
+ * The block attributes columns, cutoff and scroll are the base values, used
+ * on every screen size unless a viewport overrides them in the viewports
+ * attribute, e.g. { "@tablet": { "columns": 2 }, "@mobile": { "columns": 1 } }.
+ * Each viewport inherits from the next larger one: mobile from tablet, tablet
+ * from the base. Keep in sync with getLayouts() in edit.js.
+ *
+ * Carousels from before per-viewport layouts (no viewports attribute) get
+ * tablet min(2, columns) and mobile 1 column, both with the cutoff effect;
+ * on large screens, the cutoff effect stays off with 1 column, where it had
+ * no effect before.
+ *
+ * @param array $attributes Block attributes.
+ * @return array<string, array> Layouts keyed by 'base', '@tablet' and
+ *                              '@mobile', each with columns, cutoff, scroll,
+ *                              visible (slides across, e.g. 2.7 with cutoff)
+ *                              and gaps (gaps within the visible width).
+ */
+function gopublish_carousel_layouts( $attributes ) {
+	$base = array(
+		'columns' => $attributes['columns'] ?? 3,
+		'cutoff'  => $attributes['cutoff'] ?? true,
+		'scroll'  => $attributes['scroll'] ?? 1,
+	);
+
+	$viewports = $attributes['viewports'] ?? null;
+	if ( ! is_array( $viewports ) ) {
+		if ( 1 === (int) $base['columns'] ) {
+			$base['cutoff'] = false;
+		}
+		$viewports = array(
+			'@tablet' => array(
+				'columns' => min( 2, (int) $base['columns'] ),
+				'cutoff'  => true,
+			),
+			'@mobile' => array(
+				'columns' => 1,
+				'cutoff'  => true,
+			),
+		);
+	}
+
+	$layouts = array( 'base' => gopublish_carousel_complete_layout( $base ) );
+	$current = $base;
+	foreach ( array( '@tablet', '@mobile' ) as $viewport ) {
+		$override = is_array( $viewports[ $viewport ] ?? null ) ? $viewports[ $viewport ] : array();
+		foreach ( array( 'columns', 'cutoff', 'scroll' ) as $key ) {
+			if ( isset( $override[ $key ] ) ) {
+				$current[ $key ] = $override[ $key ];
+			}
+		}
+		$layouts[ $viewport ] = gopublish_carousel_complete_layout( $current );
+	}
+	return $layouts;
+}
+
+/**
+ * Sanitize a layout and add the values the CSS needs.
+ *
+ * With the cutoff effect, 2+ columns trim the last visible slide (columns
+ * - 0.3 slides), and 1 column lets the next slide peek in (1.3 slides). The
+ * amount (0.3) is the --cutoff-amount custom property, which themes can
+ * change: style.scss computes the slide width from trim/peek; visible and
+ * gaps here use the default, for the server's can-scroll guess. Slides to
+ * scroll is at most the number of fully visible slides.
+ *
+ * @param array $layout Columns, cutoff and scroll.
+ * @return array The layout, with trim, peek, visible and gaps added.
+ */
+function gopublish_carousel_complete_layout( $layout ) {
+	$columns = max( 1, min( 6, (int) $layout['columns'] ) );
+	$cutoff  = (bool) $layout['cutoff'];
+	$visible = $columns;
+	if ( $cutoff ) {
+		$visible = $columns > 1 ? $columns - 0.3 : 1.3;
+	}
+	$max_scroll = ( $cutoff && $columns > 1 ) ? $columns - 1 : $columns;
+
+	return array(
+		'columns' => $columns,
+		'cutoff'  => $cutoff,
+		'scroll'  => max( 1, min( $max_scroll, (int) $layout['scroll'] ) ),
+		'trim'    => $cutoff && $columns > 1,
+		'peek'    => $cutoff && 1 === $columns,
+		'visible' => $visible,
+		'gaps'    => (int) ceil( $visible ) - 1,
+	);
+}
+
+/**
+ * CSS custom properties for a layout (see gopublish_carousel_layouts()).
+ *
+ * @param array $layout A completed layout.
+ * @return array<string, string> Custom properties for style.scss.
+ */
+function gopublish_carousel_layout_properties( $layout ) {
+	return array(
+		'--columns'          => (string) $layout['columns'],
+		'--cutoff-trim'      => $layout['trim'] ? '1' : '0',
+		'--cutoff-peek'      => $layout['peek'] ? '1' : '0',
+		'--slides-to-scroll' => (string) $layout['scroll'],
+	);
 }
 
 /**
@@ -138,24 +249,26 @@ function gopublish_carousel_gap_value( $gap ) {
 	if ( ! preg_match( '/^(?:0|\d*\.?\d+(?:px|em|rem|%|vw|vh|ch)|var\(--wp--preset--spacing--[a-z0-9-]+\))$/', $gap ) ) {
 		return null;
 	}
-	return $gap;
+	// A unitless 0 is invalid in calc() additions (the slide width formula).
+	return '0' === $gap ? '0px' : $gap;
 }
 
 /**
- * Add the CSS for a per-viewport gap to the carousel's stylesheet (once per
- * class, shared by carousels with the same values).
+ * Add per-viewport CSS custom properties to the carousel's stylesheet (once
+ * per class, shared by carousels with the same values). They're !important,
+ * so they win over the base values in the wrapper's inline style.
  *
  * Added with wp_add_inline_style() rather than the style engine's
  * block-supports store: with the Gutenberg plugin active, that store is
  * printed from Gutenberg's own copy of the style engine, and rules added to
  * core's store never reach the page.
  *
- * @param string                $class_name    Class on the carousel wrapper.
- * @param array<string, string> $viewport_gaps Gap values (already validated
- *                                             by gopublish_carousel_gap_value())
- *                                             keyed by media query.
+ * @param string $class_name Class on the carousel wrapper.
+ * @param array  $rules      Custom properties keyed by media query. Values
+ *                           must already be safe CSS (numbers, or gaps
+ *                           validated by gopublish_carousel_gap_value()).
  */
-function gopublish_carousel_add_viewport_gap_styles( $class_name, $viewport_gaps ) {
+function gopublish_carousel_add_viewport_styles( $class_name, $rules ) {
 	static $added = array();
 	if ( isset( $added[ $class_name ] ) ) {
 		return;
@@ -168,15 +281,19 @@ function gopublish_carousel_add_viewport_gap_styles( $class_name, $viewport_gaps
 	}
 
 	$css = '';
-	foreach ( $viewport_gaps as $media_query => $gap ) {
-		$css .= "{$media_query}{.{$class_name}{--carousel-gap:{$gap} !important;}}";
+	foreach ( $rules as $media_query => $properties ) {
+		$declarations = '';
+		foreach ( $properties as $property => $value ) {
+			$declarations .= "{$property}:{$value} !important;";
+		}
+		$css .= "{$media_query}{.{$class_name}{{$declarations}}}";
 	}
 	wp_add_inline_style( $block_type->style_handles[0], $css );
 }
 
 /**
  * Pass the viewport media queries to the editor script, so the editor applies
- * a per-viewport gap at exactly the same widths as the front end (read in
+ * per-viewport layouts and gaps at exactly the same widths as the front end (read in
  * edit.js as window.gopublishCarousel.mediaQueries). Block editor settings
  * can't carry them: the editor only passes on settings it knows.
  */
@@ -210,12 +327,6 @@ function gopublish_carousel_add_small_screen_styles() {
 
 	$query = gopublish_carousel_small_screen_query();
 	$css   = <<<CSS
-/* Mobile slide width (Mobile slide width setting, set as --mobile-width). */
-@media {$query} {
-	.wp-block-gopublish-carousel {
-		--slide-width: var(--mobile-width);
-	}
-}
 /*
  * Small touch screens: navigate by swiping. The buttons are only visually
  * hidden, so keyboard, switch and screen reader users can still reach them,

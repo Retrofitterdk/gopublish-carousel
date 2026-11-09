@@ -32,54 +32,54 @@ if ( 0 === $real_slides ) {
 	return;
 }
 
-$columns    = (int) ( $attributes['columns'] ?? 3 );
-$one_column = 1 === $columns;
-$cutoff     = (bool) ( $attributes['cutoff'] ?? false );
-$rewind     = (bool) ( $attributes['rewind'] ?? true );
-$scroll     = (int) ( $attributes['scroll'] ?? 1 );
-$classes    = 'columns-' . $columns . ( $cutoff ? ' cutoff' : ' no-cutoff' );
+// Layout per viewport: columns, cutoff effect and slides to scroll for the
+// base (all screen sizes) and the overrides for tablet and mobile.
+$layouts = gopublish_carousel_layouts( $attributes );
+$base    = $layouts['base'];
+$rewind  = (bool) ( $attributes['rewind'] ?? true );
+$classes = 'columns-' . $base['columns'] . ( $base['cutoff'] ? ' cutoff' : ' no-cutoff' );
 
-// Mobile slide width in percent (block.json default: 75).
-$slide_width_mobile = (float) ( $attributes['mobileWidth'] ?? 75 );
-
-// Slides to scroll can't exceed the columns (with cutoff: columns - 1).
-$max_scroll = ( $cutoff && ! $one_column ) ? $columns - 1 : $columns;
-$scroll     = min( $scroll, $max_scroll );
-
-// Layout values for style.scss, which computes the slide width from them.
-$style = '--columns: ' . $columns . '; --mobile-width: ' . $slide_width_mobile . '%;';
+// Base layout values for style.scss, which computes the slide width from them.
+$style = '';
+foreach ( gopublish_carousel_layout_properties( $base ) as $property => $value ) {
+	$style .= $property . ': ' . $value . '; ';
+}
 
 // The Block spacing setting (blockGap) sets the space between slides.
 $gap = gopublish_carousel_gap_value( $attributes['style']['spacing']['blockGap'] ?? null );
 if ( null !== $gap ) {
-	$style .= ' --carousel-gap: ' . $gap . ';';
+	$style .= '--carousel-gap: ' . $gap . ';';
 }
 
-// Block spacing per viewport (WordPress 7.1+, e.g. a smaller gap on mobile).
-// Core doesn't output blockGap for blocks without layout support, so add the
-// rules the way core adds other per-viewport styles: a class shared by
-// carousels with the same values, with !important rules so they win over the
-// inline base value (see gopublish_carousel_add_viewport_gap_styles()).
-$viewport_gaps = array();
+// Per viewport: the layout, and Block spacing (WordPress 7.1+, e.g. a smaller
+// gap on mobile; core doesn't output blockGap for blocks without layout
+// support). Added the way core adds other per-viewport styles: a class shared
+// by carousels with the same values, with rules that win over the inline base
+// values (see gopublish_carousel_add_viewport_styles()).
+$viewport_rules = array();
 foreach ( gopublish_carousel_viewport_media_queries() as $viewport => $media_query ) {
+	$properties = isset( $layouts[ $viewport ] ) ? gopublish_carousel_layout_properties( $layouts[ $viewport ] ) : array();
+
 	$viewport_gap = gopublish_carousel_gap_value( $attributes['style'][ $viewport ]['spacing']['blockGap'] ?? null );
 	if ( null !== $viewport_gap ) {
-		$viewport_gaps[ $media_query ] = $viewport_gap;
+		$properties['--carousel-gap'] = $viewport_gap;
+	}
+	if ( $properties ) {
+		$viewport_rules[ $media_query ] = $properties;
 	}
 }
-if ( $viewport_gaps ) {
-	$gap_class = wp_unique_id_from_values( $viewport_gaps, 'gopublish-carousel-gap-' );
-	$classes  .= ' ' . $gap_class;
-	gopublish_carousel_add_viewport_gap_styles( $gap_class, $viewport_gaps );
+if ( $viewport_rules ) {
+	$viewport_class = wp_unique_id_from_values( $viewport_rules, 'gopublish-carousel-' );
+	$classes       .= ' ' . $viewport_class;
+	gopublish_carousel_add_viewport_styles( $viewport_class, $viewport_rules );
 }
 
 // Best guess whether there is anything to scroll, so the server-rendered
 // markup is usually right before view.js measures it: more slides than fit
-// across on large screens (columns, or columns - 0.3 with cutoff) or on small
-// screens (Mobile slide width). The arrows are only hidden on load when the
+// across in any of the layouts. The arrows are only hidden on load when the
 // slides fit on every screen size.
-$visible_columns = ( $cutoff && ! $one_column ) ? $columns - 0.3 : $columns;
-$can_scroll      = $real_slides > 1 && ( $real_slides > $visible_columns || $real_slides * $slide_width_mobile > 100 );
+$fewest_visible = min( array_column( $layouts, 'visible' ) );
+$can_scroll     = $real_slides > 1 && $real_slides > $fewest_visible;
 
 // The scroll area must be reachable by keyboard. When no slide contains
 // anything focusable, the scroll area itself gets tabindex="0" (arrow keys
@@ -98,8 +98,10 @@ $carousel_id = wp_unique_id( 'gopublish-carousel-' );
 $slides_id   = $carousel_id . '-slides';
 
 // Accessible names for the navigation buttons (they only contain an icon).
-$label_prev = _n( 'Previous slide', 'Previous slides', $scroll, 'gopublish-carousel' );
-$label_next = _n( 'Next slide', 'Next slides', $scroll, 'gopublish-carousel' );
+// Always singular, like the W3C example: how many slides a button moves can
+// differ per viewport.
+$label_prev = __( 'Previous slide', 'gopublish-carousel' );
+$label_next = __( 'Next slide', 'gopublish-carousel' );
 
 // Carousel semantics (W3C APG carousel pattern). With a label, the carousel is
 // a named region (a landmark). Without one it's a group: an unnamed region is
@@ -126,7 +128,6 @@ $slide_roledescription = __( 'slide', 'gopublish-carousel' );
 // also applies them when rendering, so the HTML matches the initial state.
 // - data-wp-init/data-wp-on: on the scroll area, keep the state up to date.
 $context = array(
-	'scroll'               => $scroll,
 	'itemsTotal'           => $real_slides,
 	// Rewind at the end: Next on the last slide goes back to the first, and
 	// Previous on the first goes to the last. Off: the buttons are disabled

@@ -34,21 +34,24 @@
 	// --slide--padding-right is still honoured for older theme CSS.
 	--carousel-gap: var(--slide--padding-right, 1rem);
 
-	// Slide width: --columns (from render.php/edit.js) slides fit across, or
-	// columns - 0.3 with the cutoff effect, so the last one is partly shown.
-	// Small screens use --mobile-width instead (generated in PHP).
-	--cutoff: 0;
-	--visible: calc(var(--columns, 3) - var(--cutoff) * 0.3);
-	--slide-width: calc((100% - (var(--columns, 3) - 1) * var(--carousel-gap)) / var(--visible));
+	// How much of a slide the cutoff effect cuts off the last visible slide
+	// (2+ columns) or shows of the next one (1 column). Themes can change it
+	// (0–0.9).
+	--cutoff-amount: 0.3;
+
+	// Slide width: --visible slides fit across, with --gaps gaps between
+	// them. render.php/edit.js set --columns, --cutoff-trim and --cutoff-peek
+	// (0 or 1) per viewport, e.g. 3 columns with cutoff: 2.7 slides and 2
+	// gaps; 1 column with cutoff: 1.3 slides and 1 gap.
+	--cutoff-delta: calc((var(--cutoff-peek, 0) - var(--cutoff-trim, 0)) * clamp(0, var(--cutoff-amount), 0.9));
+	--visible: calc(var(--columns, 3) + var(--cutoff-delta));
+	--gaps: calc(var(--columns, 3) - 1 + var(--cutoff-peek, 0));
+	--slide-width: calc((100% - var(--gaps) * var(--carousel-gap)) / var(--visible));
 
 	position: relative;
 	// A column, so the slides can fill a minimum height (Dimensions setting).
 	display: flex;
 	flex-direction: column;
-
-	&.cutoff:not(.columns-1) {
-		--cutoff: 1;
-	}
 
 	.navigation-container {
 		display: flex;

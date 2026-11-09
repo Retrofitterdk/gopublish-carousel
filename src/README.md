@@ -10,7 +10,8 @@ A dynamic block. Its output is rendered in PHP, and it runs in the browser with 
 | --- | --- |
 | `block.json` | Block metadata, attributes and supports. |
 | `index.js` | Registers the block in the editor, with a default variation that inserts three slides. |
-| `edit.js` | Editor UI: settings, toolbar (Add slide, Show all slides), and a front-end-like carousel view (gap, arrows, rewind). |
+| `layouts.js` | The layout per viewport (columns, cutoff, slides to scroll, inheritance). Mirrors `gopublish_carousel_layouts()` in PHP. |
+| `edit.js` | Editor UI: Layout panel (Screen size switch tied to the device preview, per-viewport settings), Navigation panel, toolbar (Add slide, Show all slides), and a front-end-like carousel view. |
 | `save.js` | Saves the inner blocks. The front end is rendered by `render.php`. |
 | `render.php` | Front-end markup: navigation, live region, the slides in a scroll area, the gap, and the Interactivity API context. |
 | `view.js` | Front-end behaviour: the `gopublish-carousel` store (button scrolling, rewind, start/end state, announcements). Scrolling itself is native. |

@@ -168,8 +168,17 @@ function scrollBySlides( context, element, direction ) {
 		} );
 		return;
 	}
+	// Slides to scroll can differ per viewport, so it's read from the CSS
+	// (--slides-to-scroll, set by render.php) for the current screen size.
+	const slides =
+		parseInt(
+			window
+				.getComputedStyle( track )
+				.getPropertyValue( '--slides-to-scroll' ),
+			10
+		) || 1;
 	track.scrollBy( {
-		left: textDirection * direction * context.scroll * step,
+		left: textDirection * direction * slides * step,
 	} );
 }
 
