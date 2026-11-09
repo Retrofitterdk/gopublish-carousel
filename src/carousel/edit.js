@@ -13,8 +13,7 @@ import {
 	RangeControl,
 	TextControl,
 	ToggleControl,
-	ToolbarButton,
-	ToolbarGroup,
+	ToolbarDropdownMenu,
 	// WordPress 7.1 still only ships these under their experimental names
 	// (the stable names exist in the npm package, not in core).
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -180,14 +179,32 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				);
 	};
 
-	// "Show all slides": an editor-only grid view (not saved).
-	const [ showAll, setShowAll ] = useState( false );
-	// The Carousel Slides block, which the toolbar buttons work on.
+	// The Carousel Slides block, where "Add to carousel" adds slides.
 	const slidesClientId = useSelect(
 		( select ) => {
 			const { getBlockOrder, getBlockName } = select( blockEditorStore );
 			return getBlockOrder( clientId ).find(
 				( id ) => getBlockName( id ) === 'gopublish/carousel-slides'
+			);
+		},
+		[ clientId ]
+	);
+	// Whether the carousel has its Navigation and Pagination (one of each:
+	// see the filter in index.js).
+	const hasNavigation = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).some(
+				( id ) => getBlockName( id ) === 'gopublish/carousel-navigation'
+			);
+		},
+		[ clientId ]
+	);
+	const hasPagination = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).some(
+				( id ) => getBlockName( id ) === 'gopublish/carousel-pagination'
 			);
 		},
 		[ clientId ]
@@ -198,6 +215,23 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				? select( blockEditorStore ).getBlockCount( slidesClientId )
 				: 0,
 		[ slidesClientId ]
+	);
+	const slidesIndex = useSelect(
+		( select ) =>
+			select( blockEditorStore )
+				.getBlockOrder( clientId )
+				.indexOf( slidesClientId ),
+		[ clientId, slidesClientId ]
+	);
+	// Where a recreated Carousel Slides goes: before the first Pagination.
+	const paginationIndex = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).findIndex(
+				( id ) => getBlockName( id ) === 'gopublish/carousel-pagination'
+			);
+		},
+		[ clientId ]
 	);
 	const { insertBlock } = useDispatch( blockEditorStore );
 
@@ -231,12 +265,31 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		} )
 		.join( '' );
 
-	// Add a slide at the end (it gets selected and scrolled into view).
+	// "Add to carousel": a slide at the end of Carousel Slides (it gets
+	// selected and scrolled into view; without Carousel Slides, one is added
+	// with the slide), Navigation before the slides, Pagination after them
+	// (each only if the carousel doesn't have one yet).
 	const addSlide = () =>
+		slidesClientId
+			? insertBlock(
+					createBlock( 'gopublish/carousel-slide' ),
+					slideCount,
+					slidesClientId
+				)
+			: insertBlock(
+					createBlock(
+						'gopublish/carousel-slides',
+						{ lock: { remove: true } },
+						[ createBlock( 'gopublish/carousel-slide' ) ]
+					),
+					paginationIndex < 0 ? undefined : paginationIndex,
+					clientId
+				);
+	const addPart = ( name, before ) =>
 		insertBlock(
-			createBlock( 'gopublish/carousel-slide' ),
-			slideCount,
-			slidesClientId
+			createBlock( name ),
+			slidesIndex < 0 ? undefined : slidesIndex + ( before ? 0 : 1 ),
+			clientId
 		);
 
 	// Same classes and widths as the front end (render.php), so the front-end
@@ -245,7 +298,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		className: [
 			`columns-${ layouts.base.columns }`,
 			layouts.base.cutoff ? 'cutoff' : 'no-cutoff',
-			showAll ? 'is-editor-grid' : '',
 			viewportCSS ? viewportClass : '',
 		]
 			.filter( Boolean )
@@ -261,6 +313,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'carousel-inner-blocks' },
 		{
+			// Only one Carousel Slides: see the filter in index.js.
 			allowedBlocks: ALLOWED_BLOCKS,
 			templateLock: false,
 			renderAppender: false,
@@ -271,21 +324,38 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 	return (
 		<div { ...blockProps }>
 			{ viewportCSS && <style>{ viewportCSS }</style> }
-			<BlockControls>
-				<ToolbarGroup>
-					<ToolbarButton
-						icon="plus-alt2"
-						label={ __( 'Add slide', 'gopublish-carousel' ) }
-						onClick={ addSlide }
-						disabled={ ! slidesClientId }
-					/>
-					<ToolbarButton
-						icon="grid-view"
-						label={ __( 'Show all slides', 'gopublish-carousel' ) }
-						isPressed={ showAll }
-						onClick={ () => setShowAll( ! showAll ) }
-					/>
-				</ToolbarGroup>
+			<BlockControls group="block">
+				<ToolbarDropdownMenu
+					icon="plus-alt2"
+					label={ __( 'Add to carousel', 'gopublish-carousel' ) }
+					controls={ [
+						{
+							title: __( 'Slide', 'gopublish-carousel' ),
+							icon: 'media-default',
+							onClick: addSlide,
+						},
+						{
+							title: __( 'Navigation', 'gopublish-carousel' ),
+							icon: 'leftright',
+							isDisabled: hasNavigation,
+							onClick: () =>
+								addPart(
+									'gopublish/carousel-navigation',
+									true
+								),
+						},
+						{
+							title: __( 'Pagination', 'gopublish-carousel' ),
+							icon: 'ellipsis',
+							isDisabled: hasPagination,
+							onClick: () =>
+								addPart(
+									'gopublish/carousel-pagination',
+									false
+								),
+						},
+					] }
+				/>
 			</BlockControls>
 			<InspectorControls>
 				<PanelBody title={ __( 'Layout', 'gopublish-carousel' ) }>

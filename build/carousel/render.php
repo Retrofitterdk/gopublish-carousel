@@ -37,10 +37,18 @@ if ( $is_legacy ) {
 	$inner_html .= gopublish_carousel_render_slides( $block->inner_blocks, $block, 'class="carousel-container" id="' . esc_attr( $slides_id ) . '"' );
 	$real_slides = gopublish_carousel_count_slides( $inner_html );
 } else {
-	// Carousel Slides first: the other blocks need the number of slides.
-	$parts = array();
+	// Carousel Slides first: the other blocks need the number of slides. A
+	// carousel has one scroll area: any further Carousel Slides blocks (the
+	// editor doesn't allow them, but markup can be pasted) are skipped.
+	$parts      = array();
+	$has_slides = false;
 	foreach ( $block->inner_blocks as $index => $inner_block ) {
 		if ( 'gopublish/carousel-slides' === $inner_block->name ) {
+			if ( $has_slides ) {
+				$parts[ $index ] = '';
+				continue;
+			}
+			$has_slides = true;
 			$inner_block->context['gopublish-carousel/slidesId'] = $slides_id;
 
 			$parts[ $index ] = gopublish_carousel_render_inner_block( $inner_block, $block );

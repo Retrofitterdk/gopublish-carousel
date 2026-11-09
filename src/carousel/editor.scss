@@ -36,9 +36,9 @@
 		}
 	}
 
-	// "Show all slides": every slide in a grid, one grid column per carousel
-	// column (--columns is set in edit.js).
-	&.is-editor-grid .carousel-track {
+	// "Show all slides" (Carousel Slides toolbar): every slide in a grid, one
+	// grid column per carousel column (--columns is set in edit.js).
+	.wp-block-gopublish-carousel-slides.is-editor-grid .carousel-track {
 		display: grid;
 		grid-template-columns: repeat(var(--columns), 1fr);
 		gap: var(--carousel-gap);

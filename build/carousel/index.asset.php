@@ -6,7 +6,8 @@
 		'wp-components',
 		'wp-data',
 		'wp-element',
+		'wp-hooks',
 		'wp-i18n'
 	),
-	'version' => '0e5cec05e79c8f85bd10'
+	'version' => '61628ed2d40af890961f'
 );

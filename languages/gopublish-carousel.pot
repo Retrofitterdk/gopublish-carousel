@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-09T15:24:46+00:00\n"
+"POT-Creation-Date: 2026-11-09T15:44:39+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: gopublish-carousel\n"
@@ -34,24 +34,24 @@ msgid "Choose slide"
 msgstr ""
 
 #. translators: Spoken by screen readers to describe the carousel block.
-#: build/carousel/render.php:125
+#: build/carousel/render.php:133
 msgid "carousel"
 msgstr ""
 
 #. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:160
+#: build/carousel/render.php:168
 #, php-format
 msgid "Slide %1$d of %2$d"
 msgstr ""
 
 #. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
-#: build/carousel/render.php:162
+#: build/carousel/render.php:170
 #, php-format
 msgid "Slides %1$d to %2$d of %3$d"
 msgstr ""
 
 #. translators: Label of a pagination dot. %d: Number of the first slide it scrolls to.
-#: build/carousel/render.php:180
+#: build/carousel/render.php:188
 #: build/carousel-pagination/index.js:2
 #, php-format,js-format
 msgid "Go to slide %d"
@@ -76,6 +76,14 @@ msgstr ""
 #: gopublish-carousel.php:561
 #: build/carousel-navigation/index.js:1
 msgid "Next slide"
+msgstr ""
+
+#: build/carousel-slides/index.js:1
+msgid "Add slide"
+msgstr ""
+
+#: build/carousel-slides/index.js:1
+msgid "Show all slides"
 msgstr ""
 
 #: build/carousel/index.js:1
@@ -103,11 +111,20 @@ msgid "Same as %s."
 msgstr ""
 
 #: build/carousel/index.js:3
-msgid "Add slide"
+msgid "Add to carousel"
 msgstr ""
 
 #: build/carousel/index.js:3
-msgid "Show all slides"
+msgid "Slide"
+msgstr ""
+
+#: build/carousel/index.js:3
+#: build/carousel/index.js:4
+msgid "Navigation"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Pagination"
 msgstr ""
 
 #: build/carousel/index.js:3
@@ -150,10 +167,6 @@ msgstr ""
 #: build/carousel/index.js:4
 #, js-format
 msgid "Reset to %s"
-msgstr ""
-
-#: build/carousel/index.js:4
-msgid "Navigation"
 msgstr ""
 
 #: build/carousel/index.js:4

@@ -213,7 +213,7 @@ return array(
 		'version' => '0.4.0',
 		'title' => 'Carousel Slides',
 		'category' => 'widgets',
-		'icon' => 'slides',
+		'icon' => 'images-alt2',
 		'description' => 'The slides of a carousel, in a scrollable row.',
 		'parent' => array(
 			'gopublish/carousel'

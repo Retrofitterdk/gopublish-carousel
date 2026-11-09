@@ -1,4 +1,5 @@
 import { createBlock, registerBlockType } from '@wordpress/blocks';
+import { addFilter } from '@wordpress/hooks';
 
 import './style.scss';
 import './editor.scss';
@@ -79,3 +80,36 @@ registerBlockType( metadata.name, {
 		},
 	],
 } );
+
+// A carousel has one of each part: one Carousel Slides (one scroll area;
+// render.php only renders the first), one Navigation and one Pagination.
+// The Carousel's allowed-blocks list can't enforce that, because the parts
+// name the Carousel as their parent, which the editor treats as allowed on
+// its own. This filter covers the inserter, the "Add block" button and
+// pasting.
+const ONE_PER_CAROUSEL = [
+	'gopublish/carousel-slides',
+	'gopublish/carousel-navigation',
+	'gopublish/carousel-pagination',
+];
+
+addFilter(
+	'blockEditor.__unstableCanInsertBlockType',
+	'gopublish-carousel/one-of-each-part',
+	( canInsert, blockType, rootClientId, { getBlock } ) => {
+		if (
+			! canInsert ||
+			! ONE_PER_CAROUSEL.includes( blockType.name ) ||
+			! rootClientId
+		) {
+			return canInsert;
+		}
+		const parent = getBlock( rootClientId );
+		return ! (
+			parent?.name === 'gopublish/carousel' &&
+			parent.innerBlocks.some(
+				( innerBlock ) => innerBlock.name === blockType.name
+			)
+		);
+	}
+);

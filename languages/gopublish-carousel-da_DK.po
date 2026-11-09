@@ -35,7 +35,7 @@ msgid "Next slide"
 msgstr "Næste dias"
 
 #. translators: Spoken by screen readers to describe the carousel block.
-#: build/carousel/render.php:125
+#: build/carousel/render.php:133
 msgid "carousel"
 msgstr "karrusel"
 
@@ -45,7 +45,7 @@ msgid "slide"
 msgstr "dias"
 
 #. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:160
+#: build/carousel/render.php:168
 #, php-format
 msgid "Slide %1$d of %2$d"
 msgstr "Dias %1$d af %2$d"
@@ -56,11 +56,11 @@ msgstr "Dias %1$d af %2$d"
 msgid "%1$d of %2$d"
 msgstr "%1$d af %2$d"
 
-#: build/carousel/index.js:3
+#: build/carousel-slides/index.js:1
 msgid "Add slide"
 msgstr "Tilføj dias"
 
-#: build/carousel/index.js:3
+#: build/carousel-slides/index.js:1
 msgid "Show all slides"
 msgstr "Vis alle dias"
 
@@ -113,7 +113,7 @@ msgid "A carousel for blocks using the Interactivity API."
 msgstr "En karrusel til blokke, bygget med Interactivity API."
 
 #. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
-#: build/carousel/render.php:162
+#: build/carousel/render.php:170
 #, php-format
 msgid "Slides %1$d to %2$d of %3$d"
 msgstr "Dias %1$d til %2$d af %3$d"
@@ -177,6 +177,7 @@ msgstr "Vis det sidste synlige dias delvist (eller, med én kolonne, det næste 
 msgid "Reset to %s"
 msgstr "Nulstil til %s"
 
+#: build/carousel/index.js:3
 #: build/carousel/index.js:4
 msgid "Navigation"
 msgstr "Navigation"
@@ -206,7 +207,7 @@ msgid "Choose slide"
 msgstr "Vælg dias"
 
 #. translators: Label of a pagination dot. %d: Number of the first slide it scrolls to.
-#: build/carousel/render.php:180
+#: build/carousel/render.php:188
 #: build/carousel-pagination/index.js:2
 #, php-format,js-format
 msgid "Go to slide %d"
@@ -221,3 +222,15 @@ msgstr "Karruselpaginering"
 msgctxt "block description"
 msgid "Dots for jumping to a position in a carousel."
 msgstr "Prikker til at springe til en position i en karrusel."
+
+#: build/carousel/index.js:3
+msgid "Add to carousel"
+msgstr "Tilføj til karrusel"
+
+#: build/carousel/index.js:3
+msgid "Slide"
+msgstr "Dias"
+
+#: build/carousel/index.js:3
+msgid "Pagination"
+msgstr "Paginering"
