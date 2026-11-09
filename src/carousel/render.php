@@ -1,123 +1,213 @@
 <?php
 /**
- * Carousel Block Template
- * Creates a responsive, looping carousel with configurable columns and scrolling
+ * Front-end markup for the Carousel block.
+ *
+ * Renders the navigation, the live region, the slides and the clones used for
+ * seamless looping. The behaviour is in view.js (store: gopublish-carousel).
+ *
+ * @package GopublishCarousel
+ *
+ * @var array    $attributes Block attributes.
+ * @var string   $content    Saved block content (unused: slides are rendered below).
+ * @var WP_Block $block      Block instance.
  */
 
-// Ensure innerBlocks is defined to avoid warnings in the editor
-$innerBlocks = $block->parsed_block['innerBlocks'] ?? [];
-$realSlides  = count($innerBlocks);
-$columns     = $attributes['columns'] ?? 3;
-$onecolumn   = $columns === 1;
-$cutoff      = $attributes['cutoff'] ?? false;
-$classes     = 'columns-' . $columns;
-$classes    .= $cutoff ? ' cutoff' : ' no-cutoff';
-$scroll      = $attributes['scroll'] ?? 1;
-$loop        = true;
-
-// Increase slide width to create partial cut-off effect
-$slide_width = (100 / ($columns - 0.3)) . '%';
-// If cutoff is disabled or it's a single column carousel, use normal widths
-if ( ! $cutoff || $onecolumn ) {
-  $slide_width = (100 / ($columns)) . '%';
+// Render each slide once, as a WP_Block, so it keeps the block context it
+// inherits (e.g. postId inside a Query Loop) and the usual render filters run.
+// The clones below reuse this HTML instead of rendering the slide again.
+// Slides that render empty (e.g. hidden by a visibility plugin) are skipped.
+$slides_html = array();
+foreach ( $block->inner_blocks as $inner_block ) {
+	$html = gopublish_carousel_render_inner_block( $inner_block, $block );
+	if ( '' !== trim( $html ) ) {
+		$slides_html[] = $html;
+	}
 }
-$slide_width_mobile = $attributes['mobileWidth'] ?? $slide_width;
-$slide_width_mobile_percentage = $slide_width_mobile . '%';
+$real_slides = count( $slides_html );
 
-// Ensure scroll does not exceed columns (or columns - 1 if cutoff is enabled)
-$maxscroll = $columns;
-if ( $cutoff && ! $onecolumn ) {
-  $maxscroll = $columns - 1;
+$columns    = (int) ( $attributes['columns'] ?? 3 );
+$one_column = 1 === $columns;
+$cutoff     = (bool) ( $attributes['cutoff'] ?? false );
+$scroll     = (int) ( $attributes['scroll'] ?? 1 );
+$loop       = true;
+$classes    = 'columns-' . $columns . ( $cutoff ? ' cutoff' : ' no-cutoff' );
+
+// Desktop slide width. With cutoff, slides are wider, so the last visible
+// slide is only partly shown.
+$slide_width = ( $cutoff && ! $one_column )
+	? ( 100 / ( $columns - 0.3 ) ) . '%'
+	: ( 100 / $columns ) . '%';
+
+// Mobile slide width in percent (block.json default: 75).
+$slide_width_mobile = (float) ( $attributes['mobileWidth'] ?? 75 );
+
+// Slides to scroll can't exceed the columns (with cutoff: columns - 1).
+$max_scroll = ( $cutoff && ! $one_column ) ? $columns - 1 : $columns;
+$scroll     = min( $scroll, $max_scroll );
+
+// How many slides are visible at once (cutoff shows a partial extra slide).
+$visible_desktop = ( $cutoff && ! $one_column ) ? $columns - 0.3 : $columns;
+$visible_mobile  = 100 / max( 1, $slide_width_mobile );
+
+// If every slide fits in view, there is nothing to scroll at that breakpoint:
+// no navigation, no dragging and no clones (view.js toggles .is-static).
+$static_desktop = $real_slides <= $visible_desktop + 0.01;
+$static_mobile  = $real_slides <= $visible_mobile + 0.01;
+$is_scrollable  = ! ( $static_desktop && $static_mobile );
+
+// Clones for seamless looping. Clones repeat the slides cyclically, so the
+// loop also works with fewer slides than columns.
+// - Leading: enough to move back by `scroll` from the first slide.
+// - Trailing: enough to fill the view after moving past the last slide.
+// Clone HTML is hidden from screen readers and the tab order
+// (see gopublish_carousel_clone_html()).
+$leading_clones  = 0;
+$trailing_clones = 0;
+$clones_html     = array();
+if ( $loop && $is_scrollable && $real_slides > 0 ) {
+	$leading_clones  = $columns;
+	$visible_max     = max(
+		$static_desktop ? 0 : ceil( $visible_desktop ),
+		$static_mobile ? 0 : ceil( $visible_mobile )
+	);
+	$trailing_clones = (int) $visible_max + $scroll - 1;
+	$clones_html     = array_map( 'gopublish_carousel_clone_html', $slides_html );
 }
-if ( $scroll > $maxscroll ) {
-  $scroll = $maxscroll;
+
+// Unique ID for this carousel instance. wp_unique_id() counts up per page
+// render, so the IDs are stable between page loads (unlike uniqid()).
+$carousel_id = wp_unique_id( 'gopublish-carousel-' );
+$slides_id   = $carousel_id . '-slides';
+
+// Accessible names for the navigation buttons (they only contain an icon).
+$label_prev = _n( 'Previous slide', 'Previous slides', $scroll, 'gopublish-carousel' );
+$label_next = _n( 'Next slide', 'Next slides', $scroll, 'gopublish-carousel' );
+
+// Carousel semantics (W3C APG carousel pattern). With a label, the carousel is
+// a named region (a landmark). Without one it's a group: an unnamed region is
+// ignored by screen readers, and a default "Carousel" label would be read as
+// "Carousel carousel" together with the role description.
+$aria_label      = trim( (string) ( $attributes['ariaLabel'] ?? '' ) );
+$a11y_attributes = array(
+	'role'                 => '' !== $aria_label ? 'region' : 'group',
+	/* translators: Spoken by screen readers to describe the carousel block. */
+	'aria-roledescription' => __( 'carousel', 'gopublish-carousel' ),
+);
+if ( '' !== $aria_label ) {
+	$a11y_attributes['aria-label'] = $aria_label;
 }
 
-// Calculate unique ID for this carousel instance
-$carousel_id = 'carousel-' . uniqid();
+/* translators: Spoken by screen readers to describe a single slide. */
+$slide_roledescription = __( 'slide', 'gopublish-carousel' );
 
-// Pass configuration via data-wp-context
-$wrapper_attributes = get_block_wrapper_attributes([
-  'id' => $carousel_id,
-  'class' => $classes,
-  'data-wp-interactive' => 'gopublish-carousel',
-  'data-wp-context' => wp_json_encode([
-    'currentIndex' => 0,
-    'itemsPerView' => $columns,
-    'scroll'       => $scroll,
-    'cutoff'       => $attributes['cutoff'] ?? false,
-    'loop'         => $loop,
-    'itemsTotal'   => $realSlides,
-    'clonesCount'  => $columns,
-    'slideWidth'   => $slide_width,
-    'slideWidthMobile'   => $slide_width_mobile,
-  ])
-]);
+// Interactivity API wiring:
+// - data-wp-interactive: the store namespace registered in view.js.
+// - data-wp-context: per-carousel state. Every directive inside this wrapper
+// (buttons, future navigation/pagination blocks) reads the same context.
+// - data-wp-init: runs callbacks.init once when the carousel is hydrated.
+$context = array(
+	// The real slides start after the leading clones.
+	'currentIndex'         => $leading_clones,
+	'isTransitioning'      => false,
+	'itemsPerView'         => $columns,
+	'scroll'               => $scroll,
+	'cutoff'               => $cutoff,
+	'loop'                 => $loop,
+	'itemsTotal'           => $real_slides,
+	'clonesCount'          => $leading_clones,
+	'slideWidthMobile'     => $slide_width_mobile,
+	// Same query as the small-screen CSS (follows the theme's viewports).
+	'smallScreenQuery'     => gopublish_carousel_small_screen_query(),
+	'staticDesktop'        => $static_desktop,
+	'staticMobile'         => $static_mobile,
+	// Live region text, set by view.js after each move (empty on load, so
+	// nothing is announced until the user navigates).
+	'announcement'         => '',
+	/* translators: Announced after moving the carousel. 1: Slide number, 2: Total number of slides. */
+	'announcementTemplate' => __( 'Slide %1$d of %2$d', 'gopublish-carousel' ),
+);
+
+$wrapper_attributes = get_block_wrapper_attributes(
+	$a11y_attributes + array(
+		'id'                  => $carousel_id,
+		'class'               => $classes,
+		// Merged with any styles WordPress adds from block supports (padding,
+		// min-height, etc.) into a single style attribute.
+		'style'               => '--mobile-width: ' . $slide_width_mobile . '%;',
+		'data-wp-interactive' => 'gopublish-carousel',
+		'data-wp-init'        => 'callbacks.init',
+		'data-wp-context'     => wp_json_encode( $context ),
+	)
+);
 ?>
-<div
-  <?php echo $wrapper_attributes; ?>
-  style="--mobile-width: <?php echo esc_attr( $slide_width_mobile_percentage ); ?>"
->
-  <div class="navigation-container">
-    <button class="carousel-prev"
-      data-carousel-id="<?php echo $carousel_id; ?>"
-      data-wp-on--click="actions.moveBack"
-      data-wp-bind--disabled="state.isTransitioning"
-      data-wp-context='<?php echo wp_json_encode(['carouselId' => $carousel_id]); ?>'>
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <button class="carousel-next"
-      data-carousel-id="<?php echo $carousel_id; ?>"
-      data-wp-on--click="actions.moveForward"
-      data-wp-bind--disabled="state.isTransitioning"
-      data-wp-context='<?php echo wp_json_encode(['carouselId' => $carousel_id]); ?>'>
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="#D9F99D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-  </div>
-  <div class="carousel-container" id="<?php echo $carousel_id; ?>">
-    <div class="carousel-track" data-carousel-id="<?php echo $carousel_id; ?>" data-wp-bind--style.transform="state.transform">
-      <?php 
-      // Clone last slides at the beginning for seamless looping
-      if ( $loop && $realSlides > 0 ) :
-        $start = max(0, $realSlides - $columns);
-        for ( $i = $start; $i < $realSlides; $i++ ) :
-          if ( isset( $innerBlocks[$i] ) ) : ?>
-            <div class="carousel-slide carousel-clone" ontouchstart=""
-                 data-slide-index="<?php echo $i; ?>"
-                 style="width: <?php echo $slide_width; ?>">
-              <?php echo render_block( $innerBlocks[$i] ); ?>
-            </div>
-          <?php endif;
-        endfor;
-      endif;
-      
-      // Render actual slides 
-      foreach ( $innerBlocks as $index => $inner_block ) : ?>
-      <!-- ontouchstart is essential for ios -->
-        <div class="carousel-slide" ontouchstart=""
-            data-slide-index="<?php echo $index; ?>"
-            style="width: <?php echo $slide_width; ?>">
-          <?php echo render_block( $inner_block ); ?>
-        </div>
-      <?php endforeach;
-      
-      // Clone first slides at the end for seamless looping
-      if ( $loop && $realSlides > 0 ) :
-        for ( $i = 0; $i < $columns; $i++ ) :
-          if ( isset( $innerBlocks[$i] ) ) : ?>
-            <div class="carousel-slide carousel-clone"
-                 data-slide-index="<?php echo $i; ?>"
-                 style="width: <?php echo $slide_width; ?>">
-              <?php echo render_block( $innerBlocks[$i] ); ?>
-            </div>
-          <?php endif;
-        endfor;
-      endif;
-      ?>
-    </div>
-  </div>
+<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by get_block_wrapper_attributes(). ?>>
+	<?php if ( $is_scrollable ) : ?>
+		<div class="navigation-container">
+			<button type="button" class="carousel-prev"
+				aria-label="<?php echo esc_attr( $label_prev ); ?>"
+				aria-controls="<?php echo esc_attr( $slides_id ); ?>"
+				data-wp-on--click="actions.moveBack">
+				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
+					<path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+			</button>
+			<button type="button" class="carousel-next"
+				aria-label="<?php echo esc_attr( $label_next ); ?>"
+				aria-controls="<?php echo esc_attr( $slides_id ); ?>"
+				data-wp-on--click="actions.moveForward">
+				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" focusable="false">
+					<path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+			</button>
+		</div>
+		<div class="carousel-status" aria-live="polite" aria-atomic="true" data-wp-text="context.announcement"></div>
+	<?php endif; ?>
+	<div class="carousel-container" id="<?php echo esc_attr( $slides_id ); ?>">
+		<div class="carousel-track">
+			<?php
+			// Leading clones: the slides that come before slide 0 in an endless
+			// loop, i.e. the last slides (repeated if there are fewer than needed).
+			// ontouchstart="" is needed for touch handling on iOS.
+			for ( $p = 0; $p < $leading_clones; $p++ ) :
+				$i = ( ( $p - $leading_clones ) % $real_slides + $real_slides ) % $real_slides;
+				?>
+				<div class="carousel-slide carousel-clone" aria-hidden="true" ontouchstart=""
+					data-slide-index="<?php echo esc_attr( $i ); ?>"
+					style="width: <?php echo esc_attr( $slide_width ); ?>">
+					<?php echo $clones_html[ $i ]; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered block HTML. ?>
+				</div>
+				<?php
+			endfor;
+
+			// The real slides.
+			foreach ( $slides_html as $index => $slide_html ) :
+				/* translators: 1: Slide number, 2: Total number of slides. */
+				$slide_label = sprintf( __( '%1$d of %2$d', 'gopublish-carousel' ), $index + 1, $real_slides );
+				?>
+				<div class="carousel-slide" ontouchstart=""
+					role="group"
+					aria-roledescription="<?php echo esc_attr( $slide_roledescription ); ?>"
+					aria-label="<?php echo esc_attr( $slide_label ); ?>"
+					data-slide-index="<?php echo esc_attr( $index ); ?>"
+					style="width: <?php echo esc_attr( $slide_width ); ?>">
+					<?php echo $slide_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered block HTML. ?>
+				</div>
+				<?php
+			endforeach;
+
+			// Trailing clones: the slides that come after the last slide in an
+			// endless loop, i.e. the first slides (repeated if needed).
+			for ( $p = 0; $p < $trailing_clones; $p++ ) :
+				$i = $p % $real_slides;
+				?>
+				<div class="carousel-slide carousel-clone" aria-hidden="true"
+					data-slide-index="<?php echo esc_attr( $i ); ?>"
+					style="width: <?php echo esc_attr( $slide_width ); ?>">
+					<?php echo $clones_html[ $i ]; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered block HTML. ?>
+				</div>
+				<?php
+			endfor;
+			?>
+		</div>
+	</div>
 </div>

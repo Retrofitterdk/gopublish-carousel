@@ -1,217 +1,388 @@
-import { store } from '@wordpress/interactivity';
+import { store, getContext, getElement } from '@wordpress/interactivity';
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Find all carousel wrappers having our interactive data attributes.
-  const wrappers = document.querySelectorAll('[data-wp-interactive="gopublish-carousel"][data-wp-context]');
-  // Global registry to store each carousel's store if needed.
-  window.carouselStores = {};
+const TRANSITION_MS = 300;
+const TRANSITION = `transform ${ TRANSITION_MS }ms ease-out`;
+// Extra time before the fallback unlocks the carousel, in case
+// `transitionend` never fires (hidden tab, interrupted transition, etc.).
+const FALLBACK_MARGIN_MS = 200;
+const SWIPE_THRESHOLD = 50;
+// A mouse press that moves further than this is a drag, not a click.
+const DRAG_CLICK_THRESHOLD = 5;
 
-  wrappers.forEach((wrapper) => {
-    const carouselId = wrapper.getAttribute('id');
-    let phpContext = {};
-    try {
-      phpContext = JSON.parse(wrapper.getAttribute('data-wp-context'));
-    } catch (e) {
-      console.error(`Error parsing PHP context for carousel ${carouselId}:`, e);
-    }
+// Pending fallback timer per carousel, keyed by wrapper element.
+const fallbackTimers = new WeakMap();
 
-    // Set up initial state merging defaults with PHP provided context.
-    const initialState = Object.assign(
-      {
-        currentIndex: 0,
-        transform: 'translateX(0%)',
-        isTransitioning: false,
-        itemsTotal: 0,
-        clonesCount: 0,
-        itemsPerView: 3,
-        scroll: 1,
-        loop: true,
-        slideWidth: null,
-      },
-      phpContext
-    );
+/**
+ * True on small screens (mobile/tablet). The query comes from render.php and
+ * follows the theme's viewport settings, so it matches the small-screen CSS.
+ *
+ * @param {Object} context Carousel context.
+ * @return {boolean} Whether the small-screen layout is active.
+ */
+function isMobileView( context ) {
+	return window.matchMedia( context.smallScreenQuery ).matches;
+}
 
-    // Adjust the initial index if looping.
-    if (initialState.loop) {
-      initialState.currentIndex = initialState.clonesCount;
-    }
+function prefersReducedMotion() {
+	return window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
+}
 
-    // Create a unique store for this carousel instance.
-    const { state, actions } = store('gopublish-carousel-' + carouselId, {
-      actions: {
-        moveForward() {
-          if (state.isTransitioning) return;
-          state.isTransitioning = true;
-          state.currentIndex += state.scroll;
-          doTransform();
-        },
-        moveBack() {
-          if (state.isTransitioning) return;
-          state.isTransitioning = true;
-          state.currentIndex -= state.scroll;
-          doTransform();
-        },
-      },
-      state: initialState,
-    });
+/**
+ * The track's transition: none when the user has asked for reduced motion
+ * (checked each time, so changing the OS setting takes effect right away).
+ *
+ * @return {string} CSS transition value.
+ */
+function trackTransition() {
+	return prefersReducedMotion() ? 'none' : TRANSITION;
+}
 
-    // Save the store so we can reference it if needed.
-    window.carouselStores[carouselId] = { state, actions };
+/**
+ * True when every slide fits in view at the current breakpoint, so there is
+ * nothing to scroll (computed in render.php).
+ *
+ * @param {Object} context Carousel context.
+ * @return {boolean} Whether the carousel is static right now.
+ */
+function isStatic( context ) {
+	return isMobileView( context )
+		? context.staticMobile
+		: context.staticDesktop;
+}
 
-    // Get the carousel track and container within this wrapper.
-    const carouselTrack = wrapper.querySelector('.carousel-track');
-    const carouselContainer = wrapper.querySelector('.carousel-container');
-    if (!carouselTrack || !carouselContainer) return;
+/**
+ * How many slides are in view at the current breakpoint. Fractions mean a
+ * partly visible slide (cutoff effect or mobile width). Mirrors render.php.
+ *
+ * @param {Object} context Carousel context.
+ * @return {number} Number of slides in view.
+ */
+function visibleCount( context ) {
+	if ( isMobileView( context ) ) {
+		return 100 / context.slideWidthMobile;
+	}
+	return context.cutoff && context.itemsPerView > 1
+		? context.itemsPerView - 0.3
+		: context.itemsPerView;
+}
 
-    // Handle seamless looping after transition.
-    carouselTrack.addEventListener('transitionend', () => {
-      state.isTransitioning = false;
-      // If we've reached the end, reset to the proper index.
-      if (state.currentIndex >= state.itemsTotal + state.clonesCount) {
-        carouselTrack.style.transition = 'none';
-        state.currentIndex = state.currentIndex - state.itemsTotal;
-        doTransform();
-        requestAnimationFrame(() => {
-          carouselTrack.offsetHeight; // Force reflow.
-          carouselTrack.style.transition = 'transform 0.3s ease-out';
-        });
-      }
-      // If we've reached the beginning, reset to the proper index.
-      else if (state.currentIndex < state.clonesCount) {
-        carouselTrack.style.transition = 'none';
-        state.currentIndex = state.currentIndex + state.itemsTotal;
-        doTransform();
-        requestAnimationFrame(() => {
-          carouselTrack.offsetHeight; // Force reflow.
-          carouselTrack.style.transition = 'transform 0.3s ease-out';
-        });
-      }
-    });
+/**
+ * Make real slides outside the view unreachable: `inert` removes them from
+ * the tab order and from screen readers, so focus can't land on something
+ * that isn't visible. Partly visible slides count as visible.
+ *
+ * Clones are left alone: they are always hidden from assistive technology
+ * (aria-hidden + tabindex="-1" from render.php) but stay clickable, because
+ * they can be visible next to the real slides.
+ *
+ * @param {Object}      context Carousel context.
+ * @param {HTMLElement} track   The .carousel-track element.
+ */
+function updateHiddenSlides( context, track ) {
+	const staticNow = isStatic( context );
+	const first = context.currentIndex;
+	// Small tolerance so e.g. exactly 2 slides in view doesn't round up to 3.
+	const last = first + Math.ceil( visibleCount( context ) - 0.01 ) - 1;
 
-    // Function to calculate and apply the transform based on the current index.
-    function doTransform() {
-      // const isMobile = window.innerWidth <= 782;
-      function isMobileView() {
-        return window.matchMedia("(max-width: 782px)").matches;
-      }
-      if (isMobileView()) {
-        const slideWidthPercent = state.slideWidthMobile;
-        const offsetPercentage = slideWidthPercent * state.currentIndex;
-        carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
-        carouselContainer.classList.add('mobile-partial-view');
-      } else if (!state.cutoff || state.itemsPerView == 1) {
-        const slideWidthPercent = 100 / (state.itemsPerView);
-        const offsetPercentage = slideWidthPercent * state.currentIndex;
-        carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
-        carouselContainer.classList.remove('mobile-partial-view');
-      } else {
-        const slideWidthPercent = 100 / (state.itemsPerView - 0.3);
-        const offsetPercentage = slideWidthPercent * state.currentIndex;
-        carouselTrack.style.transform = `translateX(-${offsetPercentage}%)`;
-        carouselContainer.classList.remove('mobile-partial-view');
-      }
-    }
+	Array.from( track.children ).forEach( ( slide, position ) => {
+		if ( slide.classList.contains( 'carousel-clone' ) ) {
+			return;
+		}
+		const hidden = ! staticNow && ( position < first || position > last );
+		slide.toggleAttribute( 'inert', hidden );
+	} );
+}
 
-    // Initial carousel setup.
-    carouselTrack.style.transition = 'none';
-    doTransform();
-    carouselTrack.offsetHeight; // Force reflow.
-    setTimeout(() => {
-      carouselTrack.style.transition = 'transform 0.3s ease-out';
-    }, 50);
+/**
+ * Find the carousel parts from any element inside (or on) the wrapper.
+ *
+ * @param {HTMLElement} element Element with a directive, e.g. a button.
+ * @return {{wrapper: HTMLElement|null, track: HTMLElement|null}} Parts.
+ */
+function getParts( element ) {
+	const wrapper = element.closest(
+		'[data-wp-interactive="gopublish-carousel"]'
+	);
+	return {
+		wrapper,
+		track: wrapper?.querySelector( '.carousel-track' ) ?? null,
+	};
+}
 
-    // Responsive resize handling.
-    window.addEventListener('resize', doTransform);
+/**
+ * Move the track to match context.currentIndex.
+ *
+ * The transform is set directly on the element (not via a directive) because
+ * the loop reset below needs it applied synchronously, before the transition
+ * is switched back on.
+ *
+ * When the carousel is static at the current breakpoint, the clones are hidden
+ * (via .is-static) and the track is not moved.
+ *
+ * Also updates which slides are reachable (see updateHiddenSlides()).
+ *
+ * @param {Object}      context       Carousel context.
+ * @param {Object}      parts         Result of getParts().
+ * @param {HTMLElement} parts.wrapper The block wrapper.
+ * @param {HTMLElement} parts.track   The .carousel-track element.
+ */
+function applyTransform( context, { wrapper, track } ) {
+	const staticNow = isStatic( context );
+	wrapper.classList.toggle( 'is-static', staticNow );
+	updateHiddenSlides( context, track );
+	if ( staticNow ) {
+		track.style.transform = 'none';
+		return;
+	}
 
-    // Touch swipe navigation.
-    let startX = 0;
-    let currentX = 0;
-    let isSwiping = false;
-    const swipeThreshold = 50;
+	let slideWidthPercent;
+	if ( isMobileView( context ) ) {
+		slideWidthPercent = context.slideWidthMobile;
+	} else if ( ! context.cutoff || context.itemsPerView === 1 ) {
+		slideWidthPercent = 100 / context.itemsPerView;
+	} else {
+		slideWidthPercent = 100 / ( context.itemsPerView - 0.3 );
+	}
+	const offsetPercentage = slideWidthPercent * context.currentIndex;
+	track.style.transform = `translateX(-${ offsetPercentage }%)`;
+}
 
-    carouselTrack.addEventListener('touchstart', (e) => {
-      if (!e.touches || !e.touches.length) return;
-      startX = e.touches[0].clientX;
-      currentX = startX;
-      isSwiping = true;
-    });
+/**
+ * Jump to a position without animating (used for the seamless loop).
+ *
+ * @param {Object} context Carousel context.
+ * @param {Object} parts   Result of getParts().
+ * @param {number} offset  Number of slides to shift currentIndex by.
+ */
+function resetWithoutAnimation( context, parts, offset ) {
+	parts.track.style.transition = 'none';
+	context.currentIndex += offset;
+	applyTransform( context, parts );
+	window.requestAnimationFrame( () => {
+		parts.track.getBoundingClientRect(); // Force reflow.
+		parts.track.style.transition = trackTransition();
+	} );
+}
 
-    carouselTrack.addEventListener('touchmove', (e) => {
-      if (!isSwiping || !e.touches || !e.touches.length) return;
-      currentX = e.touches[0].clientX;
-    });
+/**
+ * Update the live region text, e.g. "Slide 3 of 9" (first slide in view).
+ * The region is bound with data-wp-text, and screen readers announce the
+ * change politely (aria-live="polite").
+ *
+ * @param {Object} context Carousel context.
+ */
+function announce( context ) {
+	const { currentIndex, clonesCount, itemsTotal } = context;
+	const slideNumber =
+		( ( ( ( currentIndex - clonesCount ) % itemsTotal ) + itemsTotal ) %
+			itemsTotal ) +
+		1;
+	context.announcement = context.announcementTemplate
+		.replace( '%1$d', slideNumber )
+		.replace( '%2$d', itemsTotal );
+}
 
-    carouselTrack.addEventListener('touchend', () => {
-      if (!isSwiping) return;
-      isSwiping = false;
-      const deltaX = currentX - startX;
-      if (Math.abs(deltaX) > swipeThreshold) {
-        if (deltaX < 0) {
-          actions.moveForward();
-        } else {
-          actions.moveBack();
-        }
-      }
-    });
+/**
+ * Called when a slide transition has finished, either from `transitionend`
+ * or from the fallback timer, whichever comes first.
+ *
+ * Unlocks the carousel and, after sliding onto the clones, jumps back to the
+ * matching real slide without animation (seamless looping). Then announces
+ * the new position to screen readers.
+ *
+ * @param {Object} context Carousel context.
+ * @param {Object} parts   Result of getParts().
+ */
+function finishTransition( context, parts ) {
+	clearTimeout( fallbackTimers.get( parts.wrapper ) );
+	fallbackTimers.delete( parts.wrapper );
 
-    // Mouse drag navigation.
-    let isDragging = false;
-    let mouseStartX = 0;
-    let mouseCurrentX = 0;
-    const dragThreshold = 50;
+	// Already handled (e.g. the fallback ran before transitionend).
+	if ( ! context.isTransitioning ) {
+		return;
+	}
+	context.isTransitioning = false;
 
-    carouselTrack.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      isDragging = true;
-      mouseStartX = e.clientX;
-      mouseCurrentX = mouseStartX;
-    });
+	if ( context.currentIndex >= context.itemsTotal + context.clonesCount ) {
+		resetWithoutAnimation( context, parts, -context.itemsTotal );
+	} else if ( context.currentIndex < context.clonesCount ) {
+		resetWithoutAnimation( context, parts, context.itemsTotal );
+	}
 
-    carouselTrack.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      mouseCurrentX = e.clientX;
-    });
+	announce( context );
+}
 
-    carouselTrack.addEventListener('mouseup', () => {
-      if (!isDragging) return;
-      isDragging = false;
-      const deltaX = mouseCurrentX - mouseStartX;
-      if (Math.abs(deltaX) > dragThreshold) {
-        if (deltaX < 0) {
-          actions.moveForward();
-        } else {
-          actions.moveBack();
-        }
-      }
-    });
+/**
+ * Move the carousel forward (1) or back (-1) by `scroll` slides.
+ *
+ * @param {Object}      context   Carousel context.
+ * @param {HTMLElement} element   Any element inside the carousel.
+ * @param {number}      direction 1 or -1.
+ */
+function move( context, element, direction ) {
+	if ( context.isTransitioning || isStatic( context ) ) {
+		return;
+	}
+	const parts = getParts( element );
+	if ( ! parts.track ) {
+		return;
+	}
+	context.isTransitioning = true;
+	context.currentIndex += direction * context.scroll;
+	parts.track.style.transition = trackTransition();
+	applyTransform( context, parts );
 
-    // Handle case when mouse leaves the track while dragging.
-    carouselTrack.addEventListener('mouseleave', () => {
-      if (isDragging) {
-        isDragging = false;
-        const deltaX = mouseCurrentX - mouseStartX;
-        if (Math.abs(deltaX) > dragThreshold) {
-          if (deltaX < 0) {
-            actions.moveForward();
-          } else {
-            actions.moveBack();
-          }
-        }
-      }
-    });
+	// Reduced motion: the track jumps instantly and no transitionend event
+	// will fire, so finish the move right away (loop reset + announcement).
+	if ( prefersReducedMotion() ) {
+		finishTransition( context, parts );
+		return;
+	}
 
-    // Navigation button event bindings (found within the same wrapper).
-    const prevButton = wrapper.querySelector('.carousel-prev[data-carousel-id]');
-    if (prevButton) {
-      prevButton.addEventListener('click', () => {
-        actions.moveBack();
-      });
-    }
-    const nextButton = wrapper.querySelector('.carousel-next[data-carousel-id]');
-    if (nextButton) {
-      nextButton.addEventListener('click', () => {
-        actions.moveForward();
-      });
-    }
-  });
-});
+	// Never stay locked: finish anyway if transitionend doesn't arrive.
+	fallbackTimers.set(
+		parts.wrapper,
+		setTimeout(
+			() => finishTransition( context, parts ),
+			TRANSITION_MS + FALLBACK_MARGIN_MS
+		)
+	);
+}
+
+store( 'gopublish-carousel', {
+	actions: {
+		moveForward() {
+			move( getContext(), getElement().ref, 1 );
+		},
+		moveBack() {
+			move( getContext(), getElement().ref, -1 );
+		},
+	},
+	callbacks: {
+		/**
+		 * Runs once per carousel (data-wp-init on the wrapper).
+		 * Sets the start position and attaches the gesture listeners.
+		 */
+		init() {
+			// Keep references: the listeners below run outside the
+			// Interactivity scope, so they can't call getContext() themselves.
+			const wrapper = getElement().ref;
+			const parts = getParts( wrapper );
+			const { track } = parts;
+			if ( ! track ) {
+				return;
+			}
+			const context = getContext();
+
+			// transitionend bubbles, so transitions inside the slides (e.g.
+			// hover effects) also arrive here. Only react to the track's own
+			// transform transition.
+			track.addEventListener( 'transitionend', ( e ) => {
+				if ( e.target === track && e.propertyName === 'transform' ) {
+					finishTransition( context, parts );
+				}
+			} );
+
+			// Initial position, without animation.
+			track.style.transition = 'none';
+			applyTransform( context, parts );
+			track.getBoundingClientRect(); // Force reflow.
+			setTimeout( () => {
+				track.style.transition = trackTransition();
+			}, 50 );
+
+			window.addEventListener( 'resize', () =>
+				applyTransform( context, parts )
+			);
+
+			const swipe = ( deltaX ) => {
+				if ( Math.abs( deltaX ) > SWIPE_THRESHOLD ) {
+					move( context, wrapper, deltaX < 0 ? 1 : -1 );
+				}
+			};
+
+			// Touch swipe.
+			let touchStartX = 0;
+			let touchCurrentX = 0;
+			let isSwiping = false;
+
+			track.addEventListener( 'touchstart', ( e ) => {
+				if ( ! e.touches?.length ) {
+					return;
+				}
+				touchStartX = touchCurrentX = e.touches[ 0 ].clientX;
+				isSwiping = true;
+			} );
+			track.addEventListener( 'touchmove', ( e ) => {
+				if ( isSwiping && e.touches?.length ) {
+					touchCurrentX = e.touches[ 0 ].clientX;
+				}
+			} );
+			track.addEventListener( 'touchend', () => {
+				if ( isSwiping ) {
+					isSwiping = false;
+					swipe( touchCurrentX - touchStartX );
+				}
+			} );
+
+			// Mouse drag.
+			let mouseStartX = 0;
+			let mouseCurrentX = 0;
+			let isDragging = false;
+			let suppressClick = false;
+			const endDrag = () => {
+				if ( isDragging ) {
+					isDragging = false;
+					swipe( mouseCurrentX - mouseStartX );
+				}
+			};
+
+			track.addEventListener( 'mousedown', ( e ) => {
+				// Only the primary (left) button drags.
+				if ( e.button !== 0 ) {
+					return;
+				}
+				e.preventDefault();
+				mouseStartX = mouseCurrentX = e.clientX;
+				isDragging = true;
+			} );
+			track.addEventListener( 'mousemove', ( e ) => {
+				if ( isDragging ) {
+					mouseCurrentX = e.clientX;
+				}
+			} );
+			track.addEventListener( 'mouseup', () => {
+				// The browser fires a click right after mouseup. If the mouse
+				// moved, it was a drag: swallow that click so links and buttons
+				// inside the slide aren't activated.
+				if (
+					isDragging &&
+					Math.abs( mouseCurrentX - mouseStartX ) >
+						DRAG_CLICK_THRESHOLD
+				) {
+					suppressClick = true;
+					// Safety: never let the flag outlive this click, or it
+					// could swallow a later keyboard "click" (Enter on a link).
+					setTimeout( () => {
+						suppressClick = false;
+					}, 0 );
+				}
+				endDrag();
+			} );
+			track.addEventListener( 'mouseleave', endDrag );
+
+			// Capture phase, so this runs before any handler inside the slide.
+			track.addEventListener(
+				'click',
+				( e ) => {
+					if ( suppressClick ) {
+						suppressClick = false;
+						e.preventDefault();
+						e.stopPropagation();
+					}
+				},
+				true
+			);
+		},
+	},
+} );
