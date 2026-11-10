@@ -406,10 +406,29 @@ add_filter( 'register_block_type_args', 'gopublish_carousel_block_type_args', 10
  * @return string Rendered HTML.
  */
 function gopublish_carousel_render_inner_block( WP_Block $inner_block, WP_Block $parent_block ) {
+	$pre_render = gopublish_carousel_prepare_inner_block( $inner_block, $parent_block );
+	return null !== $pre_render ? $pre_render : $inner_block->render();
+}
+
+/**
+ * Run the filters core runs before rendering an inner block (see
+ * gopublish_carousel_render_inner_block()), without rendering it.
+ *
+ * Used for a Query Loop in Carousel Slides, whose posts the carousel renders
+ * itself: plugins that change the Query Loop's query (e.g. Advanced Query
+ * Loop, Curated Query Loop) add their query_loop_block_query_vars filter in
+ * pre_render_block.
+ *
+ * @param WP_Block $inner_block  The inner block.
+ * @param WP_Block $parent_block The block that contains it.
+ * @return string|null HTML to use instead of rendering the block (from
+ *                     pre_render_block), or null to render it.
+ */
+function gopublish_carousel_prepare_inner_block( WP_Block $inner_block, WP_Block $parent_block ) {
 	/** This filter is documented in wp-includes/blocks.php */
 	$pre_render = apply_filters( 'pre_render_block', null, $inner_block->parsed_block, $parent_block );
 	if ( null !== $pre_render ) {
-		return $pre_render;
+		return (string) $pre_render;
 	}
 
 	$source_block   = $inner_block->parsed_block;
@@ -428,7 +447,141 @@ function gopublish_carousel_render_inner_block( WP_Block $inner_block, WP_Block 
 		$inner_block->refresh_parsed_block_dependents();
 	}
 
-	return $inner_block->render();
+	return null;
+}
+
+/**
+ * The first block of a type inside a block, at any depth, not looking inside
+ * nested Query Loops.
+ *
+ * @param WP_Block $block The block to search.
+ * @param string   $name  Block name, e.g. 'core/post-template'.
+ * @return array|null The block ('block') and the block that contains it
+ *                    ('parent'), or null if not found.
+ */
+function gopublish_carousel_find_inner_block( WP_Block $block, $name ) {
+	foreach ( $block->inner_blocks as $inner_block ) {
+		if ( $name === $inner_block->name ) {
+			return array(
+				'block'  => $inner_block,
+				'parent' => $block,
+			);
+		}
+		if ( 'core/query' !== $inner_block->name ) {
+			$found = gopublish_carousel_find_inner_block( $inner_block, $name );
+			if ( null !== $found ) {
+				return $found;
+			}
+		}
+	}
+	return null;
+}
+
+/**
+ * Render a Query Loop in Carousel Slides as slides: one per post, with the
+ * Post Template's content (like core's Post Template block, whose rendering
+ * this follows). Without posts: the Query Loop's No Results content as one
+ * slide, if it has some.
+ *
+ * The query is built like core builds it, so plugins that change it work:
+ * the Query Loop's pre_render_block filters run first (Advanced Query Loop
+ * and Curated Query Loop add their query_loop_block_query_vars filter there),
+ * then build_query_vars_from_query_block() runs that filter. With "Inherit
+ * query from template", the template's own query is used.
+ *
+ * The other blocks in the Query Loop (e.g. Pagination; the carousel's own
+ * navigation replaces it) and the Post Template's layout (the carousel's
+ * columns decide it) aren't used. The carousel shows the query's first page.
+ *
+ * @param WP_Block $query_block  The Query Loop block.
+ * @param WP_Block $parent_block The block that contains it.
+ * @return string[] Each slide's HTML.
+ */
+function gopublish_carousel_render_query_slides( WP_Block $query_block, WP_Block $parent_block ) {
+	$pre_render = gopublish_carousel_prepare_inner_block( $query_block, $parent_block );
+	if ( null !== $pre_render ) {
+		return '' === trim( $pre_render ) ? array() : array( $pre_render );
+	}
+
+	$template = gopublish_carousel_find_inner_block( $query_block, 'core/post-template' );
+	if ( null === $template ) {
+		return array();
+	}
+	$pre_render = gopublish_carousel_prepare_inner_block( $template['block'], $template['parent'] );
+	if ( null !== $pre_render ) {
+		return '' === trim( $pre_render ) ? array() : array( $pre_render );
+	}
+	$template = $template['block'];
+
+	$query_args = null;
+	if ( ! empty( $template->context['query']['inherit'] ) ) {
+		global $wp_query;
+		// Inside the main loop: a copy, so the main loop isn't changed.
+		if ( in_the_loop() ) {
+			$query = clone $wp_query;
+			$query->rewind_posts();
+		} else {
+			$query = $wp_query;
+		}
+	} else {
+		$query_args = build_query_vars_from_query_block( $template, 1 );
+		$query      = new WP_Query( $query_args );
+	}
+
+	if ( ! $query->have_posts() ) {
+		$no_results = gopublish_carousel_find_inner_block( $query_block, 'core/query-no-results' );
+		if ( null === $no_results ) {
+			return array();
+		}
+		// The No Results block runs the query again to check that it's empty.
+		// Give it the query built above: query_loop_block_query_vars filters
+		// that run only once (e.g. Curated Query Loop's) would otherwise be
+		// missing and it would find posts.
+		$same_query = static function () use ( $query_args ) {
+			return $query_args;
+		};
+		if ( null !== $query_args ) {
+			add_filter( 'query_loop_block_query_vars', $same_query, PHP_INT_MAX );
+		}
+		$html = gopublish_carousel_render_inner_block( $no_results['block'], $no_results['parent'] );
+		remove_filter( 'query_loop_block_query_vars', $same_query, PHP_INT_MAX );
+		return '' === trim( $html ) ? array() : array( $html );
+	}
+
+	update_post_thumbnail_cache( $query );
+
+	$slides = array();
+	while ( $query->have_posts() ) {
+		$query->the_post();
+
+		// The Post Template's content for this post: rendered as core does,
+		// under a block name that isn't registered (no wrapper, no block
+		// supports), with the post as block context.
+		$post_block              = $template->parsed_block;
+		$post_block['blockName'] = 'core/null';
+		$post_id                 = get_the_ID();
+		$post_type               = get_post_type();
+		$post_context            = static function ( $context ) use ( $post_id, $post_type ) {
+			$context['postType'] = $post_type;
+			$context['postId']   = $post_id;
+			return $context;
+		};
+		add_filter( 'render_block_context', $post_context, 1 );
+		$html = ( new WP_Block( $post_block ) )->render( array( 'dynamic' => false ) );
+		remove_filter( 'render_block_context', $post_context, 1 );
+
+		if ( '' !== trim( $html ) ) {
+			$slides[] = sprintf(
+				'<div class="%1$s">%2$s</div>',
+				esc_attr( implode( ' ', get_post_class( 'wp-block-post' ) ) ),
+				$html
+			);
+		}
+	}
+	// Back to the main query's post for the template tags.
+	wp_reset_postdata();
+
+	return $slides;
 }
 
 /**
@@ -470,7 +623,8 @@ function gopublish_carousel_has_focusable_content( $html ) {
  * gets data-carousel-items with the number of slides, which the Carousel
  * reads (see gopublish_carousel_count_slides()).
  *
- * @param WP_Block[] $slide_blocks         The Carousel Slide blocks.
+ * @param WP_Block[] $slide_blocks         The Carousel Slide blocks, and Query
+ *                                         Loops (a slide per post).
  * @param WP_Block   $parent_block         The block that contains them.
  * @param string     $container_attributes Attributes for the container
  *                                         element, already escaped.
@@ -482,8 +636,15 @@ function gopublish_carousel_render_slides( $slide_blocks, WP_Block $parent_block
 	// run. Slides without content are skipped: empty ones (no blocks inside,
 	// e.g. added with Add slide and never filled; they would show as a gap)
 	// and ones that render nothing (e.g. hidden by a visibility plugin).
+	// A Query Loop gives a slide per post (see
+	// gopublish_carousel_render_query_slides()); it can sit between other
+	// slides.
 	$slides_html = array();
 	foreach ( $slide_blocks as $slide_block ) {
+		if ( 'core/query' === $slide_block->name ) {
+			array_push( $slides_html, ...gopublish_carousel_render_query_slides( $slide_block, $parent_block ) );
+			continue;
+		}
 		if ( 0 === count( $slide_block->inner_blocks ) ) {
 			continue;
 		}

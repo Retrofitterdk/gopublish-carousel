@@ -254,15 +254,23 @@
 		scroll-snap-align: start;
 	}
 
-	.wp-block-gopublish-carousel-slide {
+	// Slides from a Query Loop: a post each, or its No Results content. Sized
+	// like a Carousel Slide.
+	.carousel-slide > :is(.wp-block-post, .wp-block-query-no-results) {
+		width: 100%;
+		margin-block: 0;
+	}
+
+	.wp-block-gopublish-carousel-slide,
+	.carousel-slide > :is(.wp-block-post, .wp-block-query-no-results) {
 		max-width: var(--wp--style--global--content-size);
 	}
 
-	&.alignwide .wp-block-gopublish-carousel-slide {
+	&.alignwide :is(.wp-block-gopublish-carousel-slide, .carousel-slide > .wp-block-post, .carousel-slide > .wp-block-query-no-results) {
 		max-width: var(--wp--style--global--wide-size);
 	}
 
-	&.alignfull .wp-block-gopublish-carousel-slide {
+	&.alignfull :is(.wp-block-gopublish-carousel-slide, .carousel-slide > .wp-block-post, .carousel-slide > .wp-block-query-no-results) {
 		max-width: 100vw;
 	}
 }

@@ -8,13 +8,16 @@ A carousel block for WordPress. Each slide can hold any blocks. The carousel is 
 
 ## Features
 
-- Built from parts, each its own block: Carousel Slides (the row of slides, each a Carousel Slide that can contain any blocks), Carousel Navigation (Previous/Next) and Carousel Pagination (dots). Navigation and Pagination can be placed above or below the slides, justified and set to content, wide or full width.
+- Built from parts, each its own block: Carousel Slides (the row of slides, each a Carousel Slide that can contain any blocks), Carousel Navigation (Previous/Next) and Carousel Pagination (dots). Navigation and Pagination can be placed above or below the slides, justified and set to content, wide or full width; the navigation can also sit over the slides. Headings and paragraphs can go inside the carousel to introduce it.
 - 1–6 slides visible at once, with a configurable number of slides to scroll.
 - Optional cutoff effect: the last visible slide is partly shown (with one column, the next one peeks in).
 - Columns, cutoff and slides to scroll per screen size (desktop, tablet, mobile), following core's viewports.
 - Native scrolling: swipe, trackpad, keyboard and momentum are handled by the browser, snapping to the start of a slide.
 - Previous/next buttons, with optional rewinding at the ends (*Rewind at the end*), and pagination dots (one per position the buttons reach).
 - Navigation and pagination are hidden when all slides fit in view.
+- Navigation: icon from WordPress's icon registry (7.1), colours (also hover/focus), border, button padding and icon size; optionally over the slides (anchor positioning), hidden on mobile.
+- Pagination: dot colours (dots, current dot), size and spacing.
+- Empty slides are skipped on the front end.
 - Block spacing sets the gap between slides, per viewport in WordPress 7.1.
 - Right-to-left support.
 - The editor shows the carousel as on the front end (one scrollable row with the real widths, gap, arrows and dots), with "Add to carousel", "Add slide" and a "Show all slides" grid view in the toolbars.
@@ -89,7 +92,7 @@ See [src/README.md](src/README.md) for what each source file does.
 ### How it works
 
 - **Registration:** `npm run build` generates `build/blocks-manifest.php` (`--blocks-manifest`), and `wp_register_block_types_from_metadata_collection()` registers every block in it. A new block folder in `src/` is registered automatically. Settings that `block.json` can't express go through the `register_block_type_args` filter.
-- **Blocks:** Carousel → Carousel Navigation, Carousel Slides → Carousel Slide …, Carousel Pagination. The Carousel holds the settings, the Interactivity context and the live region; the parts are inside it (`parent`), one of each (an editor filter, `blockEditor.__unstableCanInsertBlockType` in `index.js`, because a block's `parent` overrides the parent's allowed-blocks list). Navigation and Pagination use core's flex layout support for justification only, and `align` for their width; the Carousel offers them wide/full through the `layout` option of its `useInnerBlocksProps`, as it has no layout support itself.
+- **Blocks:** Carousel → Carousel Navigation, Carousel Slides → Carousel Slide …, Carousel Pagination, plus `core/heading` and `core/paragraph` directly in the Carousel. The Carousel holds the settings, the Interactivity context and the live region; the parts are inside it (`parent`), one of each (an editor filter, `blockEditor.__unstableCanInsertBlockType` in `index.js`, because a block's `parent` overrides the parent's allowed-blocks list). Navigation and Pagination use core's flex layout support for justification only, and `align` for their width; the Carousel offers them wide/full through the `layout` option of its `useInnerBlocksProps`, as it has no layout support itself.
 - **Rendering:** the Carousel and Carousel Slides are dynamic blocks registered with `skip_inner_blocks`. The Carousel renders Carousel Slides first (any further ones are skipped), reads the number of slides from it (`data-carousel-items`, `gopublish_carousel_count_slides()`), then the other parts, passing the slides' ID and count through the block context. Each part is rendered with `gopublish_carousel_render_inner_block()`, which applies the same filters and block context as core; `gopublish_carousel_render_slides()` and `gopublish_carousel_render_navigation()` produce the markup. A carousel without slides renders nothing.
 - **Before 0.5.0:** the slides were the Carousel's own inner blocks and the Carousel rendered the navigation itself. `render.php` still renders that structure the same way; in the editor, a block deprecation (`isEligible` + `migrate` in `index.js`) converts it to Navigation (full width) + Carousel Slides.
 - **Scrolling:** `.carousel-track` is a native scroll area (`overflow-x: auto`, `scroll-snap-type: x mandatory`, hidden scrollbar). The slide width is computed in CSS from `--visible`, `--gaps` and `--carousel-gap` (see Layouts). The browser handles touch, trackpad, keyboard scrolling and snapping.
@@ -104,10 +107,10 @@ See [src/README.md](src/README.md) for what each source file does.
 
 ### Accessibility
 
-- **Semantics:** the wrapper has `aria-roledescription="carousel"`, and is a `region` when the *Carousel label* setting (`ariaLabel` attribute, Advanced panel) is filled in, otherwise a `group`. Each slide is a `group` with `aria-roledescription="slide"` and a label such as "2 of 9".
-- **Navigation:** the buttons have translatable `aria-label`s and `aria-controls`, and a `:focus-visible` style. With *Rewind at the end* off, they get `aria-disabled="true"` at the ends (not `disabled`, so they keep focus). On small touch screens they're visually hidden (not removed) until keyboard focus enters the carousel.
+- **Semantics:** the wrapper has `aria-roledescription="carousel"`, and is a `region` when the *Carousel label* setting (`ariaLabel` attribute, Advanced panel) is filled in, or else when it has a heading directly inside (`aria-labelledby`, the heading gets an ID if it has none); otherwise a `group`. Each slide is a `group` with `aria-roledescription="slide"` and a label such as "2 of 9".
+- **Navigation:** the buttons have translatable `aria-label`s and `aria-controls`, and a `:focus-visible` style. With *Rewind at the end* off, they get `aria-disabled="true"` at the ends (not `disabled`, so they keep focus). On small touch screens, and on mobile when over the slides, they're visually hidden (not removed) until keyboard focus enters the carousel. Focus from a mouse click shows no ring (`:focus:not(:focus-visible)`), overriding themes that outline every `:focus`.
 - **Keyboard:** all slides stay in the tab order, and the browser scrolls a focused element into view. A scroll area must be reachable by keyboard: when no slide contains anything focusable (`gopublish_carousel_has_focusable_content()`), `.carousel-track` gets `tabindex="0"` and a focus ring, and the arrow keys scroll it.
-- **Pagination:** a `group` labelled "Choose slide" of buttons labelled "Go to slide N", the current one with `aria-current="true"`, all with `aria-controls`. Each is 24 × 24 px (WCAG target size) with a smaller dot drawn inside.
+- **Pagination:** a `group` labelled "Choose slide" of buttons labelled "Go to slide N", the current one with `aria-current="true"`, all with `aria-controls`. Each is at least 24 × 24 px (WCAG target size), as wide as the dot plus Dot spacing, with the dot drawn inside; keyboard focus draws a round ring around the dot (`::after`), whatever the button's width.
 - **Announcements:** a visually hidden `aria-live="polite"` region, bound with `data-wp-text`, announces the fully visible slides after a button or dot scroll ("Slide 3 of 9" or "Slides 3 to 5 of 9"). Swiping, scrolling and tabbing don't announce anything: when focus moves into a slide, screen readers already read its label. The text templates are translated in PHP and passed in the context.
 - **Reduced motion:** with `prefers-reduced-motion: reduce`, `scroll-behavior` is `auto`, so button scrolls and rewinds jump instead of animating.
 
@@ -127,8 +130,6 @@ The full list is in the FAQ in [readme.txt](readme.txt). The navigation's icon c
 ## Roadmap
 
 - Carousel for posts in a Query Loop.
-- An overlay style for the navigation (arrows on top of the slides).
-- Colour settings for the navigation and pagination.
 
 ## Credits
 

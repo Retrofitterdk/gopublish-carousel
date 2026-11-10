@@ -18,7 +18,7 @@ Go:Publish Carousel adds a Carousel block to the block editor. A carousel is mad
 * Carousel Navigation: the Previous and Next buttons.
 * Carousel Pagination: dots for jumping to a position.
 
-Navigation and Pagination can be placed above or below the slides, aligned left, center, right or with space between, and given content, wide or full width. A carousel has one of each, and both can be removed.
+Navigation and Pagination can be placed above or below the slides, aligned left, center, right or with space between, and given content, wide or full width. The navigation can also sit on top of the slides. A carousel has one of each, and both can be removed. Headings and paragraphs can be added inside the carousel too, e.g. a title and a description above the slides.
 
 The carousel is rendered on the server and built on the browser's own scrolling (CSS scroll snap). Swiping, trackpad scrolling and momentum work like anywhere else on the device. A small script on the WordPress Interactivity API adds the buttons and dots, so no jQuery or third-party slider library is loaded.
 
@@ -32,24 +32,29 @@ Features:
 * Rewind at the end: on the last slide, Next goes back to the first (and Previous on the first goes to the last). Turn it off to stop at the ends instead.
 * Previous/next buttons, pagination dots, touch swipe, trackpad and keyboard scrolling, all snapping to the start of a slide.
 * The pagination has one dot per position the buttons can reach, and marks the current one.
+* Navigation icon from WordPress's icon library (WordPress 7.1), left- or right-pointing.
+* Colours for the navigation buttons (icon and background, also on hover and focus), borders, button padding and icon size.
+* Navigation over the slides: Previous and Next at the edges of the slides, hidden on mobile.
+* Colours, size and spacing for the pagination dots.
+* Headings and paragraphs inside the carousel, to introduce or describe it.
 * If every slide fits in view, the navigation and pagination are hidden.
 * The Block spacing setting sets the space between slides, with separate values per viewport in WordPress 7.1.
 * Wide and full alignment, padding, margin and minimum height.
 * Right-to-left languages.
 * Several carousels on the same page.
-* Slides keep the block context they inherit, and slides that render empty (e.g. hidden by a visibility plugin) are skipped.
+* Slides keep the block context they inherit. Empty slides, and slides that render nothing (e.g. hidden by a visibility plugin), are skipped.
 * The editor shows the carousel as on the front end: one row with the real slide widths, the cutoff effect, navigation arrows and dots. Switch to "Show all slides" for an overview.
 * Translation-ready, with a Danish translation included.
 
 Accessibility (following the W3C carousel pattern):
 
 * Labelled navigation buttons, with a visible focus ring for keyboard users.
-* Screen readers announce the carousel and each slide ("slide, 2 of 9"), and an optional label turns the carousel into a landmark.
-* The pagination is a group of buttons ("Choose slide"), each labelled with the slide it goes to ("Go to slide 4"), the current one marked as current. Each dot is at least 24 × 24 px to tap.
+* Screen readers announce the carousel and each slide ("slide, 2 of 9"). A label, or a heading inside the carousel, turns it into a landmark.
+* The pagination is a group of buttons ("Choose slide"), each labelled with the slide it goes to ("Go to slide 4"), the current one marked as current. Dots are at least 24 × 24 px to tap and at least 24 px apart, and keyboard focus shows a ring around the dot.
 * After using the buttons or dots, the visible slides are announced politely ("Slide 3 of 9", or "Slides 3 to 5 of 9" when several are in view).
 * Every slide can be reached with Tab; the carousel scrolls a focused slide into view. If the slides contain nothing focusable, the row of slides can be focused itself and scrolled with the arrow keys.
 * With Rewind at the end turned off, the buttons are marked as unavailable at the ends, but stay focusable, so keyboard focus isn't lost.
-* On touch screens, the navigation appears for keyboard and switch users, and screen readers can always reach it.
+* On small touch screens, and on mobile when it's over the slides, the navigation is only hidden visually: it appears for keyboard and switch users, and screen readers can always reach it.
 * Respects the reduced motion setting: the carousel jumps instead of scrolling smoothly.
 
 Go:Publish Carousel was originally based on [demo-carousel](https://github.com/eirichmond/demo-carousel) by Elliott Richmond. It has since been rewritten and extended, and is now developed as a separate plugin.
@@ -57,8 +62,6 @@ Go:Publish Carousel was originally based on [demo-carousel](https://github.com/e
 = Planned =
 
 * Carousel for posts in a Query Loop.
-* An overlay style for the navigation (arrows on top of the slides).
-* Colour settings for the navigation and pagination.
 
 == Installation ==
 
