@@ -31,6 +31,10 @@
 			// The slide is the block wrapper here, so undo the front-end rules
 			// meant for the inner slide element and the editor's flow margins.
 			display: block;
+			// Not wider than a slide because of its content's minimum width
+			// (e.g. a featured image, or a carousel of posts inside it). The
+			// same for the posts below.
+			min-width: 0;
 			max-width: none;
 			margin: 0;
 		}
@@ -56,6 +60,7 @@
 				> li {
 					flex: 0 0 var(--slide-width);
 					box-sizing: border-box;
+					min-width: 0;
 					max-width: none;
 					margin: 0;
 					list-style: none;
@@ -70,6 +75,7 @@
 			> :not(ul.wp-block-post-template) {
 				flex: 0 0 var(--slide-width);
 				box-sizing: border-box;
+				min-width: 0;
 				max-width: none;
 				margin: 0;
 				scroll-snap-align: start;
