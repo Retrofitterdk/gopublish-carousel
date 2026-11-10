@@ -6,7 +6,10 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { createBlock } from '@wordpress/blocks';
+import {
+	createBlock,
+	createBlocksFromInnerBlocksTemplate,
+} from '@wordpress/blocks';
 import {
 	Button,
 	PanelBody,
@@ -30,6 +33,7 @@ import {
 	getLayouts,
 	getViewportOverrides,
 } from './layouts';
+import { getPostsQueryTemplate } from './posts-query';
 
 // The Carousel's parts: Carousel Slides (the scroll area), Carousel
 // Navigation and Carousel Pagination.
@@ -281,27 +285,32 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		} )
 		.join( '' );
 
-	// "Add to carousel": a slide at the end of Carousel Slides (it gets
-	// selected and scrolled into view; without Carousel Slides, one is added
-	// with the slide), Navigation before the slides, Pagination after them
+	// "Add to carousel": a slide or posts (a Query Loop) at the end of
+	// Carousel Slides (it gets selected and scrolled into view; without
+	// Carousel Slides, one is added with it), Navigation before the slides, Pagination after them
 	// (each only if the carousel doesn't have one yet), a heading at the top
 	// and a paragraph above the parts.
-	const addSlide = () =>
+	const addToSlides = ( block ) =>
 		slidesClientId
-			? insertBlock(
-					createBlock( 'gopublish/carousel-slide' ),
-					slideCount,
-					slidesClientId
-				)
+			? insertBlock( block, slideCount, slidesClientId )
 			: insertBlock(
 					createBlock(
 						'gopublish/carousel-slides',
 						{ lock: { remove: true } },
-						[ createBlock( 'gopublish/carousel-slide' ) ]
+						[ block ]
 					),
 					paginationIndex < 0 ? undefined : paginationIndex,
 					clientId
 				);
+	const addSlide = () =>
+		addToSlides( createBlock( 'gopublish/carousel-slide' ) );
+	// The latest posts, a slide each: a Query Loop at the end of the slides.
+	const addPosts = () =>
+		addToSlides(
+			createBlocksFromInnerBlocksTemplate( [
+				getPostsQueryTemplate(),
+			] )[ 0 ]
+		);
 	const addText = ( name, blockAttributes, atStart ) =>
 		insertBlock(
 			createBlock( name, blockAttributes ),
@@ -356,6 +365,11 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 							title: __( 'Slide', 'gopublish-carousel' ),
 							icon: 'media-default',
 							onClick: addSlide,
+						},
+						{
+							title: __( 'Posts', 'gopublish-carousel' ),
+							icon: 'admin-post',
+							onClick: addPosts,
 						},
 						{
 							title: __( 'Navigation', 'gopublish-carousel' ),

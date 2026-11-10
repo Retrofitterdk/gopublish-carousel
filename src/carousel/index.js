@@ -1,5 +1,6 @@
 import { createBlock, registerBlockType } from '@wordpress/blocks';
 import { addFilter } from '@wordpress/hooks';
+import { __ } from '@wordpress/i18n';
 
 import './style.scss';
 import './editor.scss';
@@ -7,6 +8,14 @@ import './editor.scss';
 import Edit from './edit';
 import save from './save';
 import metadata from './block.json';
+import { getPostsQueryTemplate } from './posts-query';
+
+// 3 columns on large screens, 2 on tablet and 1 on mobile (all with the
+// cutoff effect, the block's default), for both variations.
+const VIEWPORTS = {
+	'@tablet': { columns: 2 },
+	'@mobile': { columns: 1 },
+};
 
 registerBlockType( metadata.name, {
 	edit: Edit,
@@ -54,14 +63,7 @@ registerBlockType( metadata.name, {
 			icon: metadata.icon,
 			isDefault: true,
 			scope: [ 'inserter' ],
-			// 3 columns on large screens, 2 on tablet and 1 on mobile (all
-			// with the cutoff effect, the block's default).
-			attributes: {
-				viewports: {
-					'@tablet': { columns: 2 },
-					'@mobile': { columns: 1 },
-				},
-			},
+			attributes: { viewports: VIEWPORTS },
 			innerBlocks: [
 				[ 'gopublish/carousel-navigation', { align: 'full' } ],
 				[
@@ -74,6 +76,31 @@ registerBlockType( metadata.name, {
 						[ 'gopublish/carousel-slide' ],
 						[ 'gopublish/carousel-slide' ],
 					],
+				],
+				[ 'gopublish/carousel-pagination' ],
+			],
+		},
+		// The latest posts, a slide each (a Query Loop in Carousel Slides).
+		{
+			name: 'posts',
+			title: __( 'Posts carousel', 'gopublish-carousel' ),
+			description: __(
+				'The latest posts in a carousel, a slide each, with the featured image and title. Choose the posts in the Query Loop’s settings.',
+				'gopublish-carousel'
+			),
+			icon: 'admin-post',
+			keywords: [
+				__( 'query', 'gopublish-carousel' ),
+				__( 'posts', 'gopublish-carousel' ),
+			],
+			scope: [ 'inserter' ],
+			attributes: { viewports: VIEWPORTS },
+			innerBlocks: [
+				[ 'gopublish/carousel-navigation', { align: 'full' } ],
+				[
+					'gopublish/carousel-slides',
+					{ lock: { remove: true } },
+					[ getPostsQueryTemplate() ],
 				],
 				[ 'gopublish/carousel-pagination' ],
 			],
