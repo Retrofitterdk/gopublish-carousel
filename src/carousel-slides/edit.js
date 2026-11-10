@@ -10,7 +10,9 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
-const ALLOWED_BLOCKS = [ 'gopublish/carousel-slide' ];
+// Slides, and Query Loops: a slide per post (editor.scss lays the posts out
+// as slides; render.php in the plugin's main file renders them as slides).
+const ALLOWED_BLOCKS = [ 'gopublish/carousel-slide', 'core/query' ];
 
 /**
  * The carousel's scroll area in the editor: the same classes as on the front

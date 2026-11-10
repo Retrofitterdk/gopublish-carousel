@@ -4,19 +4,41 @@
  */
 
 /**
+ * The slides in the scroll area: its children. In the editor, a Query Loop
+ * in Carousel Slides counts as its posts (the Post Template's list items
+ * that are shown, which editor.scss lays out as slides); on the front end,
+ * render.php has already made them slides.
+ *
+ * @param {HTMLElement} track The scroll area.
+ * @return {HTMLElement[]} The slides.
+ */
+export function getSlides( track ) {
+	return Array.from( track.children ).flatMap( ( child ) => {
+		if ( ! child.classList.contains( 'wp-block-query' ) ) {
+			return [ child ];
+		}
+		// Not the hidden copy the editor keeps of the post being edited.
+		const posts = Array.from(
+			child.querySelectorAll( ':scope > ul.wp-block-post-template > li' )
+		).filter( ( post ) => post.getClientRects().length > 0 );
+		return posts.length ? posts : [ child ];
+	} );
+}
+
+/**
  * Distance from one slide to the next: slide width plus the gap.
  *
  * @param {HTMLElement} track The scroll area.
  * @return {number} Distance in pixels (0 without slides).
  */
 export function getStep( track ) {
-	const [ first, second ] = track.children;
-	if ( ! first ) {
+	const slides = getSlides( track );
+	if ( ! slides.length ) {
 		return 0;
 	}
-	return second
-		? Math.abs( second.offsetLeft - first.offsetLeft )
-		: first.offsetWidth;
+	return slides.length > 1
+		? Math.abs( slides[ 1 ].offsetLeft - slides[ 0 ].offsetLeft )
+		: slides[ 0 ].offsetWidth;
 }
 
 /**
@@ -68,7 +90,7 @@ export function getSlidesToScroll( track ) {
  *                  slide).
  */
 export function getPages( track ) {
-	const total = track.children.length;
+	const total = getSlides( track ).length;
 	const step = getStep( track );
 	if ( ! total || ! step ) {
 		return { count: total ? 1 : 0, current: 0, targets: [ 0 ], step };

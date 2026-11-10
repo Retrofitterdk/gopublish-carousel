@@ -4,6 +4,8 @@
  */
 import { useEffect, useState } from '@wordpress/element';
 
+import { getStep } from './pages';
+
 /**
  * Find and measure the scroll area (.carousel-track) of the carousel an
  * element belongs to: whether there is anything to scroll, and whether it's
@@ -77,16 +79,15 @@ export function useCarouselTrack( elementRef, deps = [] ) {
  * @param {boolean}     state.atEnd   Whether it's at the end.
  */
 export function scrollCarousel( track, direction, { rewind, atStart, atEnd } ) {
-	const [ first, second ] = track?.children ?? [];
 	const atEdge = direction > 0 ? atEnd : atStart;
-	if ( ! first || ( atEdge && ! rewind ) ) {
+	if ( ! track || ( atEdge && ! rewind ) ) {
+		return;
+	}
+	const step = getStep( track );
+	if ( ! step ) {
 		return;
 	}
 	const view = track.ownerDocument.defaultView;
-	// Distance from one slide to the next: slide width plus the gap.
-	const step = second
-		? Math.abs( second.offsetLeft - first.offsetLeft )
-		: first.offsetWidth;
 	const behavior = view.matchMedia( '(prefers-reduced-motion: reduce)' )
 		.matches
 		? 'auto'

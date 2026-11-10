@@ -285,12 +285,13 @@ return array(
 		'title' => 'Carousel Slides',
 		'category' => 'widgets',
 		'icon' => 'images-alt2',
-		'description' => 'The slides of a carousel, in a scrollable row.',
+		'description' => 'The slides of a carousel, in a scrollable row: slides, and Query Loops with a slide per post.',
 		'parent' => array(
 			'gopublish/carousel'
 		),
 		'allowedBlocks' => array(
-			'gopublish/carousel-slide'
+			'gopublish/carousel-slide',
+			'core/query'
 		),
 		'usesContext' => array(
 			'gopublish-carousel/slidesId'

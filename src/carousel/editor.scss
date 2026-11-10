@@ -36,6 +36,51 @@
 		}
 	}
 
+	// A Query Loop in Carousel Slides: its posts are slides, as on the front
+	// end (render.php). The Query Loop and the Post Template's list don't
+	// take part in the layout, so the posts (the list items) sit in the
+	// scroll area's row, next to any other slides. Only while the Query Loop
+	// shows its posts: its setup placeholder, loading and "No results found"
+	// fill the scroll area's width instead.
+	.carousel-track > .wp-block-query {
+		flex: 0 0 100%;
+		margin: 0;
+		max-width: none;
+
+		&:has(> ul.wp-block-post-template) {
+			display: contents;
+
+			> ul.wp-block-post-template {
+				display: contents;
+
+				> li {
+					flex: 0 0 var(--slide-width);
+					box-sizing: border-box;
+					max-width: none;
+					margin: 0;
+					list-style: none;
+					scroll-snap-align: start;
+				}
+			}
+
+			// The Query Loop's other blocks: on the front end, No Results shows
+			// only when there are no posts, and the rest not at all (e.g.
+			// Pagination: the carousel's navigation replaces it). Here after the
+			// posts, sized like slides and dimmed, so they can still be edited.
+			> :not(ul.wp-block-post-template) {
+				flex: 0 0 var(--slide-width);
+				box-sizing: border-box;
+				max-width: none;
+				margin: 0;
+				scroll-snap-align: start;
+
+				&:not(.is-selected, .has-child-selected) {
+					opacity: 0.5;
+				}
+			}
+		}
+	}
+
 	// "Show all slides" (Carousel Slides toolbar): every slide in a grid, one
 	// grid column per carousel column (--columns is set in edit.js).
 	.wp-block-gopublish-carousel-slides.is-editor-grid .carousel-track {
