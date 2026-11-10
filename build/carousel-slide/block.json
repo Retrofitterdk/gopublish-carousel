@@ -2,13 +2,13 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "gopublish/carousel-slide",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "title": "Carousel Slide",
   "category": "widgets",
   "icon": "media-default",
   "description": "A wrapper block for carousel slides",
   "parent": [
-    "gopublish/carousel"
+    "gopublish/carousel-slides"
   ],
   "supports": {
     "align": [

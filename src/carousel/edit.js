@@ -6,15 +6,17 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 } from '@wordpress/block-editor';
-import { createBlock } from '@wordpress/blocks';
+import {
+	createBlock,
+	createBlocksFromInnerBlocksTemplate,
+} from '@wordpress/blocks';
 import {
 	Button,
 	PanelBody,
 	RangeControl,
 	TextControl,
 	ToggleControl,
-	ToolbarButton,
-	ToolbarGroup,
+	ToolbarDropdownMenu,
 	// WordPress 7.1 still only ships these under their experimental names
 	// (the stable names exist in the npm package, not in core).
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -23,7 +25,7 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useEffect, useRef, useState } from '@wordpress/element';
+import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 import {
@@ -31,8 +33,25 @@ import {
 	getLayouts,
 	getViewportOverrides,
 } from './layouts';
+import { getPostsQueryTemplate } from './posts-query';
 
-const ALLOWED_BLOCKS = [ 'gopublish/carousel-slide' ];
+// The Carousel's parts: Carousel Slides (the scroll area), Carousel
+// Navigation and Carousel Pagination.
+const PARTS = [
+	'gopublish/carousel-navigation',
+	'gopublish/carousel-slides',
+	'gopublish/carousel-pagination',
+];
+
+// The Carousel's inner blocks: its parts, and headings and paragraphs to
+// introduce or describe it (a heading also names it for screen readers; see
+// render.php).
+const ALLOWED_BLOCKS = [ ...PARTS, 'core/heading', 'core/paragraph' ];
+
+// Alignments the inner blocks can choose (Navigation and Pagination width:
+// content, wide or full; see style.scss). The Carousel has no layout support,
+// so without this the editor wouldn't offer them.
+const INNER_LAYOUT = { type: 'default', alignments: [ 'wide', 'full' ] };
 
 // The layout's screen sizes and the editor's device preview names. The base
 // layout (Desktop) applies to every screen size unless Tablet or Mobile
@@ -77,33 +96,6 @@ function getGapValue( gap ) {
 	}
 	// A unitless 0 is invalid in calc() additions (the slide width formula).
 	return value === '0' ? '0px' : value;
-}
-
-/**
- * The arrow icon from render.php (the previous button rotates it via CSS).
- *
- * @return {Element} SVG icon.
- */
-function ArrowIcon() {
-	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="14"
-			height="14"
-			viewBox="0 0 14 14"
-			fill="none"
-			aria-hidden="true"
-			focusable="false"
-		>
-			<path
-				d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332"
-				stroke="currentColor"
-				strokeWidth="2"
-				strokeLinecap="round"
-				strokeLinejoin="round"
-			/>
-		</svg>
-	);
 }
 
 export default function Edit( { attributes, setAttributes, clientId } ) {
@@ -196,17 +188,69 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				);
 	};
 
-	// "Show all slides": an editor-only grid view (not saved).
-	const [ showAll, setShowAll ] = useState( false );
-	// Whether the slides overflow the row, i.e. there is something to scroll.
-	const [ canScroll, setCanScroll ] = useState( false );
-	// Scroll position: at the first or the last scroll position.
-	const [ atStart, setAtStart ] = useState( true );
-	const [ atEnd, setAtEnd ] = useState( false );
-	const trackRef = useRef();
-
+	// The Carousel Slides block, where "Add to carousel" adds slides.
+	const slidesClientId = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).find(
+				( id ) => getBlockName( id ) === 'gopublish/carousel-slides'
+			);
+		},
+		[ clientId ]
+	);
+	// Whether the carousel has its Navigation and Pagination (one of each:
+	// see the filter in index.js).
+	const hasNavigation = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).some(
+				( id ) => getBlockName( id ) === 'gopublish/carousel-navigation'
+			);
+		},
+		[ clientId ]
+	);
+	const hasPagination = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).some(
+				( id ) => getBlockName( id ) === 'gopublish/carousel-pagination'
+			);
+		},
+		[ clientId ]
+	);
 	const slideCount = useSelect(
-		( select ) => select( blockEditorStore ).getBlockCount( clientId ),
+		( select ) =>
+			slidesClientId
+				? select( blockEditorStore ).getBlockCount( slidesClientId )
+				: 0,
+		[ slidesClientId ]
+	);
+	// Where text goes: before the first part (after any heading or
+	// paragraph already above the parts).
+	const firstPartIndex = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).findIndex( ( id ) =>
+				PARTS.includes( getBlockName( id ) )
+			);
+		},
+		[ clientId ]
+	);
+	const slidesIndex = useSelect(
+		( select ) =>
+			select( blockEditorStore )
+				.getBlockOrder( clientId )
+				.indexOf( slidesClientId ),
+		[ clientId, slidesClientId ]
+	);
+	// Where a recreated Carousel Slides goes: before the first Pagination.
+	const paginationIndex = useSelect(
+		( select ) => {
+			const { getBlockOrder, getBlockName } = select( blockEditorStore );
+			return getBlockOrder( clientId ).findIndex(
+				( id ) => getBlockName( id ) === 'gopublish/carousel-pagination'
+			);
+		},
 		[ clientId ]
 	);
 	const { insertBlock } = useDispatch( blockEditorStore );
@@ -241,84 +285,44 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		} )
 		.join( '' );
 
-	// Add a slide at the end (it gets selected and scrolled into view).
+	// "Add to carousel": a slide or posts (a Query Loop) at the end of
+	// Carousel Slides (it gets selected and scrolled into view; without
+	// Carousel Slides, one is added with it), Navigation before the slides, Pagination after them
+	// (each only if the carousel doesn't have one yet), a heading at the top
+	// and a paragraph above the parts.
+	const addToSlides = ( block ) =>
+		slidesClientId
+			? insertBlock( block, slideCount, slidesClientId )
+			: insertBlock(
+					createBlock(
+						'gopublish/carousel-slides',
+						{ lock: { remove: true } },
+						[ block ]
+					),
+					paginationIndex < 0 ? undefined : paginationIndex,
+					clientId
+				);
 	const addSlide = () =>
+		addToSlides( createBlock( 'gopublish/carousel-slide' ) );
+	// The latest posts, a slide each: a Query Loop at the end of the slides.
+	const addPosts = () =>
+		addToSlides(
+			createBlocksFromInnerBlocksTemplate( [
+				getPostsQueryTemplate(),
+			] )[ 0 ]
+		);
+	const addText = ( name, blockAttributes, atStart ) =>
 		insertBlock(
-			createBlock( 'gopublish/carousel-slide' ),
-			slideCount,
+			createBlock( name, blockAttributes ),
+			atStart || firstPartIndex < 0 ? 0 : firstPartIndex,
 			clientId
 		);
-
-	// Show the arrows only when the slides overflow, and track the start/end,
-	// like the front end. The row's width follows the editor canvas,
-	// including device previews.
-	useEffect( () => {
-		const track = trackRef.current;
-		if ( ! track || showAll ) {
-			return;
-		}
-		const update = () => {
-			const max = track.scrollWidth - track.clientWidth;
-			const position = Math.abs( track.scrollLeft );
-			setCanScroll( max > 1 );
-			setAtStart( position <= 1 );
-			setAtEnd( position >= max - 1 );
-		};
-		update();
-		const { ResizeObserver } = track.ownerDocument.defaultView;
-		const observer = new ResizeObserver( update );
-		observer.observe( track );
-		track.addEventListener( 'scroll', update, { passive: true } );
-		return () => {
-			observer.disconnect();
-			track.removeEventListener( 'scroll', update );
-		};
-	}, [ showAll, slideCount, viewportCSS ] );
-
-	// The arrows only scroll the row (by "Slides to scroll"), and rewind at
-	// the ends when Rewind is on.
-	const scrollBySlides = ( direction ) => {
-		const track = trackRef.current;
-		const [ first, second ] = track?.children ?? [];
-		const atEdge = direction > 0 ? atEnd : atStart;
-		if ( ! first || ( atEdge && ! rewind ) ) {
-			return;
-		}
-		// Distance from one slide to the next: slide width plus the gap.
-		const step = second
-			? Math.abs( second.offsetLeft - first.offsetLeft )
-			: first.offsetWidth;
-		const reduceMotion = track.ownerDocument.defaultView.matchMedia(
-			'(prefers-reduced-motion: reduce)'
-		).matches;
-		const behavior = reduceMotion ? 'auto' : 'smooth';
-		// Right-to-left: forward scrolls to negative positions (see view.js).
-		const textDirection =
-			track.ownerDocument.defaultView.getComputedStyle( track )
-				.direction === 'rtl'
-				? -1
-				: 1;
-		if ( atEdge ) {
-			const maxPosition = track.scrollWidth - track.clientWidth;
-			track.scrollTo( {
-				left: direction > 0 ? 0 : textDirection * maxPosition,
-				behavior,
-			} );
-			return;
-		}
-		// Slides to scroll for the current preview size (see view.js).
-		const slides =
-			parseInt(
-				track.ownerDocument.defaultView
-					.getComputedStyle( track )
-					.getPropertyValue( '--slides-to-scroll' ),
-				10
-			) || 1;
-		track.scrollBy( {
-			left: textDirection * direction * slides * step,
-			behavior,
-		} );
-	};
+	const addPart = ( name, before ) =>
+		insertBlock(
+			createBlock( name ),
+			slidesIndex < 0 ? undefined : slidesIndex + ( before ? 0 : 1 ),
+			clientId
+		);
 
 	// Same classes and widths as the front end (render.php), so the front-end
 	// styles apply in the editor too. Nothing here is saved.
@@ -326,7 +330,6 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		className: [
 			`columns-${ layouts.base.columns }`,
 			layouts.base.cutoff ? 'cutoff' : 'no-cutoff',
-			showAll ? 'is-editor-grid' : '',
 			viewportCSS ? viewportClass : '',
 		]
 			.filter( Boolean )
@@ -337,34 +340,71 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		},
 	} );
 
+	// The inner blocks' wrapper is display: contents (editor.scss), so the
+	// Carousel Slides block lays out as on the front end.
 	const innerBlocksProps = useInnerBlocksProps(
-		{ className: 'carousel-track', ref: trackRef },
+		{ className: 'carousel-inner-blocks' },
 		{
+			// Only one Carousel Slides: see the filter in index.js.
 			allowedBlocks: ALLOWED_BLOCKS,
 			templateLock: false,
-			orientation: 'horizontal',
-			// Slides are added from the toolbar instead.
 			renderAppender: false,
+			layout: INNER_LAYOUT,
 		}
 	);
 
 	return (
 		<div { ...blockProps }>
 			{ viewportCSS && <style>{ viewportCSS }</style> }
-			<BlockControls>
-				<ToolbarGroup>
-					<ToolbarButton
-						icon="plus-alt2"
-						label={ __( 'Add slide', 'gopublish-carousel' ) }
-						onClick={ addSlide }
-					/>
-					<ToolbarButton
-						icon="grid-view"
-						label={ __( 'Show all slides', 'gopublish-carousel' ) }
-						isPressed={ showAll }
-						onClick={ () => setShowAll( ! showAll ) }
-					/>
-				</ToolbarGroup>
+			<BlockControls group="block">
+				<ToolbarDropdownMenu
+					icon="plus-alt2"
+					label={ __( 'Add to carousel', 'gopublish-carousel' ) }
+					controls={ [
+						{
+							title: __( 'Slide', 'gopublish-carousel' ),
+							icon: 'media-default',
+							onClick: addSlide,
+						},
+						{
+							title: __( 'Posts', 'gopublish-carousel' ),
+							icon: 'admin-post',
+							onClick: addPosts,
+						},
+						{
+							title: __( 'Navigation', 'gopublish-carousel' ),
+							icon: 'leftright',
+							isDisabled: hasNavigation,
+							onClick: () =>
+								addPart(
+									'gopublish/carousel-navigation',
+									true
+								),
+						},
+						{
+							title: __( 'Pagination', 'gopublish-carousel' ),
+							icon: 'ellipsis',
+							isDisabled: hasPagination,
+							onClick: () =>
+								addPart(
+									'gopublish/carousel-pagination',
+									false
+								),
+						},
+						{
+							title: __( 'Heading', 'gopublish-carousel' ),
+							icon: 'heading',
+							onClick: () =>
+								addText( 'core/heading', { level: 2 }, true ),
+						},
+						{
+							title: __( 'Paragraph', 'gopublish-carousel' ),
+							icon: 'editor-paragraph',
+							onClick: () =>
+								addText( 'core/paragraph', {}, false ),
+						},
+					] }
+				/>
 			</BlockControls>
 			<InspectorControls>
 				<PanelBody title={ __( 'Layout', 'gopublish-carousel' ) }>
@@ -481,7 +521,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 					__nextHasNoMarginBottom
 					label={ __( 'Carousel label', 'gopublish-carousel' ) }
 					help={ __(
-						'Describes the carousel for screen reader users, e.g. "Customer testimonials". With a label, the carousel becomes a landmark they can jump to.',
+						'Describes the carousel for screen reader users, e.g. "Customer testimonials". With a label, the carousel becomes a landmark they can jump to. Leave empty to use the carousel\'s heading, if it has one.',
 						'gopublish-carousel'
 					) }
 					value={ ariaLabel }
@@ -491,35 +531,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 				/>
 			</InspectorControls>
 
-			{ ! showAll && canScroll && (
-				<div className="navigation-container">
-					<button
-						type="button"
-						className="carousel-prev"
-						aria-label={ __(
-							'Previous slide',
-							'gopublish-carousel'
-						) }
-						aria-disabled={ ! rewind && atStart }
-						onClick={ () => scrollBySlides( -1 ) }
-					>
-						<ArrowIcon />
-					</button>
-					<button
-						type="button"
-						className="carousel-next"
-						aria-label={ __( 'Next slide', 'gopublish-carousel' ) }
-						aria-disabled={ ! rewind && atEnd }
-						onClick={ () => scrollBySlides( 1 ) }
-					>
-						<ArrowIcon />
-					</button>
-				</div>
-			) }
-
-			<div className="carousel-container">
-				<div { ...innerBlocksProps } />
-			</div>
+			<div { ...innerBlocksProps } />
 		</div>
 	);
 }

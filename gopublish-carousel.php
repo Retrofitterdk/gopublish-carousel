@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Go:Publish Carousel
  * Description:       A carousel block for any blocks, built on native scrolling and the Interactivity API.
- * Version:           0.4.0
+ * Version:           0.6.0
  * Requires at least: 6.8
  * Requires PHP:      7.2
  * Author:            Retrofitter
@@ -51,7 +51,7 @@ function gopublish_carousel_block_init() {
 	// Core only looks for them in wp-content/languages/, so point the editor
 	// scripts to the plugin's own folder.
 	$registry = WP_Block_Type_Registry::get_instance();
-	foreach ( array( 'gopublish/carousel', 'gopublish/carousel-slide' ) as $block_name ) {
+	foreach ( array( 'gopublish/carousel', 'gopublish/carousel-slides', 'gopublish/carousel-slide', 'gopublish/carousel-navigation', 'gopublish/carousel-pagination' ) as $block_name ) {
 		$block_type = $registry->get_registered( $block_name );
 		foreach ( $block_type ? $block_type->editor_script_handles : array() as $handle ) {
 			wp_set_script_translations( $handle, 'gopublish-carousel', __DIR__ . '/languages' );
@@ -348,6 +348,29 @@ function gopublish_carousel_add_small_screen_styles() {
 }
 CSS;
 
+	// Navigation over the slides: hidden on mobile (any pointer), where it
+	// would cover much of a slide and visitors swipe. Only visually, like
+	// above, so keyboard users can still reach it.
+	$mobile = gopublish_carousel_viewport_media_queries()['@mobile'] ?? '';
+	if ( '' !== $mobile ) {
+		$css .= <<<CSS
+
+{$mobile} {
+	.wp-block-gopublish-carousel:not(:has(:focus-visible)) .navigation-container.is-overlay {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
+	}
+}
+CSS;
+	}
+
 	wp_add_inline_style( $block_type->style_handles[0], $css );
 }
 add_action( 'init', 'gopublish_carousel_add_small_screen_styles', 20 );
@@ -355,16 +378,17 @@ add_action( 'init', 'gopublish_carousel_add_small_screen_styles', 20 );
 /**
  * Extra registration settings that block.json can't express.
  *
- * The carousel is registered with skip_inner_blocks: render.php renders the
- * slides itself (each in a slide wrapper), so core shouldn't render them first
- * into an unused $content.
+ * The Carousel and Carousel Slides blocks are registered with
+ * skip_inner_blocks: their render.php renders the inner blocks itself (the
+ * slides each in a slide wrapper), so core shouldn't render them first into an
+ * unused $content.
  *
  * @param array  $args       Block type registration arguments.
  * @param string $block_type Block type name, e.g. 'gopublish/carousel'.
  * @return array Filtered arguments.
  */
 function gopublish_carousel_block_type_args( $args, $block_type ) {
-	if ( 'gopublish/carousel' === $block_type ) {
+	if ( in_array( $block_type, array( 'gopublish/carousel', 'gopublish/carousel-slides' ), true ) ) {
 		$args['skip_inner_blocks'] = true;
 	}
 	return $args;
@@ -382,10 +406,29 @@ add_filter( 'register_block_type_args', 'gopublish_carousel_block_type_args', 10
  * @return string Rendered HTML.
  */
 function gopublish_carousel_render_inner_block( WP_Block $inner_block, WP_Block $parent_block ) {
+	$pre_render = gopublish_carousel_prepare_inner_block( $inner_block, $parent_block );
+	return null !== $pre_render ? $pre_render : $inner_block->render();
+}
+
+/**
+ * Run the filters core runs before rendering an inner block (see
+ * gopublish_carousel_render_inner_block()), without rendering it.
+ *
+ * Used for a Query Loop in Carousel Slides, whose posts the carousel renders
+ * itself: plugins that change the Query Loop's query (e.g. Advanced Query
+ * Loop, Curated Query Loop) add their query_loop_block_query_vars filter in
+ * pre_render_block.
+ *
+ * @param WP_Block $inner_block  The inner block.
+ * @param WP_Block $parent_block The block that contains it.
+ * @return string|null HTML to use instead of rendering the block (from
+ *                     pre_render_block), or null to render it.
+ */
+function gopublish_carousel_prepare_inner_block( WP_Block $inner_block, WP_Block $parent_block ) {
 	/** This filter is documented in wp-includes/blocks.php */
 	$pre_render = apply_filters( 'pre_render_block', null, $inner_block->parsed_block, $parent_block );
 	if ( null !== $pre_render ) {
-		return $pre_render;
+		return (string) $pre_render;
 	}
 
 	$source_block   = $inner_block->parsed_block;
@@ -404,7 +447,141 @@ function gopublish_carousel_render_inner_block( WP_Block $inner_block, WP_Block 
 		$inner_block->refresh_parsed_block_dependents();
 	}
 
-	return $inner_block->render();
+	return null;
+}
+
+/**
+ * The first block of a type inside a block, at any depth, not looking inside
+ * nested Query Loops.
+ *
+ * @param WP_Block $block The block to search.
+ * @param string   $name  Block name, e.g. 'core/post-template'.
+ * @return array|null The block ('block') and the block that contains it
+ *                    ('parent'), or null if not found.
+ */
+function gopublish_carousel_find_inner_block( WP_Block $block, $name ) {
+	foreach ( $block->inner_blocks as $inner_block ) {
+		if ( $name === $inner_block->name ) {
+			return array(
+				'block'  => $inner_block,
+				'parent' => $block,
+			);
+		}
+		if ( 'core/query' !== $inner_block->name ) {
+			$found = gopublish_carousel_find_inner_block( $inner_block, $name );
+			if ( null !== $found ) {
+				return $found;
+			}
+		}
+	}
+	return null;
+}
+
+/**
+ * Render a Query Loop in Carousel Slides as slides: one per post, with the
+ * Post Template's content (like core's Post Template block, whose rendering
+ * this follows). Without posts: the Query Loop's No Results content as one
+ * slide, if it has some.
+ *
+ * The query is built like core builds it, so plugins that change it work:
+ * the Query Loop's pre_render_block filters run first (Advanced Query Loop
+ * and Curated Query Loop add their query_loop_block_query_vars filter there),
+ * then build_query_vars_from_query_block() runs that filter. With "Inherit
+ * query from template", the template's own query is used.
+ *
+ * The other blocks in the Query Loop (e.g. Pagination; the carousel's own
+ * navigation replaces it) and the Post Template's layout (the carousel's
+ * columns decide it) aren't used. The carousel shows the query's first page.
+ *
+ * @param WP_Block $query_block  The Query Loop block.
+ * @param WP_Block $parent_block The block that contains it.
+ * @return string[] Each slide's HTML.
+ */
+function gopublish_carousel_render_query_slides( WP_Block $query_block, WP_Block $parent_block ) {
+	$pre_render = gopublish_carousel_prepare_inner_block( $query_block, $parent_block );
+	if ( null !== $pre_render ) {
+		return '' === trim( $pre_render ) ? array() : array( $pre_render );
+	}
+
+	$template = gopublish_carousel_find_inner_block( $query_block, 'core/post-template' );
+	if ( null === $template ) {
+		return array();
+	}
+	$pre_render = gopublish_carousel_prepare_inner_block( $template['block'], $template['parent'] );
+	if ( null !== $pre_render ) {
+		return '' === trim( $pre_render ) ? array() : array( $pre_render );
+	}
+	$template = $template['block'];
+
+	$query_args = null;
+	if ( ! empty( $template->context['query']['inherit'] ) ) {
+		global $wp_query;
+		// Inside the main loop: a copy, so the main loop isn't changed.
+		if ( in_the_loop() ) {
+			$query = clone $wp_query;
+			$query->rewind_posts();
+		} else {
+			$query = $wp_query;
+		}
+	} else {
+		$query_args = build_query_vars_from_query_block( $template, 1 );
+		$query      = new WP_Query( $query_args );
+	}
+
+	if ( ! $query->have_posts() ) {
+		$no_results = gopublish_carousel_find_inner_block( $query_block, 'core/query-no-results' );
+		if ( null === $no_results ) {
+			return array();
+		}
+		// The No Results block runs the query again to check that it's empty.
+		// Give it the query built above: query_loop_block_query_vars filters
+		// that run only once (e.g. Curated Query Loop's) would otherwise be
+		// missing and it would find posts.
+		$same_query = static function () use ( $query_args ) {
+			return $query_args;
+		};
+		if ( null !== $query_args ) {
+			add_filter( 'query_loop_block_query_vars', $same_query, PHP_INT_MAX );
+		}
+		$html = gopublish_carousel_render_inner_block( $no_results['block'], $no_results['parent'] );
+		remove_filter( 'query_loop_block_query_vars', $same_query, PHP_INT_MAX );
+		return '' === trim( $html ) ? array() : array( $html );
+	}
+
+	update_post_thumbnail_cache( $query );
+
+	$slides = array();
+	while ( $query->have_posts() ) {
+		$query->the_post();
+
+		// The Post Template's content for this post: rendered as core does,
+		// under a block name that isn't registered (no wrapper, no block
+		// supports), with the post as block context.
+		$post_block              = $template->parsed_block;
+		$post_block['blockName'] = 'core/null';
+		$post_id                 = get_the_ID();
+		$post_type               = get_post_type();
+		$post_context            = static function ( $context ) use ( $post_id, $post_type ) {
+			$context['postType'] = $post_type;
+			$context['postId']   = $post_id;
+			return $context;
+		};
+		add_filter( 'render_block_context', $post_context, 1 );
+		$html = ( new WP_Block( $post_block ) )->render( array( 'dynamic' => false ) );
+		remove_filter( 'render_block_context', $post_context, 1 );
+
+		if ( '' !== trim( $html ) ) {
+			$slides[] = sprintf(
+				'<div class="%1$s">%2$s</div>',
+				esc_attr( implode( ' ', get_post_class( 'wp-block-post' ) ) ),
+				$html
+			);
+		}
+	}
+	// Back to the main query's post for the template tags.
+	wp_reset_postdata();
+
+	return $slides;
 }
 
 /**
@@ -435,4 +612,414 @@ function gopublish_carousel_has_focusable_content( $html ) {
 		}
 	}
 	return false;
+}
+
+/**
+ * Render a carousel's slides: the scroll area (.carousel-track) inside its
+ * container, with each slide in a labelled wrapper ("2 of 9").
+ *
+ * Used by the Carousel Slides block, and by the Carousel itself for carousels
+ * from before 0.5.0, which have the slides directly inside. The scroll area
+ * gets data-carousel-items with the number of slides, which the Carousel
+ * reads (see gopublish_carousel_count_slides()).
+ *
+ * @param WP_Block[] $slide_blocks         The Carousel Slide blocks, and Query
+ *                                         Loops (a slide per post).
+ * @param WP_Block   $parent_block         The block that contains them.
+ * @param string     $container_attributes Attributes for the container
+ *                                         element, already escaped.
+ * @return string HTML, or an empty string if no slide renders anything.
+ */
+function gopublish_carousel_render_slides( $slide_blocks, WP_Block $parent_block, $container_attributes ) {
+	// Render each slide once, as a WP_Block, so it keeps the block context it
+	// inherits (e.g. postId inside a Query Loop) and the usual render filters
+	// run. Slides without content are skipped: empty ones (no blocks inside,
+	// e.g. added with Add slide and never filled; they would show as a gap)
+	// and ones that render nothing (e.g. hidden by a visibility plugin).
+	// A Query Loop gives a slide per post (see
+	// gopublish_carousel_render_query_slides()); it can sit between other
+	// slides.
+	$slides_html = array();
+	foreach ( $slide_blocks as $slide_block ) {
+		if ( 'core/query' === $slide_block->name ) {
+			array_push( $slides_html, ...gopublish_carousel_render_query_slides( $slide_block, $parent_block ) );
+			continue;
+		}
+		if ( 0 === count( $slide_block->inner_blocks ) ) {
+			continue;
+		}
+		$html = gopublish_carousel_render_inner_block( $slide_block, $parent_block );
+		if ( '' !== trim( $html ) ) {
+			$slides_html[] = $html;
+		}
+	}
+	$total = count( $slides_html );
+	if ( 0 === $total ) {
+		return '';
+	}
+
+	// The scroll area must be reachable by keyboard. When no slide contains
+	// anything focusable, the scroll area itself gets tabindex="0" (arrow keys
+	// then scroll it).
+	$track_is_focusable = true;
+	foreach ( $slides_html as $slide_html ) {
+		if ( gopublish_carousel_has_focusable_content( $slide_html ) ) {
+			$track_is_focusable = false;
+			break;
+		}
+	}
+
+	/* translators: Spoken by screen readers to describe a single slide. */
+	$slide_roledescription = __( 'slide', 'gopublish-carousel' );
+
+	ob_start();
+	?>
+	<div <?php echo $container_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by the caller. ?>>
+		<div class="carousel-track"<?php echo $track_is_focusable ? ' tabindex="0"' : ''; ?>
+			data-carousel-items="<?php echo esc_attr( $total ); ?>"
+			data-wp-init="callbacks.initTrack"
+			data-wp-on-async--scroll="callbacks.onScroll"
+			data-wp-on--scrollend="callbacks.onScrollEnd">
+			<?php
+			foreach ( $slides_html as $index => $slide_html ) :
+				/* translators: 1: Slide number, 2: Total number of slides. */
+				$slide_label = sprintf( __( '%1$d of %2$d', 'gopublish-carousel' ), $index + 1, $total );
+				?>
+				<div class="carousel-slide"
+					role="group"
+					aria-roledescription="<?php echo esc_attr( $slide_roledescription ); ?>"
+					aria-label="<?php echo esc_attr( $slide_label ); ?>">
+					<?php echo $slide_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered block HTML. ?>
+				</div>
+				<?php
+			endforeach;
+			?>
+		</div>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * The number of slides in a carousel's rendered inner blocks: read from the
+ * first scroll area (gopublish_carousel_render_slides()), which is the
+ * carousel's own; nested carousels come later in the HTML.
+ *
+ * @param string $html Rendered inner blocks.
+ * @return int Number of slides (0 without a scroll area).
+ */
+function gopublish_carousel_count_slides( $html ) {
+	$processor = new WP_HTML_Tag_Processor( $html );
+	while ( $processor->next_tag() ) {
+		$items = $processor->get_attribute( 'data-carousel-items' );
+		if ( null !== $items ) {
+			return (int) $items;
+		}
+	}
+	return 0;
+}
+
+/**
+ * A colour or border value from block attributes as CSS: preset references
+ * ('var:preset|color|accent-1') become custom properties
+ * ('var(--wp--preset--color--accent-1)'), like the style engine does.
+ *
+ * @param mixed $value Attribute value.
+ * @return string CSS value, or an empty string if unset or unsafe.
+ */
+function gopublish_carousel_css_value( $value ) {
+	if ( ! is_string( $value ) && ! is_numeric( $value ) ) {
+		return '';
+	}
+	$value = trim( (string) $value );
+	if ( str_starts_with( $value, 'var:' ) ) {
+		$path  = array_map( '_wp_to_kebab_case', explode( '|', substr( $value, 4 ) ) );
+		$value = 'var(--wp--' . implode( '--', $path ) . ')';
+	}
+	// A single value: nothing that could end the declaration.
+	return preg_match( '/[;{}<>"\\\\]/', $value ) ? '' : $value;
+}
+
+/**
+ * A colour setting as CSS, from a pair of attributes made by withColors() in
+ * the editor: a palette slug ($name, e.g. 'iconColor') or a custom colour
+ * ('custom' + $name, e.g. 'customIconColor').
+ *
+ * @param array  $attributes Block attributes.
+ * @param string $name       Attribute name of the palette slug.
+ * @return string CSS value, or an empty string if unset.
+ */
+function gopublish_carousel_color_attribute( $attributes, $name ) {
+	$slug = $attributes[ $name ] ?? null;
+	if ( is_string( $slug ) && '' !== $slug ) {
+		return gopublish_carousel_css_value( 'var:preset|color|' . $slug );
+	}
+	return gopublish_carousel_css_value( $attributes[ 'custom' . ucfirst( $name ) ] ?? '' );
+}
+
+/**
+ * The Carousel Pagination block's settings as the dots' custom properties
+ * (style.scss), set on the block's wrapper: Dots and Current dot colours, dot
+ * size and the space between dots (both in pixels).
+ *
+ * A chosen Dots colour is shown as is (full opacity); without it, dots are
+ * the text colour, faded. The current dot is the text colour unless Current
+ * dot is set.
+ *
+ * Mirrors getPaginationStyles() in src/carousel-pagination/dot-styles.js:
+ * keep them in sync.
+ *
+ * @param array $attributes Block attributes.
+ * @return string CSS declarations for a style attribute.
+ */
+function gopublish_carousel_pagination_styles( $attributes ) {
+	$properties = array();
+	$dot        = gopublish_carousel_color_attribute( $attributes, 'dotColor' );
+	if ( '' !== $dot ) {
+		$properties['--pagination-dot-color']   = $dot;
+		$properties['--pagination-dot-opacity'] = '1';
+	}
+	$current = gopublish_carousel_color_attribute( $attributes, 'currentDotColor' );
+	if ( '' !== $current ) {
+		$properties['--pagination-dot-current-color'] = $current;
+	}
+	if ( is_numeric( $attributes['dotSize'] ?? null ) ) {
+		$properties['--pagination-dot-size'] = max( 4, min( 32, (int) $attributes['dotSize'] ) ) . 'px';
+	}
+	if ( is_numeric( $attributes['dotSpacing'] ?? null ) ) {
+		$properties['--pagination-dot-spacing'] = max( 0, min( 48, (int) $attributes['dotSpacing'] ) ) . 'px';
+	}
+
+	$css = '';
+	foreach ( $properties as $property => $value ) {
+		$css .= $property . ':' . $value . ';';
+	}
+	return $css;
+}
+
+/**
+ * The Carousel Navigation block's colour and border settings as the buttons'
+ * custom properties (style.scss), set on the block's wrapper.
+ *
+ * Button padding and icon size are the block's own settings too (in the
+ * Dimensions panel). Colours are the block's own settings (Icon, Background and their hover
+ * colours: a palette slug or a custom colour each). Without hover colours,
+ * hovering swaps the icon and background colours (with only an icon colour,
+ * the background takes the icon colour). The keyboard focus ring follows the
+ * hover background. Borders are WordPress's Border settings, applied to the
+ * buttons instead of the wrapper (serialization is skipped in block.json).
+ * As custom properties, the hover and focus rules in style.scss keep working.
+ *
+ * Mirrors getButtonStyles() in src/carousel-navigation/button-styles.js:
+ * keep them in sync.
+ *
+ * @param array $attributes Block attributes.
+ * @return string CSS declarations for a style attribute.
+ */
+function gopublish_carousel_navigation_button_styles( $attributes ) {
+	$style  = is_array( $attributes['style'] ?? null ) ? $attributes['style'] : array();
+	$border = is_array( $style['border'] ?? null ) ? $style['border'] : array();
+	$preset = static function ( $slug ) {
+		return is_string( $slug ) && '' !== $slug ? 'var:preset|color|' . $slug : null;
+	};
+
+	$icon             = gopublish_carousel_color_attribute( $attributes, 'iconColor' );
+	$background       = gopublish_carousel_color_attribute( $attributes, 'buttonColor' );
+	$icon_hover       = gopublish_carousel_color_attribute( $attributes, 'iconHoverColor' );
+	$background_hover = gopublish_carousel_color_attribute( $attributes, 'buttonHoverColor' );
+	if ( '' === $background_hover ) {
+		$background_hover = $icon;
+	}
+	if ( '' === $icon_hover && '' !== $icon ) {
+		$icon_hover = $background;
+	}
+
+	$properties = array_filter(
+		array(
+			'--nav-button-icon-color'       => $icon,
+			'--nav-button-background'       => $background,
+			'--nav-button-icon-color-hover' => $icon_hover,
+			'--nav-button-background-hover' => $background_hover,
+			'--nav-button-outline-color'    => $background_hover,
+		),
+		'strlen'
+	);
+
+	// Space between the icon and the button's edge, per side (a spacing
+	// preset or a custom size), and the icon's size in pixels.
+	$padding = is_array( $attributes['buttonPadding'] ?? null ) ? $attributes['buttonPadding'] : array();
+	foreach ( array( 'top', 'right', 'bottom', 'left' ) as $side ) {
+		$value = gopublish_carousel_css_value( $padding[ $side ] ?? '' );
+		if ( '' !== $value ) {
+			$properties[ '--nav-button-padding-' . $side ] = $value;
+		}
+	}
+	if ( is_numeric( $attributes['iconSize'] ?? null ) ) {
+		$properties['--nav-button-icon-size'] = max( 8, min( 128, (int) $attributes['iconSize'] ) ) . 'px';
+	}
+
+	// Border colour, style and width: one value for all sides, or one per
+	// side (top, right, bottom, left) when the sides are set separately.
+	$defaults = array(
+		'color' => 'currentcolor',
+		'style' => 'solid',
+		'width' => '0',
+	);
+	$values   = array();
+	foreach ( $defaults as $feature => $default ) {
+		$linked = 'color' === $feature ? $preset( $attributes['borderColor'] ?? null ) : null;
+		$linked = gopublish_carousel_css_value( $linked ?? ( $border[ $feature ] ?? '' ) );
+		if ( '' !== $linked ) {
+			$values[ $feature ] = $linked;
+			continue;
+		}
+		$sides = array();
+		foreach ( array( 'top', 'right', 'bottom', 'left' ) as $side ) {
+			$sides[] = gopublish_carousel_css_value( $border[ $side ][ $feature ] ?? '' );
+		}
+		if ( array_filter( $sides, 'strlen' ) ) {
+			$values[ $feature ] = implode(
+				' ',
+				array_map(
+					static function ( $value ) use ( $default ) {
+						return '' !== $value ? $value : $default;
+					},
+					$sides
+				)
+			);
+		}
+	}
+	// A colour or style without a width: a thin border, so it shows.
+	if ( $values && ! isset( $values['width'] ) ) {
+		$values['width'] = '1px';
+	}
+	foreach ( $values as $feature => $value ) {
+		$properties[ '--nav-button-border-' . $feature ] = $value;
+	}
+
+	// Corner radius: one value, or one per corner.
+	$radius = $border['radius'] ?? '';
+	if ( is_array( $radius ) ) {
+		$corners = array();
+		foreach ( array( 'topLeft', 'topRight', 'bottomRight', 'bottomLeft' ) as $corner ) {
+			$corners[] = gopublish_carousel_css_value( $radius[ $corner ] ?? '' );
+		}
+		$radius = array_filter( $corners, 'strlen' )
+			? implode(
+				' ',
+				array_map(
+					static function ( $value ) {
+						return '' !== $value ? $value : '0';
+					},
+					$corners
+				)
+			)
+			: '';
+	} else {
+		$radius = gopublish_carousel_css_value( $radius );
+	}
+	if ( '' !== $radius ) {
+		$properties['--nav-button-radius'] = $radius;
+	}
+
+	$css = '';
+	foreach ( $properties as $property => $value ) {
+		$css .= $property . ':' . $value . ';';
+	}
+	return $css;
+}
+
+/**
+ * Whether a navigation icon points back (left), judging by its name, e.g.
+ * 'core/chevron-left', 'core/arrow-up-left' or 'core/previous'. The buttons
+ * expect an icon pointing forward; a backward one is mirrored the other way
+ * round (the has-backward-icon class, style.scss), so either works.
+ *
+ * Mirrors pointsBack() in src/carousel-navigation/edit.js.
+ *
+ * @param string $icon Namespaced icon name.
+ * @return bool Whether it points back.
+ */
+function gopublish_carousel_icon_points_back( $icon ) {
+	return (bool) preg_match( '#(^|[/-])(left|previous|back)(-|$)#', $icon );
+}
+
+/**
+ * The SVG for the navigation buttons: an icon from the icon registry
+ * (WordPress 7.1+, e.g. 'core/chevron-right'), drawn pointing forward; the
+ * Previous button mirrors it (style.scss). Falls back to the plugin's own
+ * arrow when no icon is chosen, the icon isn't registered (any more) or the
+ * WordPress version has no icon registry.
+ *
+ * The default arrow sits in a 24px canvas with padding, like the registry's
+ * icons, so --nav-button-icon-size sizes both the same way.
+ *
+ * @param string $icon Namespaced icon name, or an empty string for the default.
+ * @return string SVG markup, hidden from screen readers (the button has the
+ *                accessible name).
+ */
+function gopublish_carousel_navigation_icon( $icon ) {
+	if ( '' !== $icon && function_exists( 'wp_get_icon' ) ) {
+		$svg = wp_get_icon( $icon, array( 'size' => 24 ) );
+		if ( '' !== $svg ) {
+			return $svg;
+		}
+	}
+	return '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-5 -5 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M1.16663 6.99984H12.8333M12.8333 6.99984L6.99996 1.1665M12.8333 6.99984L6.99996 12.8332" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+/**
+ * Render a carousel's navigation: the Previous and Next buttons.
+ *
+ * Used by the Carousel Navigation block, and by the Carousel itself for
+ * carousels from before 0.5.0. Hidden (hidden attribute) while all slides fit
+ * in view; the Interactivity API keeps that and the buttons' disabled state
+ * up to date (context of the surrounding carousel, see view.js).
+ *
+ * @param string $slides_id            ID of the carousel's slides, for
+ *                                     aria-controls.
+ * @param string $container_attributes Attributes for the container element,
+ *                                     already escaped.
+ * @param string $icon                 Icon for the buttons (see
+ *                                     gopublish_carousel_navigation_icon()).
+ * @return string HTML.
+ */
+function gopublish_carousel_render_navigation( $slides_id, $container_attributes, $icon = '' ) {
+	$svg = gopublish_carousel_navigation_icon( $icon );
+
+	// Accessible names for the buttons (they only contain an icon). Always
+	// singular, like the W3C example: how many slides a button moves can
+	// differ per viewport.
+	$buttons = array(
+		array(
+			'class'    => 'carousel-prev',
+			'label'    => __( 'Previous slide', 'gopublish-carousel' ),
+			'disabled' => 'context.prevDisabled',
+			'action'   => 'actions.moveBack',
+		),
+		array(
+			'class'    => 'carousel-next',
+			'label'    => __( 'Next slide', 'gopublish-carousel' ),
+			'disabled' => 'context.nextDisabled',
+			'action'   => 'actions.moveForward',
+		),
+	);
+
+	ob_start();
+	?>
+	<div <?php echo $container_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by the caller. ?>>
+		<?php foreach ( $buttons as $button ) : ?>
+			<button type="button" class="<?php echo esc_attr( $button['class'] ); ?>"
+				aria-label="<?php echo esc_attr( $button['label'] ); ?>"
+				<?php if ( '' !== $slides_id ) : ?>
+					aria-controls="<?php echo esc_attr( $slides_id ); ?>"
+				<?php endif; ?>
+				data-wp-bind--aria-disabled="<?php echo esc_attr( $button['disabled'] ); ?>"
+				data-wp-on--click="<?php echo esc_attr( $button['action'] ); ?>">
+				<?php echo $svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG from the icon registry or the plugin itself. ?>
+			</button>
+		<?php endforeach; ?>
+	</div>
+	<?php
+	return ob_get_clean();
 }

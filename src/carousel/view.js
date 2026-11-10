@@ -5,6 +5,13 @@ import {
 	withScope,
 } from '@wordpress/interactivity';
 
+import {
+	getPages,
+	getScrollDirection,
+	getSlidesToScroll,
+	getStep,
+} from './pages';
+
 // Browsers without the scrollend event (older Safari) treat the scroll as
 // finished once no scroll event has fired for this long (ms).
 const SCROLL_SETTLE_DELAY = 150;
@@ -26,37 +33,9 @@ function getTrack( element ) {
 }
 
 /**
- * Distance from one slide to the next: slide width plus the gap.
- *
- * @param {HTMLElement} track The scroll area.
- * @return {number} Distance in pixels (0 without slides).
- */
-function getStep( track ) {
-	const [ first, second ] = track.children;
-	if ( ! first ) {
-		return 0;
-	}
-	return second
-		? Math.abs( second.offsetLeft - first.offsetLeft )
-		: first.offsetWidth;
-}
-
-/**
- * Horizontal scroll direction: 1 left-to-right, -1 right-to-left.
- *
- * In right-to-left text, the slides run from right to left and scrollLeft
- * counts down from 0, so "forward" means scrolling to negative positions.
- *
- * @param {HTMLElement} track The scroll area.
- * @return {number} 1 or -1.
- */
-function getScrollDirection( track ) {
-	return window.getComputedStyle( track ).direction === 'rtl' ? -1 : 1;
-}
-
-/**
  * Measure the scroll area and update canScroll, atStart and atEnd, and with
- * them the buttons' disabled state (prevDisabled, nextDisabled).
+ * them the buttons' disabled state (prevDisabled, nextDisabled) and the
+ * pagination dots.
  *
  * Uses the absolute scroll position, so it also works right-to-left, where
  * scrollLeft counts down from 0.
@@ -74,6 +53,21 @@ function updateState( context, track ) {
 	// With Rewind off, the buttons are disabled at the ends.
 	context.prevDisabled = ! context.rewind && context.atStart;
 	context.nextDisabled = ! context.rewind && context.atEnd;
+
+	// Carousel Pagination: one dot per page, the current one marked. All
+	// possible dots are rendered; those the current layout doesn't need are
+	// hidden.
+	if ( context.dots ) {
+		const { count, current, targets } = getPages( track );
+		context.dots = context.dots.map( ( dot, page ) => ( {
+			current: page === current,
+			hidden: page >= count,
+			label: context.dotLabelTemplate.replace(
+				'%d',
+				( targets[ page ] ?? page ) + 1
+			),
+		} ) );
+	}
 }
 
 /**
@@ -170,15 +164,8 @@ function scrollBySlides( context, element, direction ) {
 	}
 	// Slides to scroll can differ per viewport, so it's read from the CSS
 	// (--slides-to-scroll, set by render.php) for the current screen size.
-	const slides =
-		parseInt(
-			window
-				.getComputedStyle( track )
-				.getPropertyValue( '--slides-to-scroll' ),
-			10
-		) || 1;
 	track.scrollBy( {
-		left: textDirection * direction * slides * step,
+		left: textDirection * direction * getSlidesToScroll( track ) * step,
 	} );
 }
 
@@ -189,6 +176,29 @@ store( 'gopublish-carousel', {
 		},
 		moveBack() {
 			scrollBySlides( getContext(), getElement().ref, -1 );
+		},
+		/**
+		 * A pagination dot (data-dot: its page): scroll to the first slide
+		 * of that page.
+		 */
+		goToDot() {
+			const { ref } = getElement();
+			const track = getTrack( ref );
+			if ( ! track ) {
+				return;
+			}
+			const { targets, step } = getPages( track );
+			const target = targets[ Number( ref.dataset.dot ) ];
+			const left = getScrollDirection( track ) * ( target ?? 0 ) * step;
+			// Already there: nothing to scroll (and no scrollend to announce).
+			if (
+				target === undefined ||
+				Math.abs( track.scrollLeft - left ) < 1
+			) {
+				return;
+			}
+			getContext().announcePending = true;
+			track.scrollTo( { left } );
 		},
 	},
 	callbacks: {

@@ -2,6 +2,24 @@
 // (same classes, see edit.js); this file only adds what the editor needs.
 .wp-block-gopublish-carousel {
 
+	// The inner blocks' wrapper (edit.js) doesn't take part in the layout, so
+	// Carousel Slides is a direct flex child, as on the front end.
+	.carousel-inner-blocks {
+		display: contents;
+	}
+
+	.wp-block-gopublish-carousel-slides {
+		margin-block: 0;
+	}
+
+	// Carousel Navigation and Pagination while all slides fit: dimmed instead
+	// of hidden (as
+	// on the front end), so it can still be selected.
+	.wp-block-gopublish-carousel-navigation.is-inactive,
+	.wp-block-gopublish-carousel-pagination.is-inactive {
+		opacity: 0.4;
+	}
+
 	// Carousel view (default): the same scroll area as the front end, with
 	// gentler snapping while editing.
 	.carousel-track {
@@ -13,17 +31,100 @@
 			// The slide is the block wrapper here, so undo the front-end rules
 			// meant for the inner slide element and the editor's flow margins.
 			display: block;
+			// Not wider than a slide because of its content's minimum width
+			// (e.g. a featured image, or a carousel of posts inside it). The
+			// same for the posts below.
+			min-width: 0;
 			max-width: none;
 			margin: 0;
 		}
 	}
 
-	// "Show all slides": every slide in a grid, one grid column per carousel
-	// column (--columns is set in edit.js).
-	&.is-editor-grid .carousel-track {
+	// A Query Loop in Carousel Slides: its posts are slides, as on the front
+	// end (render.php). The Query Loop and the Post Template's list don't
+	// take part in the layout, so the posts (the list items) sit in the
+	// scroll area's row, next to any other slides. Only while the Query Loop
+	// shows its posts: its setup placeholder, loading and "No results found"
+	// fill the scroll area's width instead.
+	.carousel-track > .wp-block-query {
+		flex: 0 0 100%;
+		margin: 0;
+		max-width: none;
+
+		&:has(> ul.wp-block-post-template) {
+			display: contents;
+
+			> ul.wp-block-post-template {
+				display: contents;
+
+				> li {
+					flex: 0 0 var(--slide-width);
+					box-sizing: border-box;
+					min-width: 0;
+					max-width: none;
+					margin: 0;
+					list-style: none;
+					scroll-snap-align: start;
+				}
+			}
+
+			// The Query Loop's other blocks: on the front end, No Results shows
+			// only when there are no posts, and the rest not at all (e.g.
+			// Pagination: the carousel's navigation replaces it). Here after the
+			// posts, sized like slides and dimmed, so they can still be edited.
+			> :not(ul.wp-block-post-template) {
+				flex: 0 0 var(--slide-width);
+				box-sizing: border-box;
+				min-width: 0;
+				max-width: none;
+				margin: 0;
+				scroll-snap-align: start;
+
+				&:not(.is-selected, .has-child-selected) {
+					opacity: 0.5;
+				}
+			}
+		}
+	}
+
+	// "Show all slides" (Carousel Slides toolbar): every slide in a grid, one
+	// grid column per carousel column (--columns is set in edit.js).
+	.wp-block-gopublish-carousel-slides.is-editor-grid .carousel-track {
 		display: grid;
 		grid-template-columns: repeat(var(--columns), 1fr);
 		gap: var(--carousel-gap);
 		overflow-x: visible;
+	}
+}
+
+// Carousel Navigation's Icon panel and icon picker (outside the carousel, in
+// the editor's own document).
+.gopublish-carousel-icon-preview {
+	display: inline-flex;
+	padding: 4px;
+	border: 1px solid #ddd;
+	border-radius: 2px;
+
+	svg {
+		width: 24px;
+		height: 24px;
+	}
+}
+
+.gopublish-carousel-icon-picker__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+	gap: 8px;
+	margin-top: 16px;
+
+	.gopublish-carousel-icon-picker__icon {
+		justify-content: center;
+		width: 48px;
+		height: 48px;
+
+		svg {
+			width: 24px;
+			height: 24px;
+		}
 	}
 }

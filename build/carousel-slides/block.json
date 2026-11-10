@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "gopublish/carousel-slides",
+  "version": "0.6.0",
+  "title": "Carousel Slides",
+  "category": "widgets",
+  "icon": "images-alt2",
+  "description": "The slides of a carousel, in a scrollable row: slides, and Query Loops with a slide per post.",
+  "parent": [
+    "gopublish/carousel"
+  ],
+  "allowedBlocks": [
+    "gopublish/carousel-slide",
+    "core/query"
+  ],
+  "usesContext": [
+    "gopublish-carousel/slidesId"
+  ],
+  "supports": {
+    "html": false,
+    "reusable": false,
+    "interactivity": true
+  },
+  "textdomain": "gopublish-carousel",
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}

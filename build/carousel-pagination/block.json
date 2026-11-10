@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "gopublish/carousel-pagination",
+  "version": "0.6.0",
+  "title": "Carousel Pagination",
+  "category": "widgets",
+  "icon": "ellipsis",
+  "description": "Dots for jumping to a position in a carousel.",
+  "parent": [
+    "gopublish/carousel"
+  ],
+  "attributes": {
+    "dotColor": {
+      "type": "string"
+    },
+    "customDotColor": {
+      "type": "string"
+    },
+    "currentDotColor": {
+      "type": "string"
+    },
+    "customCurrentDotColor": {
+      "type": "string"
+    },
+    "dotSize": {
+      "type": "number"
+    },
+    "dotSpacing": {
+      "type": "number"
+    }
+  },
+  "usesContext": [
+    "gopublish-carousel/slidesId",
+    "gopublish-carousel/itemsTotal"
+  ],
+  "supports": {
+    "html": false,
+    "reusable": false,
+    "interactivity": true,
+    "align": [
+      "wide",
+      "full"
+    ],
+    "layout": {
+      "default": {
+        "type": "flex",
+        "justifyContent": "center",
+        "flexWrap": "wrap"
+      },
+      "allowSwitching": false,
+      "allowInheriting": false,
+      "allowOrientation": false,
+      "allowVerticalAlignment": false,
+      "allowJustification": true,
+      "allowSizingOnChildren": false
+    },
+    "spacing": {
+      "margin": [
+        "top",
+        "bottom"
+      ],
+      "padding": true
+    }
+  },
+  "textdomain": "gopublish-carousel",
+  "editorScript": "file:./index.js",
+  "render": "file:./render.php"
+}

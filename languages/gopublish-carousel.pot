@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Go:Publish Carousel 0.4.0\n"
-"Report-Msgid-Bugs-To: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"Project-Id-Version: Go:Publish Carousel 0.6.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/gopublish-carousel\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-09T13:57:45+00:00\n"
+"POT-Creation-Date: 2026-11-10T16:01:28+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: gopublish-carousel\n"
@@ -29,42 +29,152 @@ msgstr ""
 msgid "Retrofitter"
 msgstr ""
 
-#: build/carousel/render.php:103
-#: build/carousel/index.js:4
-msgid "Previous slide"
-msgstr ""
-
-#: build/carousel/render.php:104
-#: build/carousel/index.js:4
-msgid "Next slide"
+#: build/carousel-pagination/render.php:31
+msgid "Choose slide"
 msgstr ""
 
 #. translators: Spoken by screen readers to describe the carousel block.
-#: build/carousel/render.php:114
+#: build/carousel/render.php:162
 msgid "carousel"
 msgstr ""
 
-#. translators: Spoken by screen readers to describe a single slide.
-#: build/carousel/render.php:121
-msgid "slide"
-msgstr ""
-
 #. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:152
+#: build/carousel/render.php:200
 #, php-format
 msgid "Slide %1$d of %2$d"
 msgstr ""
 
 #. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
-#: build/carousel/render.php:154
+#: build/carousel/render.php:202
 #, php-format
 msgid "Slides %1$d to %2$d of %3$d"
 msgstr ""
 
+#. translators: Label of a pagination dot. %d: Number of the first slide it scrolls to.
+#: build/carousel/render.php:220
+#: build/carousel-pagination/index.js:2
+#, php-format,js-format
+msgid "Go to slide %d"
+msgstr ""
+
+#. translators: Spoken by screen readers to describe a single slide.
+#: gopublish-carousel.php:673
+msgid "slide"
+msgstr ""
+
 #. translators: 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:204
+#: gopublish-carousel.php:686
 #, php-format
 msgid "%1$d of %2$d"
+msgstr ""
+
+#: gopublish-carousel.php:996
+#: build/carousel-navigation/index.js:1
+msgid "Previous slide"
+msgstr ""
+
+#: gopublish-carousel.php:1002
+#: build/carousel-navigation/index.js:1
+msgid "Next slide"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Choose icon"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Search icons"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Previous and Next show the icon mirrored: left- and right-pointing icons both work."
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "No icons found."
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Position"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Over the slides"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Previous and Next at the edges of the slides. Hidden on mobile, where visitors swipe."
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Icon"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Reset"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Button padding"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Icon size"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+#: build/carousel-pagination/index.js:1
+msgid "In pixels."
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+#: build/carousel-pagination/index.js:1
+msgid "Color"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Background"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Icon (hover & focus)"
+msgstr ""
+
+#: build/carousel-navigation/index.js:1
+msgid "Background (hover & focus)"
+msgstr ""
+
+#: build/carousel-pagination/index.js:1
+msgid "Dot size"
+msgstr ""
+
+#: build/carousel-pagination/index.js:1
+msgid "Dot spacing"
+msgstr ""
+
+#: build/carousel-pagination/index.js:1
+msgid "In pixels. Dots stay at least 24 pixels apart, centre to centre, so they are easy to tap."
+msgstr ""
+
+#: build/carousel-pagination/index.js:1
+msgid "Dots"
+msgstr ""
+
+#: build/carousel-pagination/index.js:1
+msgid "Current dot"
+msgstr ""
+
+#: build/carousel-slides/index.js:1
+msgid "Add slide"
+msgstr ""
+
+#: build/carousel-slides/index.js:1
+msgid "Show all slides"
+msgstr ""
+
+#: build/carousel/index.js:1
+#: build/carousel/index.js:3
+msgid "Posts"
 msgstr ""
 
 #: build/carousel/index.js:1
@@ -92,11 +202,28 @@ msgid "Same as %s."
 msgstr ""
 
 #: build/carousel/index.js:3
-msgid "Add slide"
+msgid "Add to carousel"
 msgstr ""
 
 #: build/carousel/index.js:3
-msgid "Show all slides"
+msgid "Slide"
+msgstr ""
+
+#: build/carousel/index.js:3
+#: build/carousel/index.js:4
+msgid "Navigation"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Pagination"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Heading"
+msgstr ""
+
+#: build/carousel/index.js:3
+msgid "Paragraph"
 msgstr ""
 
 #: build/carousel/index.js:3
@@ -142,10 +269,6 @@ msgid "Reset to %s"
 msgstr ""
 
 #: build/carousel/index.js:4
-msgid "Navigation"
-msgstr ""
-
-#: build/carousel/index.js:4
 msgid "Rewind at the end"
 msgstr ""
 
@@ -158,7 +281,43 @@ msgid "Carousel label"
 msgstr ""
 
 #: build/carousel/index.js:4
-msgid "Describes the carousel for screen reader users, e.g. \"Customer testimonials\". With a label, the carousel becomes a landmark they can jump to."
+msgid "Describes the carousel for screen reader users, e.g. \"Customer testimonials\". With a label, the carousel becomes a landmark they can jump to. Leave empty to use the carousel's heading, if it has one."
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "Posts carousel"
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "The latest posts in a carousel, a slide each, with the featured image and title. Choose the posts in the Query Loop’s settings."
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "query"
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "posts"
+msgstr ""
+
+#: build/carousel-navigation/block.json
+msgctxt "block title"
+msgid "Carousel Navigation"
+msgstr ""
+
+#: build/carousel-navigation/block.json
+msgctxt "block description"
+msgid "Previous and next buttons for a carousel."
+msgstr ""
+
+#: build/carousel-pagination/block.json
+msgctxt "block title"
+msgid "Carousel Pagination"
+msgstr ""
+
+#: build/carousel-pagination/block.json
+msgctxt "block description"
+msgid "Dots for jumping to a position in a carousel."
 msgstr ""
 
 #: build/carousel-slide/block.json
@@ -169,6 +328,16 @@ msgstr ""
 #: build/carousel-slide/block.json
 msgctxt "block description"
 msgid "A wrapper block for carousel slides"
+msgstr ""
+
+#: build/carousel-slides/block.json
+msgctxt "block title"
+msgid "Carousel Slides"
+msgstr ""
+
+#: build/carousel-slides/block.json
+msgctxt "block description"
+msgid "The slides of a carousel, in a scrollable row: slides, and Query Loops with a slide per post."
 msgstr ""
 
 #: build/carousel/block.json

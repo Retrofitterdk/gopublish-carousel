@@ -2,7 +2,7 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "gopublish/carousel",
-	"version": "0.4.0",
+	"version": "0.6.0",
 	"title": "Carousel",
 	"category": "widgets",
 	"icon": "slides",
@@ -48,6 +48,9 @@
 			"type": "string",
 			"default": ""
 		}
+	},
+	"providesContext": {
+		"gopublish-carousel/rewind": "rewind"
 	},
 	"textdomain": "gopublish-carousel",
 	"editorScript": "file:./index.js",

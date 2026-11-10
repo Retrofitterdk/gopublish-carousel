@@ -4,22 +4,37 @@ Block source files. `npm run build` compiles them into `build/`, which is what W
 
 ## `carousel/` – Carousel (`gopublish/carousel`)
 
-A dynamic block. Its output is rendered in PHP, and it runs in the browser with the [Interactivity API](https://developer.wordpress.org/block-editor/reference-guides/interactivity-api/).
+The wrapper: settings, the Interactivity API context and the live region, around its parts (Carousel Navigation, Carousel Slides, Carousel Pagination). A dynamic block: its output is rendered in PHP, and it runs in the browser with the [Interactivity API](https://developer.wordpress.org/block-editor/reference-guides/interactivity-api/). This folder also holds modules the other blocks share.
 
 | File | Purpose |
 | --- | --- |
-| `block.json` | Block metadata, attributes and supports. |
-| `index.js` | Registers the block in the editor, with a default variation that inserts three slides. |
-| `layouts.js` | The layout per viewport (columns, cutoff, slides to scroll, inheritance). Mirrors `gopublish_carousel_layouts()` in PHP. |
-| `edit.js` | Editor UI: Layout panel (Screen size switch tied to the device preview, per-viewport settings), Navigation panel, toolbar (Add slide, Show all slides), and a front-end-like carousel view. |
+| `block.json` | Block metadata, attributes and supports; provides Rewind at the end to the parts (block context). |
+| `index.js` | Registers the block: the default variation (Navigation, Carousel Slides with three slides, Pagination), the Posts carousel variation (a Query Loop instead of the slides), the deprecation that converts carousels from before 0.5.0, and the filter that allows one of each part. |
+| `edit.js` | Editor UI: Layout panel (Screen size switch tied to the device preview, per-viewport settings), Navigation panel, "Add to carousel" in the toolbar (slide, posts, parts, Heading, Paragraph; the inner blocks allowed are the parts plus `core/heading` and `core/paragraph`), and the per-viewport CSS. |
 | `save.js` | Saves the inner blocks. The front end is rendered by `render.php`. |
-| `render.php` | Front-end markup: navigation, live region, the slides in a scroll area, the gap, and the Interactivity API context. |
-| `view.js` | Front-end behaviour: the `gopublish-carousel` store (button scrolling, rewind, start/end state, announcements). Scrolling itself is native. |
-| `style.scss` | Front-end and editor styles: the scroll-snap area and slide widths. Small-screen and per-viewport gap styles are generated in PHP (in `gopublish-carousel.php`). |
-| `editor.scss` | Editor-only styles: softer snapping while editing and the "Show all slides" grid. |
+| `render.php` | Front-end markup: the live region and the parts (Carousel Slides first, then the others with the slides' ID and count in the block context; headings and paragraphs too, the first heading naming the carousel via `aria-labelledby` without a Carousel label), the layout and gap CSS, and the Interactivity API context. Renders carousels from before 0.5.0 as before. |
+| `view.js` | Front-end behaviour: the `gopublish-carousel` store (button and dot scrolling, rewind, start/end state, pagination, announcements). Scrolling itself is native. |
+| `layouts.js` | Shared: the layout per viewport (columns, cutoff, slides to scroll, inheritance). Mirrors `gopublish_carousel_layouts()` in PHP. |
+| `posts-query.js` | The Query Loop for the Posts carousel variation and "Add to carousel → Posts": the latest posts, with featured image and title. |
+| `pages.js` | Shared (`view.js` and the editor): measurements of the scroll area – the slides (a Query Loop's posts count as slides in the editor), the step between slides, the scroll direction, slides to scroll and the pagination's pages. |
+| `use-carousel-track.js` | Shared (editor): finds and measures the carousel's scroll area for Navigation and Pagination, and scrolls it. |
+| `style.scss` | Front-end and editor styles for the carousel and all its parts: the scroll-snap area, slide widths, navigation, dots, and the parts' width. Small-screen and per-viewport styles are generated in PHP (in `gopublish-carousel.php`). |
+| `editor.scss` | Editor-only styles: softer snapping while editing, a Query Loop's posts laid out as slides, the "Show all slides" grid, and dimmed parts while all slides fit. |
 
-All blocks are registered from `build/blocks-manifest.php`, which `npm run build` generates. The carousel gets `skip_inner_blocks` through the `register_block_type_args` filter. `render.php` renders each slide once with `gopublish_carousel_render_inner_block()` (in `gopublish-carousel.php`), so the slides keep their inherited block context.
+All blocks are registered from `build/blocks-manifest.php`, which `npm run build` generates. The Carousel and Carousel Slides get `skip_inner_blocks` through the `register_block_type_args` filter, and render their inner blocks with `gopublish_carousel_render_inner_block()` (in `gopublish-carousel.php`), so the slides keep their inherited block context.
+
+## `carousel-slides/` – Carousel Slides (`gopublish/carousel-slides`)
+
+The scroll area with the slides, only inside a Carousel (one per carousel, and it can't be removed on its own). It holds Carousel Slide blocks and Query Loops (`core/query`, a slide per post). `render.php` uses `gopublish_carousel_render_slides()`, which renders a Query Loop's posts as slides (`gopublish_carousel_render_query_slides()`); the editor has the same classes as the front end (`.carousel-container > .carousel-track`) and the toolbar buttons Add slide and Show all slides.
 
 ## `carousel-slide/` – Carousel Slide (`gopublish/carousel-slide`)
 
-A static wrapper block for one slide. It can only be placed inside a Carousel (`parent` in `block.json`). In the editor, it gets the extra class `carousel-slide` (not saved), so it's styled like the front-end slide.
+A static wrapper block for one slide. It can only be placed inside Carousel Slides (`parent` in `block.json`). In the editor, it gets the extra class `carousel-slide` (not saved), so it's styled like the front-end slide.
+
+## `carousel-navigation/` – Carousel Navigation (`gopublish/carousel-navigation`)
+
+The Previous and Next buttons, only inside a Carousel (one per carousel). A dynamic block (`save` returns nothing); `render.php` uses `gopublish_carousel_render_navigation()`. Justification (flex layout support), width (`align`), margin and padding are block settings, and the icon (`icon` attribute, picked in `icon-picker.js` from WordPress's icon registry). Over the slides (`overlay`, Position panel; anchor positioning in style.scss), the Color panel (own attributes, `withColors`), Button padding and Icon size (own attributes in the Dimensions panel) and the Border settings style the buttons, as `--nav-button-*` custom properties on the wrapper (`button-styles.js`, mirroring `gopublish_carousel_navigation_button_styles()`); the buttons' behaviour comes from the Carousel's store.
+
+## `carousel-pagination/` – Carousel Pagination (`gopublish/carousel-pagination`)
+
+The dots, only inside a Carousel (one per carousel). A dynamic block; `render.php` renders a dot per slide, each bound to its entry in the Carousel's `context.dots`, which `view.js` keeps up to date. Justification, width, margin and padding like the navigation, plus Dots and Current dot colours (Color panel, `withColors`) and Dot size and Dot spacing (Dimensions panel), turned into `--pagination-*` custom properties by `dot-styles.js` (mirroring `gopublish_carousel_pagination_styles()`). The editor computes the dots with `pages.js`.

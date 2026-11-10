@@ -4,7 +4,7 @@ Tags:              carousel, slider, block, interactivity api
 Requires at least: 6.8
 Tested up to:      7.1
 Requires PHP:      7.2
-Stable tag:        0.4.0
+Stable tag:        0.6.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,44 +12,54 @@ A carousel block for any blocks, built on native scrolling and the Interactivity
 
 == Description ==
 
-Go:Publish Carousel adds a Carousel block to the block editor. Each slide is a Carousel Slide block that can hold any other blocks: images, text, buttons, groups, cards and so on.
+Go:Publish Carousel adds a Carousel block to the block editor. A carousel is made of parts, each its own block:
 
-The carousel is rendered on the server and built on the browser's own scrolling (CSS scroll snap). Swiping, trackpad scrolling and momentum work like anywhere else on the device. A small script on the WordPress Interactivity API adds the navigation buttons, so no jQuery or third-party slider library is loaded.
+* Carousel Slides: the row of slides. Each slide is a Carousel Slide block that can hold any other blocks: images, text, buttons, groups, cards and so on. A Query Loop in Carousel Slides gives a slide per post.
+* Carousel Navigation: the Previous and Next buttons.
+* Carousel Pagination: dots for jumping to a position.
+
+Navigation and Pagination can be placed above or below the slides, aligned left, center, right or with space between, and given content, wide or full width. The navigation can also sit on top of the slides. A carousel has one of each, and both can be removed. Headings and paragraphs can be added inside the carousel too, e.g. a title and a description above the slides.
+
+The carousel is rendered on the server and built on the browser's own scrolling (CSS scroll snap). Swiping, trackpad scrolling and momentum work like anywhere else on the device. A small script on the WordPress Interactivity API adds the buttons and dots, so no jQuery or third-party slider library is loaded.
 
 Features:
 
 * Slides can contain any blocks.
+* Posts as slides: a Query Loop in Carousel Slides shows a slide per post, with the Query Loop's own settings for which posts. Start with the Posts carousel in the inserter, or add a Query Loop to any carousel. Manual slides and posts can be mixed.
+* Works with Query Loop variations that change the query on the server, such as Advanced Query Loop and Curated Query Loop.
 * 1–6 slides visible at once (Columns).
 * Choose how many slides to move per step (Slides to scroll).
 * Cutoff effect: the last visible slide is partly shown (with one column, the next slide peeks in), hinting that there is more to scroll through.
 * Columns, cutoff effect and slides to scroll can be set separately for desktop, tablet and mobile. New carousels start with 3, 2 and 1 columns.
 * Rewind at the end: on the last slide, Next goes back to the first (and Previous on the first goes to the last). Turn it off to stop at the ends instead.
-* Previous/next buttons, touch swipe, trackpad and keyboard scrolling, all snapping to the start of a slide.
-* If every slide fits in view, the navigation is hidden.
+* Previous/next buttons, pagination dots, touch swipe, trackpad and keyboard scrolling, all snapping to the start of a slide.
+* The pagination has one dot per position the buttons can reach, and marks the current one.
+* Navigation icon from WordPress's icon library (WordPress 7.1), left- or right-pointing.
+* Colours for the navigation buttons (icon and background, also on hover and focus), borders, button padding and icon size.
+* Navigation over the slides: Previous and Next at the edges of the slides, hidden on mobile.
+* Colours, size and spacing for the pagination dots.
+* Headings and paragraphs inside the carousel, to introduce or describe it.
+* If every slide fits in view, the navigation and pagination are hidden.
 * The Block spacing setting sets the space between slides, with separate values per viewport in WordPress 7.1.
 * Wide and full alignment, padding, margin and minimum height.
 * Right-to-left languages.
 * Several carousels on the same page.
-* Slides keep the block context they inherit, and slides that render empty (e.g. hidden by a visibility plugin) are skipped.
-* The editor shows the carousel as on the front end: one row with the real slide widths, the cutoff effect and navigation arrows. Switch to "Show all slides" for an overview.
+* Slides keep the block context they inherit. Empty slides, and slides that render nothing (e.g. hidden by a visibility plugin), are skipped.
+* The editor shows the carousel as on the front end: one row with the real slide widths, the cutoff effect, navigation arrows and dots. Switch to "Show all slides" for an overview.
 * Translation-ready, with a Danish translation included.
 
 Accessibility (following the W3C carousel pattern):
 
 * Labelled navigation buttons, with a visible focus ring for keyboard users.
-* Screen readers announce the carousel and each slide ("slide, 2 of 9"), and an optional label turns the carousel into a landmark.
-* After using the buttons, the visible slides are announced politely ("Slide 3 of 9", or "Slides 3 to 5 of 9" when several are in view).
+* Screen readers announce the carousel and each slide ("slide, 2 of 9"). A label, or a heading inside the carousel, turns it into a landmark.
+* The pagination is a group of buttons ("Choose slide"), each labelled with the slide it goes to ("Go to slide 4"), the current one marked as current. Dots are at least 24 × 24 px to tap and at least 24 px apart, and keyboard focus shows a ring around the dot.
+* After using the buttons or dots, the visible slides are announced politely ("Slide 3 of 9", or "Slides 3 to 5 of 9" when several are in view).
 * Every slide can be reached with Tab; the carousel scrolls a focused slide into view. If the slides contain nothing focusable, the row of slides can be focused itself and scrolled with the arrow keys.
 * With Rewind at the end turned off, the buttons are marked as unavailable at the ends, but stay focusable, so keyboard focus isn't lost.
-* On touch screens, the navigation appears for keyboard and switch users, and screen readers can always reach it.
+* On small touch screens, and on mobile when it's over the slides, the navigation is only hidden visually: it appears for keyboard and switch users, and screen readers can always reach it.
 * Respects the reduced motion setting: the carousel jumps instead of scrolling smoothly.
 
 Go:Publish Carousel was originally based on [demo-carousel](https://github.com/eirichmond/demo-carousel) by Elliott Richmond. It has since been rewritten and extended, and is now developed as a separate plugin.
-
-= Planned =
-
-* Carousel for posts in a Query Loop.
-* Separate blocks for navigation and pagination, so they can be placed freely.
 
 == Installation ==
 
@@ -62,11 +72,29 @@ Go:Publish Carousel was originally based on [demo-carousel](https://github.com/e
 
 = How do I add more slides? =
 
-Select the Carousel block and click Add slide (+) in the block toolbar. The new slide is added at the end. If a slide or a block inside it is selected, select the Carousel first, e.g. with "Select parent" in the toolbar or in List View. Carousel Slide blocks can only be placed inside a Carousel.
+Select the Carousel and choose Add to carousel (+) → Slide in the block toolbar, or select Carousel Slides and click Add slide. The new slide is added at the end. With a slide selected, "Add carousel slide" (+, next to "Select parent") adds one after it. List View is handy for selecting the right block.
+
+= How do I show posts in a carousel? =
+
+Insert the Posts carousel (search the inserter for "Posts carousel"): a carousel of the latest posts, a slide each, with the featured image and title. Or add posts to an existing carousel: select the Carousel and choose Add to carousel (+) → Posts, or insert a Query Loop into Carousel Slides.
+
+Choose which posts in the Query Loop's settings, like in any Query Loop: post type, number of posts (by default the site's "Blog pages show at most" setting), order, filters, or "Inherit query from template" in templates. What each slide shows is set in the Post Template: the featured image and title to start with; add the date, excerpt, categories, a Read more link, and so on. The carousel's own settings decide the layout: columns, cutoff effect, slides to scroll and the space between slides.
+
+Query Loop variations that change the query on the server work too, e.g. Advanced Query Loop and Curated Query Loop. With Curated Query Loop, the number of posts still applies: set it to at least the number of posts you pick.
+
+= What does a Query Loop in a carousel show? =
+
+A slide per post on the query's first page; the carousel's navigation and dots replace the Query Loop's Pagination block, which isn't shown. If no posts are found, the Query Loop's No Results content is shown as a slide; without it, the Query Loop shows nothing (and a carousel with nothing else isn't shown at all). In the editor, the Query Loop's other blocks (No Results, Pagination and so on) are shown dimmed after the posts, so they can still be edited. The Post Template's own layout (list or grid) isn't used; each post gets the post classes (e.g. `post-123`, `category-news`), like in any Query Loop.
+
+= How do I add, move or remove the navigation and dots? =
+
+New carousels have Navigation above the slides and Pagination below. Move them with the block toolbar's arrows or in List View, or remove them like any block. To add them back, select the Carousel and choose Add to carousel (+) → Navigation or Pagination. A carousel can have one of each.
+
+Both have the same settings: Justification (left, center, right, space between) in the block's settings, and width (none = content width, wide or full) with the alignment button in the toolbar.
 
 = How do I see or rearrange all slides in the editor? =
 
-The editor shows the carousel as a scrollable row, like on the front end; use the arrows or scroll sideways to reach the other slides. To see every slide at once, click Show all slides in the Carousel's block toolbar. This grid view is only shown in the editor and is handy for rearranging slides. Click the button again to return to the carousel view.
+The editor shows the carousel as a scrollable row, like on the front end; use the arrows or scroll sideways to reach the other slides. To see every slide at once, select Carousel Slides and click Show all slides in its block toolbar. This grid view is only shown in the editor and is handy for rearranging slides. Click the button again to return to the carousel view.
 
 = How do I set a different layout for tablet and mobile? =
 
@@ -90,9 +118,33 @@ No. On a computer, use the buttons, scroll sideways with a trackpad or with Shif
 
 Select the Carousel and change Block spacing in the Dimensions panel. From WordPress 7.1, you can set a different value for tablet and mobile. Themes can also set the `--carousel-gap` custom property.
 
+= Can I change the arrows? =
+
+Yes, from WordPress 7.1. Select Carousel Navigation and click Choose icon in the Icon panel to pick any icon from WordPress's icon library (and collections your theme or plugins add). Previous and Next show the icon mirrored, pointing back and forward: an icon pointing left (e.g. Chevron left) works as well as one pointing right. Reset returns to the default arrow. The icon's size is set with the `--nav-button-icon-size` custom property (default 24 px).
+
+= Can I add a title or description to a carousel? =
+
+Yes. Select the Carousel and choose Add to carousel → Heading or Paragraph in its toolbar (or insert them between the carousel's parts). They sit inside the carousel, above the slides or wherever you move them, at content width. A heading also names the carousel for screen reader users (unless Carousel label is set).
+
+= Can the arrows sit on top of the slides? =
+
+Yes. Select Carousel Navigation and turn on Position → Over the slides. Previous and Next then sit at the left and right edges of the slides, vertically centred (Justification is set to Space between; Padding sets the distance from the edges). They're white buttons with a soft shadow, unless you choose colours. On mobile they're hidden: visitors swipe, and keyboard users still reach them. This needs a browser with CSS anchor positioning (current versions of all major browsers); older browsers show the navigation above or below the slides.
+
+= Can I change the dots? =
+
+Yes. Select Carousel Pagination and open the Styles tab. In the Color panel, choose the colour of the Dots and of the Current dot (hovering a dot shows a colour halfway between them). Under Dimensions, set Dot size and Dot spacing. Dots stay at least 24 px apart, centre to centre, so they're easy to tap: with large dots, a small spacing can't go lower than that. Without a Dots colour, the dots are the text colour, faded.
+
+= Can I change the size of the arrows? =
+
+Yes. Select Carousel Navigation, open the Styles tab and use Icon size and Button padding in the Dimensions panel. The buttons grow to fit the icon plus the padding (by default a 24 px icon with 4 px padding: 32 px buttons) and are never smaller than 24 × 24 px. Padding (above them) is the space around the whole navigation.
+
+= Can I change the colours of the arrows? =
+
+Yes. Select Carousel Navigation and open the Styles tab. In the Color panel, choose the Icon and Background colours and, if you like, their colours on hover and keyboard focus: Icon (hover & focus) and Background (hover & focus). Without hover colours, the icon and background colours swap on hover; with only an icon colour, the background takes the icon colour. Borders adds a border around each button (outside the button, so it doesn't cover the background) and rounds the corners: the buttons are 32 px, so a radius of 16 px or more makes them round, like the default. Themes can set the same through custom properties (see below). The Border settings for Carousel Navigation under Styles → Blocks in the Site Editor don't reach the buttons, so use custom properties for site-wide styles.
+
 = How do I make the carousel accessible? =
 
-Most of it is built in. To help screen reader users, give the carousel a label that describes it, e.g. "Customer testimonials": select the Carousel block and open Advanced → Carousel label. Screen reader users can then jump to the carousel as a landmark. Leave it empty if the surrounding content (such as a heading right above it) already makes the purpose clear.
+Most of it is built in. To help screen reader users, give the carousel a label that describes it, e.g. "Customer testimonials": select the Carousel block and open Advanced → Carousel label. Screen reader users can then jump to the carousel as a landmark. Or add a heading inside the carousel (Add to carousel → Heading): without a label, the heading names the carousel, with the same effect. Leave both out if the surrounding content already makes the purpose clear.
 
 Avoid forms and other complex interactive content inside slides.
 
@@ -106,19 +158,25 @@ Available properties:
 
 * `--nav-container-padding`, `--nav-container-padding-left`, `--nav-container-padding-right`
 * `--nav-container-justify-content`, `--nav-container-gap`, `--nav-container-text-align`
-* `--nav-button-width`, `--nav-button-height`, `--nav-button-radius`
+* `--nav-button-width`, `--nav-button-height` (minimum size, default `24px`; the button fits the icon plus padding), `--nav-button-padding` (default `4px`), `--nav-button-radius`
+* `--nav-button-border-width` (default `0`), `--nav-button-border-style` (default `solid`), `--nav-button-border-color` (default `currentcolor`, the icon colour)
 * `--nav-button-background`, `--nav-button-background-hover`
-* `--nav-button-icon-color`, `--nav-button-icon-color-hover`
+* `--nav-button-icon-color`, `--nav-button-icon-color-hover`, `--nav-button-icon-size` (default `24px`)
 * `--nav-button-outline-color`, `--nav-button-outline-width`, `--nav-button-outline-offset` (keyboard focus ring)
+* `--nav-button-shadow` (default `none`)
+* `--nav-overlay-button-background`, `--nav-overlay-button-background-hover`, `--nav-overlay-button-icon-color`, `--nav-overlay-button-icon-color-hover`, `--nav-overlay-button-shadow`, `--nav-overlay-inset` (navigation over the slides)
 * `--nav-button-disabled-opacity` (buttons at the ends, with Rewind at the end off)
 * `--carousel-gap` (space between slides; normally set with Block spacing). The older `--slide--padding-right` still works as a fallback.
+* `--pagination-dot-size` (default `10px`), `--pagination-dot-spacing` (space between dots, default `14px`; dots stay at least 24 px apart, centre to centre), `--pagination-dot-color` (default: the text colour), `--pagination-dot-current-color` (default: the text colour), `--pagination-dot-opacity` (dots other than the current one, default `0.3`), `--pagination-gap` (extra space between the dot buttons, default `0`)
 * `--cutoff-amount` (how much of a slide the cutoff effect cuts off the last visible slide, or shows of the next one with one column; default `0.3`, from 0 to 0.9).
+
+The space between the navigation buttons is set with `--nav-container-gap` rather than in the editor, so themes control it. The dots' size, spacing and colours are block settings (see above).
 
 The carousel also has classes for its state: `is-scrollable` (the slides don't all fit), `is-at-start` and `is-at-end`, plus `columns-N` and `cutoff` or `no-cutoff` for its settings.
 
 = Why are the navigation buttons hidden on my phone? =
 
-On small touch screens the carousel is navigated by swiping, so the buttons are visually hidden. They appear as soon as someone uses a keyboard or switch device to move focus into the carousel, and screen readers can always reach them. On any screen size where all slides fit in view, there is nothing to navigate and the buttons are hidden.
+On small touch screens the carousel is navigated by swiping, so the buttons are visually hidden. They appear as soon as someone uses a keyboard or switch device to move focus into the carousel, and screen readers can always reach them. On any screen size where all slides fit in view, there is nothing to navigate and the buttons and dots are hidden. The dots stay visible on touch screens.
 
 = What are the breakpoints for tablet and mobile? =
 
@@ -138,6 +196,33 @@ Source files are in `src/`, and the compiled blocks in `build/` are what WordPre
 See README.md for more developer notes, including how to update translations.
 
 == Changelog ==
+
+= Unreleased =
+* New: posts as slides. A Query Loop in Carousel Slides shows a slide per post, next to any manual slides. The query is built like core's Query Loop builds it, so its settings, "Inherit query from template" and variations that change the query on the server (e.g. Advanced Query Loop, Curated Query Loop) work. The No Results content shows as a slide when nothing is found; the Query Loop's Pagination isn't shown. In the editor, the posts are laid out as slides, and the arrows, dots and Show all slides include them.
+* New: Posts carousel block variation (the latest posts, with featured image and title), and Add to carousel → Posts.
+* New: headings and paragraphs directly in the Carousel, e.g. a title and a description above the slides (Add to carousel → Heading or Paragraph). They're content width (headings can be wide or full). Without a Carousel label, the carousel's heading names it for screen readers, making it a landmark.
+* New: navigation over the slides (Carousel Navigation → Position → Over the slides): Previous and Next at the edges of the slides, vertically centred, as white buttons with a shadow by default (the block's colours override them). Clicks and swipes outside the buttons reach the slides; a button that can't go further (Rewind off) is invisible but stays keyboard-focusable; hidden on mobile, where visitors swipe. Uses CSS anchor positioning (current Chrome, Edge, Safari and Firefox); older browsers show the navigation above or below the slides.
+* New: `--nav-overlay-*` and `--nav-button-shadow` custom properties.
+* New: colour and size settings for the pagination dots (Carousel Pagination → Styles): Dots and Current dot colours, Dot size and Dot spacing. Dots stay at least 24 px apart, centre to centre. The default look is unchanged.
+* New: `--pagination-dot-current-color` and `--pagination-dot-spacing` custom properties.
+* Fixed: clicking a dot or a navigation button left the theme's focus outline around it (around a wide dot button, an ellipse). Focus from a click shows no ring; keyboard focus shows a round ring around the dot itself.
+* Fixed: empty slides (no blocks inside, e.g. added with Add slide and never filled) showed as a blank gap, at the end of the carousel looking like the slides had run out. They're left out on the front end, and don't count as slides or get a dot.
+
+= 0.6.0 =
+* New: choose the navigation's icon from WordPress's icon library (WordPress 7.1): an Icon panel on Carousel Navigation with a searchable picker. Previous and Next show it mirrored, pointing back and forward, whether the icon points left or right.
+* New: `--nav-button-icon-size` custom property (default 24 px). The default arrow looks as before.
+* Changed: the icon colour is set as the button's text colour, so filled and outlined icons both follow `--nav-button-icon-color`; Previous mirrors the icon instead of rotating it.
+* New: colour and border settings for the navigation buttons (Carousel Navigation → Styles): icon and background colours, also on hover, and border colour, width, style and radius. Without hover colours, hover and focus swap the icon and background colours. A border is added outside the button.
+* New: Icon size and Button padding settings for the navigation buttons (Carousel Navigation → Styles → Dimensions). The buttons now fit the icon plus padding; `--nav-button-width` and `--nav-button-height` are minimum sizes (default 24 px), and `--nav-button-padding` is new (default 4 px). The default look is unchanged.
+* New: `--nav-button-border-width`, `--nav-button-border-style` and `--nav-button-border-color` custom properties.
+* Fixed: a carousel with an empty Carousel Slides before the one with slides (possible in content edited during 0.5.0 development) showed nothing; the first Carousel Slides with slides is used.
+
+= 0.5.0 =
+* New: Carousel Navigation and Carousel Pagination blocks. The buttons and the new dots are separate blocks inside the Carousel: place them above or below the slides, justify them (left, center, right, space between) and choose their width (content, wide or full).
+* New: pagination dots, one per position the buttons reach, following the scroll position; clicking one scrolls there. Accessible as a group of labelled buttons with the current one marked, each at least 24 × 24 px.
+* New: the slides are wrapped in a Carousel Slides block. Existing carousels are converted when opened in the editor (Navigation at full width, as before) and render as before until saved.
+* New: "Add to carousel" in the Carousel's toolbar (Slide, Navigation, Pagination); Add slide and Show all slides moved to Carousel Slides. A carousel has one Carousel Slides, Navigation and Pagination.
+* New: `--pagination-*` custom properties.
 
 = 0.4.0 =
 * New: columns, cutoff effect and slides to scroll per screen size (desktop, tablet, mobile), with a Screen size switch in the Layout panel that also switches the editor preview. Tablet and mobile inherit from the larger screen size unless changed.
@@ -223,6 +308,12 @@ See README.md for more developer notes, including how to update translations.
 * First release, as demo-carousel.
 
 == Upgrade Notice ==
+
+= 0.6.0 =
+The navigation buttons get icon, colour, border and size settings. The default look is unchanged; themes that set `--nav-button-width` or `--nav-button-height`: these are now minimum sizes (the button fits the icon plus padding).
+
+= 0.5.0 =
+Navigation and pagination are now separate blocks. Existing carousels are converted when opened in the editor and look the same; save them to keep the new structure.
 
 = 0.4.0 =
 Columns per screen size replace the Mobile slide width setting. Existing carousels get 2 columns on tablet and 1 on mobile; check carousels that used a custom mobile width.
