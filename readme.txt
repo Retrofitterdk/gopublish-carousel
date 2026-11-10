@@ -4,7 +4,7 @@ Tags:              carousel, slider, block, interactivity api
 Requires at least: 6.8
 Tested up to:      7.1
 Requires PHP:      7.2
-Stable tag:        0.6.0
+Stable tag:        0.7.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -197,7 +197,7 @@ See README.md for more developer notes, including how to update translations.
 
 == Changelog ==
 
-= Unreleased =
+= 0.7.0 =
 * New: posts as slides. A Query Loop in Carousel Slides shows a slide per post, next to any manual slides. The query is built like core's Query Loop builds it, so its settings, "Inherit query from template" and variations that change the query on the server (e.g. Advanced Query Loop, Curated Query Loop) work. The No Results content shows as a slide when nothing is found; the Query Loop's Pagination isn't shown. In the editor, the posts are laid out as slides, and the arrows, dots and Show all slides include them.
 * New: Posts carousel block variation (the latest posts, with featured image and title), and Add to carousel → Posts.
 * New: headings and paragraphs directly in the Carousel, e.g. a title and a description above the slides (Add to carousel → Heading or Paragraph). They're content width (headings can be wide or full). Without a Carousel label, the carousel's heading names it for screen readers, making it a landmark.
@@ -308,6 +308,9 @@ See README.md for more developer notes, including how to update translations.
 * First release, as demo-carousel.
 
 == Upgrade Notice ==
+
+= 0.7.0 =
+Posts as slides (Query Loop in a carousel, and a Posts carousel), navigation over the slides, dot styling, and headings and paragraphs inside the carousel. Empty slides are no longer shown on the front end. Existing carousels look the same.
 
 = 0.6.0 =
 The navigation buttons get icon, colour, border and size settings. The default look is unchanged; themes that set `--nav-button-width` or `--nav-button-height`: these are now minimum sizes (the button fits the icon plus padding).
