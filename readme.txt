@@ -14,7 +14,7 @@ A carousel block for any blocks, built on native scrolling and the Interactivity
 
 Go:Publish Carousel adds a Carousel block to the block editor. A carousel is made of parts, each its own block:
 
-* Carousel Slides: the row of slides. Each slide is a Carousel Slide block that can hold any other blocks: images, text, buttons, groups, cards and so on.
+* Carousel Slides: the row of slides. Each slide is a Carousel Slide block that can hold any other blocks: images, text, buttons, groups, cards and so on. A Query Loop in Carousel Slides gives a slide per post.
 * Carousel Navigation: the Previous and Next buttons.
 * Carousel Pagination: dots for jumping to a position.
 
@@ -25,6 +25,8 @@ The carousel is rendered on the server and built on the browser's own scrolling 
 Features:
 
 * Slides can contain any blocks.
+* Posts as slides: a Query Loop in Carousel Slides shows a slide per post, with the Query Loop's own settings for which posts. Start with the Posts carousel in the inserter, or add a Query Loop to any carousel. Manual slides and posts can be mixed.
+* Works with Query Loop variations that change the query on the server, such as Advanced Query Loop and Curated Query Loop.
 * 1–6 slides visible at once (Columns).
 * Choose how many slides to move per step (Slides to scroll).
 * Cutoff effect: the last visible slide is partly shown (with one column, the next slide peeks in), hinting that there is more to scroll through.
@@ -59,10 +61,6 @@ Accessibility (following the W3C carousel pattern):
 
 Go:Publish Carousel was originally based on [demo-carousel](https://github.com/eirichmond/demo-carousel) by Elliott Richmond. It has since been rewritten and extended, and is now developed as a separate plugin.
 
-= Planned =
-
-* Carousel for posts in a Query Loop.
-
 == Installation ==
 
 1. Download the plugin as a zip file, or build one yourself (see Development below).
@@ -75,6 +73,18 @@ Go:Publish Carousel was originally based on [demo-carousel](https://github.com/e
 = How do I add more slides? =
 
 Select the Carousel and choose Add to carousel (+) → Slide in the block toolbar, or select Carousel Slides and click Add slide. The new slide is added at the end. With a slide selected, "Add carousel slide" (+, next to "Select parent") adds one after it. List View is handy for selecting the right block.
+
+= How do I show posts in a carousel? =
+
+Insert the Posts carousel (search the inserter for "Posts carousel"): a carousel of the latest posts, a slide each, with the featured image and title. Or add posts to an existing carousel: select the Carousel and choose Add to carousel (+) → Posts, or insert a Query Loop into Carousel Slides.
+
+Choose which posts in the Query Loop's settings, like in any Query Loop: post type, number of posts (by default the site's "Blog pages show at most" setting), order, filters, or "Inherit query from template" in templates. What each slide shows is set in the Post Template: the featured image and title to start with; add the date, excerpt, categories, a Read more link, and so on. The carousel's own settings decide the layout: columns, cutoff effect, slides to scroll and the space between slides.
+
+Query Loop variations that change the query on the server work too, e.g. Advanced Query Loop and Curated Query Loop. With Curated Query Loop, the number of posts still applies: set it to at least the number of posts you pick.
+
+= What does a Query Loop in a carousel show? =
+
+A slide per post on the query's first page; the carousel's navigation and dots replace the Query Loop's Pagination block, which isn't shown. If no posts are found, the Query Loop's No Results content is shown as a slide; without it, the Query Loop shows nothing (and a carousel with nothing else isn't shown at all). In the editor, the Query Loop's other blocks (No Results, Pagination and so on) are shown dimmed after the posts, so they can still be edited. The Post Template's own layout (list or grid) isn't used; each post gets the post classes (e.g. `post-123`, `category-news`), like in any Query Loop.
 
 = How do I add, move or remove the navigation and dots? =
 
@@ -188,6 +198,8 @@ See README.md for more developer notes, including how to update translations.
 == Changelog ==
 
 = Unreleased =
+* New: posts as slides. A Query Loop in Carousel Slides shows a slide per post, next to any manual slides. The query is built like core's Query Loop builds it, so its settings, "Inherit query from template" and variations that change the query on the server (e.g. Advanced Query Loop, Curated Query Loop) work. The No Results content shows as a slide when nothing is found; the Query Loop's Pagination isn't shown. In the editor, the posts are laid out as slides, and the arrows, dots and Show all slides include them.
+* New: Posts carousel block variation (the latest posts, with featured image and title), and Add to carousel → Posts.
 * New: headings and paragraphs directly in the Carousel, e.g. a title and a description above the slides (Add to carousel → Heading or Paragraph). They're content width (headings can be wide or full). Without a Carousel label, the carousel's heading names it for screen readers, making it a landmark.
 * New: navigation over the slides (Carousel Navigation → Position → Over the slides): Previous and Next at the edges of the slides, vertically centred, as white buttons with a shadow by default (the block's colours override them). Clicks and swipes outside the buttons reach the slides; a button that can't go further (Rewind off) is invisible but stays keyboard-focusable; hidden on mobile, where visitors swipe. Uses CSS anchor positioning (current Chrome, Edge, Safari and Firefox); older browsers show the navigation above or below the slides.
 * New: `--nav-overlay-*` and `--nav-button-shadow` custom properties.
