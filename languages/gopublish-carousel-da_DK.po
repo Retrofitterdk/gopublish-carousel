@@ -24,12 +24,12 @@ msgstr ""
 msgid "Retrofitter"
 msgstr ""
 
-#: gopublish-carousel.php:835
+#: gopublish-carousel.php:996
 #: build/carousel-navigation/index.js:1
 msgid "Previous slide"
 msgstr "Forrige dias"
 
-#: gopublish-carousel.php:841
+#: gopublish-carousel.php:1002
 #: build/carousel-navigation/index.js:1
 msgid "Next slide"
 msgstr "Næste dias"
@@ -40,7 +40,7 @@ msgid "carousel"
 msgstr "karrusel"
 
 #. translators: Spoken by screen readers to describe a single slide.
-#: gopublish-carousel.php:512
+#: gopublish-carousel.php:673
 msgid "slide"
 msgstr "dias"
 
@@ -51,7 +51,7 @@ msgid "Slide %1$d of %2$d"
 msgstr "Dias %1$d af %2$d"
 
 #. translators: 1: Slide number, 2: Total number of slides.
-#: gopublish-carousel.php:525
+#: gopublish-carousel.php:686
 #, php-format
 msgid "%1$d of %2$d"
 msgstr "%1$d af %2$d"
@@ -193,11 +193,6 @@ msgctxt "block title"
 msgid "Carousel Slides"
 msgstr "Karrusellens dias"
 
-#: build/carousel-slides/block.json
-msgctxt "block description"
-msgid "The slides of a carousel, in a scrollable row."
-msgstr "Karrusellens dias i en række, der kan rulles."
-
 #: build/carousel-pagination/render.php:31
 msgid "Choose slide"
 msgstr "Vælg dias"
@@ -328,3 +323,29 @@ msgstr "Afsnit"
 #: build/carousel/index.js:4
 msgid "Describes the carousel for screen reader users, e.g. \"Customer testimonials\". With a label, the carousel becomes a landmark they can jump to. Leave empty to use the carousel's heading, if it has one."
 msgstr "Beskriver karrusellen for skærmlæserbrugere, f.eks. \"Kundeudtalelser\". Med et navn bliver karrusellen et landmærke, de kan springe direkte til. Lad feltet være tomt for at bruge karrusellens overskrift, hvis den har en."
+
+#: build/carousel/index.js:1
+#: build/carousel/index.js:3
+msgid "Posts"
+msgstr "Indlæg"
+
+#: build/carousel/index.js:4
+msgid "Posts carousel"
+msgstr "Indlægskarrusel"
+
+#: build/carousel/index.js:4
+msgid "The latest posts in a carousel, a slide each, with the featured image and title. Choose the posts in the Query Loop’s settings."
+msgstr "De seneste indlæg i en karrusel, ét pr. dias, med udvalgt billede og titel. Vælg indlæggene i indstillingerne for Forespørgsels-loop."
+
+#: build/carousel/index.js:4
+msgid "query"
+msgstr "forespørgsel"
+
+#: build/carousel/index.js:4
+msgid "posts"
+msgstr "indlæg"
+
+#: build/carousel-slides/block.json
+msgctxt "block description"
+msgid "The slides of a carousel, in a scrollable row: slides, and Query Loops with a slide per post."
+msgstr "Karrusellens dias i en række, der kan rulles: dias og Forespørgsels-loops med ét dias pr. indlæg."

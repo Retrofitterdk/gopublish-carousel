@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-09T19:40:24+00:00\n"
+"POT-Creation-Date: 2026-11-10T16:01:28+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: gopublish-carousel\n"
@@ -58,22 +58,22 @@ msgid "Go to slide %d"
 msgstr ""
 
 #. translators: Spoken by screen readers to describe a single slide.
-#: gopublish-carousel.php:512
+#: gopublish-carousel.php:673
 msgid "slide"
 msgstr ""
 
 #. translators: 1: Slide number, 2: Total number of slides.
-#: gopublish-carousel.php:525
+#: gopublish-carousel.php:686
 #, php-format
 msgid "%1$d of %2$d"
 msgstr ""
 
-#: gopublish-carousel.php:835
+#: gopublish-carousel.php:996
 #: build/carousel-navigation/index.js:1
 msgid "Previous slide"
 msgstr ""
 
-#: gopublish-carousel.php:841
+#: gopublish-carousel.php:1002
 #: build/carousel-navigation/index.js:1
 msgid "Next slide"
 msgstr ""
@@ -170,6 +170,11 @@ msgstr ""
 
 #: build/carousel-slides/index.js:1
 msgid "Show all slides"
+msgstr ""
+
+#: build/carousel/index.js:1
+#: build/carousel/index.js:3
+msgid "Posts"
 msgstr ""
 
 #: build/carousel/index.js:1
@@ -279,6 +284,22 @@ msgstr ""
 msgid "Describes the carousel for screen reader users, e.g. \"Customer testimonials\". With a label, the carousel becomes a landmark they can jump to. Leave empty to use the carousel's heading, if it has one."
 msgstr ""
 
+#: build/carousel/index.js:4
+msgid "Posts carousel"
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "The latest posts in a carousel, a slide each, with the featured image and title. Choose the posts in the Query Loop’s settings."
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "query"
+msgstr ""
+
+#: build/carousel/index.js:4
+msgid "posts"
+msgstr ""
+
 #: build/carousel-navigation/block.json
 msgctxt "block title"
 msgid "Carousel Navigation"
@@ -316,7 +337,7 @@ msgstr ""
 
 #: build/carousel-slides/block.json
 msgctxt "block description"
-msgid "The slides of a carousel, in a scrollable row."
+msgid "The slides of a carousel, in a scrollable row: slides, and Query Loops with a slide per post."
 msgstr ""
 
 #: build/carousel/block.json
