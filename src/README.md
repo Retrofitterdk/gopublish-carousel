@@ -9,22 +9,23 @@ The wrapper: settings, the Interactivity API context and the live region, around
 | File | Purpose |
 | --- | --- |
 | `block.json` | Block metadata, attributes and supports; provides Rewind at the end to the parts (block context). |
-| `index.js` | Registers the block: the default variation (Navigation, Carousel Slides with three slides, Pagination), the deprecation that converts carousels from before 0.5.0, and the filter that allows one of each part. |
-| `edit.js` | Editor UI: Layout panel (Screen size switch tied to the device preview, per-viewport settings), Navigation panel, "Add to carousel" in the toolbar (parts, Heading, Paragraph; the inner blocks allowed are the parts plus `core/heading` and `core/paragraph`), and the per-viewport CSS. |
+| `index.js` | Registers the block: the default variation (Navigation, Carousel Slides with three slides, Pagination), the Posts carousel variation (a Query Loop instead of the slides), the deprecation that converts carousels from before 0.5.0, and the filter that allows one of each part. |
+| `edit.js` | Editor UI: Layout panel (Screen size switch tied to the device preview, per-viewport settings), Navigation panel, "Add to carousel" in the toolbar (slide, posts, parts, Heading, Paragraph; the inner blocks allowed are the parts plus `core/heading` and `core/paragraph`), and the per-viewport CSS. |
 | `save.js` | Saves the inner blocks. The front end is rendered by `render.php`. |
 | `render.php` | Front-end markup: the live region and the parts (Carousel Slides first, then the others with the slides' ID and count in the block context; headings and paragraphs too, the first heading naming the carousel via `aria-labelledby` without a Carousel label), the layout and gap CSS, and the Interactivity API context. Renders carousels from before 0.5.0 as before. |
 | `view.js` | Front-end behaviour: the `gopublish-carousel` store (button and dot scrolling, rewind, start/end state, pagination, announcements). Scrolling itself is native. |
 | `layouts.js` | Shared: the layout per viewport (columns, cutoff, slides to scroll, inheritance). Mirrors `gopublish_carousel_layouts()` in PHP. |
-| `pages.js` | Shared (`view.js` and the editor): measurements of the scroll area – the step between slides, the scroll direction, slides to scroll and the pagination's pages. |
+| `posts-query.js` | The Query Loop for the Posts carousel variation and "Add to carousel → Posts": the latest posts, with featured image and title. |
+| `pages.js` | Shared (`view.js` and the editor): measurements of the scroll area – the slides (a Query Loop's posts count as slides in the editor), the step between slides, the scroll direction, slides to scroll and the pagination's pages. |
 | `use-carousel-track.js` | Shared (editor): finds and measures the carousel's scroll area for Navigation and Pagination, and scrolls it. |
 | `style.scss` | Front-end and editor styles for the carousel and all its parts: the scroll-snap area, slide widths, navigation, dots, and the parts' width. Small-screen and per-viewport styles are generated in PHP (in `gopublish-carousel.php`). |
-| `editor.scss` | Editor-only styles: softer snapping while editing, the "Show all slides" grid, and dimmed parts while all slides fit. |
+| `editor.scss` | Editor-only styles: softer snapping while editing, a Query Loop's posts laid out as slides, the "Show all slides" grid, and dimmed parts while all slides fit. |
 
 All blocks are registered from `build/blocks-manifest.php`, which `npm run build` generates. The Carousel and Carousel Slides get `skip_inner_blocks` through the `register_block_type_args` filter, and render their inner blocks with `gopublish_carousel_render_inner_block()` (in `gopublish-carousel.php`), so the slides keep their inherited block context.
 
 ## `carousel-slides/` – Carousel Slides (`gopublish/carousel-slides`)
 
-The scroll area with the slides, only inside a Carousel (one per carousel, and it can't be removed on its own). `render.php` uses `gopublish_carousel_render_slides()`; the editor has the same classes as the front end (`.carousel-container > .carousel-track`) and the toolbar buttons Add slide and Show all slides.
+The scroll area with the slides, only inside a Carousel (one per carousel, and it can't be removed on its own). It holds Carousel Slide blocks and Query Loops (`core/query`, a slide per post). `render.php` uses `gopublish_carousel_render_slides()`, which renders a Query Loop's posts as slides (`gopublish_carousel_render_query_slides()`); the editor has the same classes as the front end (`.carousel-container > .carousel-track`) and the toolbar buttons Add slide and Show all slides.
 
 ## `carousel-slide/` – Carousel Slide (`gopublish/carousel-slide`)
 
