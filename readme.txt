@@ -4,7 +4,7 @@ Tags:              carousel, slider, block, interactivity api
 Requires at least: 6.8
 Tested up to:      7.1
 Requires PHP:      7.2
-Stable tag:        0.7.0
+Stable tag:        0.8.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,7 +18,9 @@ Go:Publish Carousel adds a Carousel block to the block editor. A carousel is mad
 * Carousel Navigation: the Previous and Next buttons.
 * Carousel Pagination: dots for jumping to a position.
 
-Navigation and Pagination can be placed above or below the slides, aligned left, center, right or with space between, and given content, wide or full width. The navigation can also sit on top of the slides. A carousel has one of each, and both can be removed. Headings and paragraphs can be added inside the carousel too, e.g. a title and a description above the slides.
+Navigation and Pagination can be placed above or below the slides, aligned left, center, right or with space between, and given content, wide or full width. The navigation can also sit on top of the slides. A carousel has one of each, and both can be removed. Headings and paragraphs can be added inside the carousel too, e.g. a title and a description above the slides, and Groups or Rows to arrange them, e.g. a heading with the navigation on the same line.
+
+Like a Group, the carousel itself can have a background colour or image, text and link colours, a border, rounded corners, a shadow and typography settings.
 
 The carousel is rendered on the server and built on the browser's own scrolling (CSS scroll snap). Swiping, trackpad scrolling and momentum work like anywhere else on the device. A small script on the WordPress Interactivity API adds the buttons and dots, so no jQuery or third-party slider library is loaded.
 
@@ -39,6 +41,8 @@ Features:
 * Navigation over the slides: Previous and Next at the edges of the slides, hidden on mobile.
 * Colours, size and spacing for the pagination dots.
 * Headings and paragraphs inside the carousel, to introduce or describe it.
+* Groups, Rows and Stacks inside the carousel, with the navigation and dots inside them if you like: e.g. a heading and the navigation on one line (Add to carousel → Heading and navigation).
+* Design settings like a Group: background colour, gradient or image, text, link and heading colours, border and rounded corners, shadow, typography, minimum width and an HTML anchor. The arrows follow the carousel's text and background colours.
 * If every slide fits in view, the navigation and pagination are hidden.
 * The Block spacing setting sets the space between slides, with separate values per viewport in WordPress 7.1.
 * Wide and full alignment, padding, margin and minimum height.
@@ -90,6 +94,8 @@ A slide per post on the query's first page; the carousel's navigation and dots r
 
 New carousels have Navigation above the slides and Pagination below. Move them with the block toolbar's arrows or in List View, or remove them like any block. To add them back, select the Carousel and choose Add to carousel (+) → Navigation or Pagination. A carousel can have one of each.
 
+They can also go inside a Row or Group in the carousel (not inside the slides), e.g. to put a heading and the navigation on one line: choose Add to carousel → Heading and navigation, or drag them into a Row in List View. A Row inside the carousel doesn't stop you from adding a second Navigation or Pagination from the inserter, so check List View if the arrows show twice.
+
 Both have the same settings: Justification (left, center, right, space between) in the block's settings, and width (none = content width, wide or full) with the alignment button in the toolbar.
 
 = How do I see or rearrange all slides in the editor? =
@@ -124,7 +130,13 @@ Yes, from WordPress 7.1. Select Carousel Navigation and click Choose icon in the
 
 = Can I add a title or description to a carousel? =
 
-Yes. Select the Carousel and choose Add to carousel → Heading or Paragraph in its toolbar (or insert them between the carousel's parts). They sit inside the carousel, above the slides or wherever you move them, at content width. A heading also names the carousel for screen reader users (unless Carousel label is set).
+Yes. Select the Carousel and choose Add to carousel → Heading or Paragraph in its toolbar (or insert them between the carousel's parts). They sit inside the carousel, above the slides or wherever you move them, at content width. A heading also names the carousel for screen reader users (unless Carousel label is set), also when it's inside a Row or Group: the first heading with text does.
+
+For a heading with the navigation on the same line, choose Add to carousel → Heading and navigation: a Row with a heading and the carousel's navigation, spread out on one line. If the carousel already has a navigation, it moves into the Row with its settings.
+
+= Can I give the carousel a background, border or rounded corners? =
+
+Yes, like a Group: select the Carousel and open the Styles tab. Color sets the text, background (a colour, gradient or image), link and heading colours; Border adds a border and rounded corners; Shadow and Typography work as on other blocks. Padding keeps the slides away from the edges. The arrows follow the carousel's colours: with a text or background colour set, the icon takes the text colour, and on hover the button fills with the text colour and the icon takes the background colour. The navigation's own colours (see below) override this.
 
 = Can the arrows sit on top of the slides? =
 
@@ -162,6 +174,7 @@ Available properties:
 * `--nav-button-border-width` (default `0`), `--nav-button-border-style` (default `solid`), `--nav-button-border-color` (default `currentcolor`, the icon colour)
 * `--nav-button-background`, `--nav-button-background-hover`
 * `--nav-button-icon-color`, `--nav-button-icon-color-hover`, `--nav-button-icon-size` (default `24px`)
+* `--carousel-color`, `--carousel-background`: the carousel's text and background colours (Color settings; set by the plugin when chosen). The default icon colour and hover background are `--carousel-color` (otherwise `#000`) and the default hover icon colour `--carousel-background` (otherwise `#fff`).
 * `--nav-button-outline-color`, `--nav-button-outline-width`, `--nav-button-outline-offset` (keyboard focus ring)
 * `--nav-button-shadow` (default `none`)
 * `--nav-overlay-button-background`, `--nav-overlay-button-background-hover`, `--nav-overlay-button-icon-color`, `--nav-overlay-button-icon-color-hover`, `--nav-overlay-button-shadow`, `--nav-overlay-inset` (navigation over the slides)
@@ -196,6 +209,13 @@ Source files are in `src/`, and the compiled blocks in `build/` are what WordPre
 See README.md for more developer notes, including how to update translations.
 
 == Changelog ==
+
+= 0.8.0 =
+* New: design settings for the Carousel, like a Group: background colour, gradient and image, text, link and heading colours, border and radius, shadow, typography, minimum width and HTML anchor. The anchor becomes the carousel's ID (the slides get `<anchor>-slides`).
+* New: the arrows follow the carousel's text and background colours (`--carousel-color`, `--carousel-background`), so they show on a dark background. Carousels without colours look as before.
+* New: Groups, Rows and Stacks inside the Carousel, and Carousel Navigation and Pagination inside them (not inside the slides). A heading inside a Row or Group names the carousel too.
+* New: Add to carousel → Heading and navigation: a Row with a heading and the navigation on one line.
+* Changed: the width settings of Navigation, Pagination, headings and paragraphs (content, wide, full) apply when they're directly in the carousel; inside a Row or Group, it sizes them.
 
 = 0.7.0 =
 * New: posts as slides. A Query Loop in Carousel Slides shows a slide per post, next to any manual slides. The query is built like core's Query Loop builds it, so its settings, "Inherit query from template" and variations that change the query on the server (e.g. Advanced Query Loop, Curated Query Loop) work. The No Results content shows as a slide when nothing is found; the Query Loop's Pagination isn't shown. In the editor, the posts are laid out as slides, and the arrows, dots and Show all slides include them.
@@ -308,6 +328,9 @@ See README.md for more developer notes, including how to update translations.
 * First release, as demo-carousel.
 
 == Upgrade Notice ==
+
+= 0.8.0 =
+Design settings for the carousel (background, border, radius, shadow, typography), and Rows and Groups inside it, e.g. a heading and the navigation on one line. Existing carousels look the same.
 
 = 0.7.0 =
 Posts as slides (Query Loop in a carousel, and a Posts carousel), navigation over the slides, dot styling, and headings and paragraphs inside the carousel. Empty slides are no longer shown on the front end. Existing carousels look the same.
