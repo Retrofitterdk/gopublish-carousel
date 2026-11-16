@@ -18,7 +18,50 @@ return array(
 				'wide',
 				'full'
 			),
+			'anchor' => true,
 			'interactivity' => true,
+			'color' => array(
+				'gradients' => true,
+				'heading' => true,
+				'link' => true,
+				'__experimentalDefaultControls' => array(
+					'background' => true,
+					'text' => true
+				)
+			),
+			'background' => array(
+				'backgroundImage' => true,
+				'backgroundSize' => true,
+				'__experimentalDefaultControls' => array(
+					'backgroundImage' => true
+				)
+			),
+			'__experimentalBorder' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => true,
+					'radius' => true,
+					'style' => true,
+					'width' => true
+				)
+			),
+			'shadow' => true,
+			'typography' => array(
+				'fontSize' => true,
+				'lineHeight' => true,
+				'__experimentalFontFamily' => true,
+				'__experimentalFontWeight' => true,
+				'__experimentalFontStyle' => true,
+				'__experimentalTextTransform' => true,
+				'__experimentalTextDecoration' => true,
+				'__experimentalLetterSpacing' => true,
+				'__experimentalDefaultControls' => array(
+					'fontSize' => true
+				)
+			),
 			'spacing' => array(
 				'margin' => array(
 					'top',
@@ -32,7 +75,8 @@ return array(
 				)
 			),
 			'dimensions' => array(
-				'minHeight' => true
+				'minHeight' => true,
+				'minWidth' => true
 			)
 		),
 		'attributes' => array(

@@ -25,6 +25,7 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
+import { getCSSValueFromRawStyle } from '@wordpress/style-engine';
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
@@ -96,6 +97,35 @@ function getGapValue( gap ) {
 	}
 	// A unitless 0 is invalid in calc() additions (the slide width formula).
 	return value === '0' ? '0px' : value;
+}
+
+/**
+ * The carousel's text and background colours (Color settings) as custom
+ * properties, for the arrows' default colours. Mirrors
+ * gopublish_carousel_colors() in PHP.
+ *
+ * @param {Object} attributes                 Block attributes.
+ * @param {string} attributes.textColor       Palette text colour.
+ * @param {string} attributes.backgroundColor Palette background colour.
+ * @param {Object} attributes.style           Styles, with custom colours.
+ * @return {Object} --carousel-color and --carousel-background, when set.
+ */
+function getCarouselColors( { textColor, backgroundColor, style } ) {
+	const value = ( slug, custom ) => {
+		const raw = slug ? `var:preset|color|${ slug }` : custom;
+		return typeof raw === 'string' && raw
+			? getCSSValueFromRawStyle( raw )
+			: undefined;
+	};
+	return Object.fromEntries(
+		Object.entries( {
+			'--carousel-color': value( textColor, style?.color?.text ),
+			'--carousel-background': value(
+				backgroundColor,
+				style?.color?.background
+			),
+		} ).filter( ( [ , cssValue ] ) => cssValue )
+	);
 }
 
 export default function Edit( { attributes, setAttributes, clientId } ) {
@@ -336,6 +366,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			.join( ' ' ),
 		style: {
 			...getLayoutProperties( layouts.base ),
+			...getCarouselColors( attributes ),
 			'--carousel-gap': gap,
 		},
 	} );

@@ -15,9 +15,11 @@
  * @var WP_Block $block      Block instance.
  */
 
-// Unique ID for this carousel instance. wp_unique_id() counts up per page
-// render, so the IDs are stable between page loads (unlike uniqid()).
-$carousel_id = wp_unique_id( 'gopublish-carousel-' );
+// The carousel's ID: its HTML anchor (Advanced settings), or else a unique
+// ID for this carousel instance. wp_unique_id() counts up per page render,
+// so the IDs are stable between page loads (unlike uniqid()).
+$anchor      = trim( (string) ( $attributes['anchor'] ?? '' ) );
+$carousel_id = '' !== $anchor ? $anchor : wp_unique_id( 'gopublish-carousel-' );
 $slides_id   = $carousel_id . '-slides';
 
 // The inner blocks: Carousel Slides (the scroll area with the slides),
@@ -110,6 +112,12 @@ $classes = 'columns-' . $base['columns'] . ( $base['cutoff'] ? ' cutoff' : ' no-
 // Base layout values for style.scss, which computes the slide width from them.
 $style = '';
 foreach ( gopublish_carousel_layout_properties( $base ) as $property => $value ) {
+	$style .= $property . ': ' . $value . '; ';
+}
+
+// The carousel's text and background colours, for the arrows' default
+// colours (see gopublish_carousel_colors()).
+foreach ( gopublish_carousel_colors( $attributes ) as $property => $value ) {
 	$style .= $property . ': ' . $value . '; ';
 }
 

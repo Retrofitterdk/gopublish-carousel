@@ -26,9 +26,12 @@
 	--nav-button-padding: 4px;
 	--nav-button-radius: 100%;
 	--nav-button-background: transparent;
-	--nav-button-background-hover: #000;
-	--nav-button-icon-color: #000;
-	--nav-button-icon-color-hover: #fff;
+	// The carousel's text and background colours when it has them (Color
+	// settings, set by render.php/edit.js), so the arrows show on a dark
+	// background; black and white otherwise.
+	--nav-button-background-hover: var(--carousel-color, #000);
+	--nav-button-icon-color: var(--carousel-color, #000);
+	--nav-button-icon-color-hover: var(--carousel-background, #fff);
 	--nav-button-icon-size: 24px;
 	--nav-button-border-width: 0;
 	--nav-button-border-style: solid;

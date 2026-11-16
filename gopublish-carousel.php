@@ -758,6 +758,37 @@ function gopublish_carousel_color_attribute( $attributes, $name ) {
 }
 
 /**
+ * The Carousel's text and background colours (its Color settings: a palette
+ * colour or a custom one) as custom properties for its parts: the arrows'
+ * default colours follow them (style.scss), so they show on a dark
+ * background. Without them, the arrows keep their default look. A gradient
+ * background isn't a single colour, so it isn't passed on.
+ *
+ * Mirrors getCarouselColors() in src/carousel/edit.js: keep them in sync.
+ *
+ * @param array $attributes Block attributes.
+ * @return array<string, string> Custom properties: --carousel-color and
+ *                               --carousel-background, when set.
+ */
+function gopublish_carousel_colors( $attributes ) {
+	$colors = array(
+		'--carousel-color'      => array( $attributes['textColor'] ?? null, $attributes['style']['color']['text'] ?? null ),
+		'--carousel-background' => array( $attributes['backgroundColor'] ?? null, $attributes['style']['color']['background'] ?? null ),
+	);
+
+	$properties = array();
+	foreach ( $colors as $property => list( $slug, $custom ) ) {
+		$value = is_string( $slug ) && '' !== $slug
+			? gopublish_carousel_css_value( 'var:preset|color|' . $slug )
+			: gopublish_carousel_css_value( $custom );
+		if ( '' !== $value ) {
+			$properties[ $property ] = $value;
+		}
+	}
+	return $properties;
+}
+
+/**
  * The Carousel Pagination block's settings as the dots' custom properties
  * (style.scss), set on the block's wrapper: Dots and Current dot colours, dot
  * size and the space between dots (both in pixels).
