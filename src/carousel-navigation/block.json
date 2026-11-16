@@ -7,7 +7,7 @@
 	"category": "widgets",
 	"icon": "leftright",
 	"description": "Previous and next buttons for a carousel.",
-	"parent": [ "gopublish/carousel" ],
+	"ancestor": [ "gopublish/carousel" ],
 	"attributes": {
 		"icon": {
 			"type": "string"

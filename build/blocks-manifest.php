@@ -123,7 +123,7 @@ return array(
 		'category' => 'widgets',
 		'icon' => 'leftright',
 		'description' => 'Previous and next buttons for a carousel.',
-		'parent' => array(
+		'ancestor' => array(
 			'gopublish/carousel'
 		),
 		'attributes' => array(
@@ -223,7 +223,7 @@ return array(
 		'category' => 'widgets',
 		'icon' => 'ellipsis',
 		'description' => 'Dots for jumping to a position in a carousel.',
-		'parent' => array(
+		'ancestor' => array(
 			'gopublish/carousel'
 		),
 		'attributes' => array(

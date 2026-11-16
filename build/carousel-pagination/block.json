@@ -7,7 +7,7 @@
   "category": "widgets",
   "icon": "ellipsis",
   "description": "Dots for jumping to a position in a carousel.",
-  "parent": [
+  "ancestor": [
     "gopublish/carousel"
   ],
   "attributes": {
