@@ -26,9 +26,12 @@
 	--nav-button-padding: 4px;
 	--nav-button-radius: 100%;
 	--nav-button-background: transparent;
-	--nav-button-background-hover: #000;
-	--nav-button-icon-color: #000;
-	--nav-button-icon-color-hover: #fff;
+	// The carousel's text and background colours when it has them (Color
+	// settings, set by render.php/edit.js), so the arrows show on a dark
+	// background; black and white otherwise.
+	--nav-button-background-hover: var(--carousel-color, #000);
+	--nav-button-icon-color: var(--carousel-color, #000);
+	--nav-button-icon-color-hover: var(--carousel-background, #fff);
 	--nav-button-icon-size: 24px;
 	--nav-button-border-width: 0;
 	--nav-button-border-style: solid;
@@ -369,12 +372,12 @@
 	}
 }
 
-.wp-block-gopublish-carousel-navigation,
-.wp-block-gopublish-carousel-pagination,
-// Headings and paragraphs directly in the carousel (in the editor, inside
-// the display: contents wrapper of the inner blocks).
-.wp-block-gopublish-carousel > :is(h1, h2, h3, h4, h5, h6, p),
-.wp-block-gopublish-carousel > .carousel-inner-blocks > :is(h1, h2, h3, h4, h5, h6, p) {
+// The parts directly in the carousel: Navigation, Pagination, headings,
+// paragraphs and Groups (Row, Stack); in the editor, inside the display:
+// contents wrapper of the inner blocks. Navigation and Pagination inside a
+// Row or Group are sized by it instead.
+.wp-block-gopublish-carousel > :is(.wp-block-gopublish-carousel-navigation, .wp-block-gopublish-carousel-pagination, .wp-block-group, h1, h2, h3, h4, h5, h6, p),
+.wp-block-gopublish-carousel > .carousel-inner-blocks > :is(.wp-block-gopublish-carousel-navigation, .wp-block-gopublish-carousel-pagination, .wp-block-group, h1, h2, h3, h4, h5, h6, p) {
 
 	// Width: content width by default, wide or full (the carousel's width)
 	// with the alignment setting; centered in the carousel.

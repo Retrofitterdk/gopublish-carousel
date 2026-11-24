@@ -111,9 +111,17 @@ registerBlockType( metadata.name, {
 // A carousel has one of each part: one Carousel Slides (one scroll area;
 // render.php only renders the first), one Navigation and one Pagination.
 // The Carousel's allowed-blocks list can't enforce that, because the parts
-// name the Carousel as their parent, which the editor treats as allowed on
-// its own. This filter covers the inserter, the "Add block" button and
-// pasting.
+// name the Carousel as their parent or ancestor, which the editor treats as
+// allowed on its own. This filter covers the inserter, the "Add block"
+// button, pasting and moving blocks.
+//
+// The editor caches the answer per insertion point and only recomputes it
+// when that block's own inner blocks change, so the rules only look at the
+// insertion point and its ancestors:
+// - Directly in the Carousel: one of each part.
+// - Navigation and Pagination can also go in a Row or Group in the carousel
+//   (ancestor in block.json), but not in its slides. There the inserter
+//   doesn't count the carousel's other parts; "Add to carousel" does.
 const ONE_PER_CAROUSEL = [
 	'gopublish/carousel-slides',
 	'gopublish/carousel-navigation',
@@ -123,7 +131,12 @@ const ONE_PER_CAROUSEL = [
 addFilter(
 	'blockEditor.__unstableCanInsertBlockType',
 	'gopublish-carousel/one-of-each-part',
-	( canInsert, blockType, rootClientId, { getBlock } ) => {
+	(
+		canInsert,
+		blockType,
+		rootClientId,
+		{ getBlock, getBlockParentsByBlockName }
+	) => {
 		if (
 			! canInsert ||
 			! ONE_PER_CAROUSEL.includes( blockType.name ) ||
@@ -131,12 +144,25 @@ addFilter(
 		) {
 			return canInsert;
 		}
-		const parent = getBlock( rootClientId );
-		return ! (
-			parent?.name === 'gopublish/carousel' &&
-			parent.innerBlocks.some(
+		const root = getBlock( rootClientId );
+		if ( root?.name === 'gopublish/carousel' ) {
+			return ! root.innerBlocks.some(
 				( innerBlock ) => innerBlock.name === blockType.name
-			)
+			);
+		}
+
+		// In a Row or Group: not in the slides of the carousel it belongs to
+		// (the nearest one).
+		const nearest = ( clientId, name ) =>
+			getBlockParentsByBlockName( clientId, name, true )[ 0 ];
+		const slidesId =
+			root?.name === 'gopublish/carousel-slides'
+				? rootClientId
+				: nearest( rootClientId, 'gopublish/carousel-slides' );
+		return ! (
+			slidesId &&
+			nearest( slidesId, 'gopublish/carousel' ) ===
+				nearest( rootClientId, 'gopublish/carousel' )
 		);
 	}
 );

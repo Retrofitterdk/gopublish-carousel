@@ -15,9 +15,11 @@
  * @var WP_Block $block      Block instance.
  */
 
-// Unique ID for this carousel instance. wp_unique_id() counts up per page
-// render, so the IDs are stable between page loads (unlike uniqid()).
-$carousel_id = wp_unique_id( 'gopublish-carousel-' );
+// The carousel's ID: its HTML anchor (Advanced settings), or else a unique
+// ID for this carousel instance. wp_unique_id() counts up per page render,
+// so the IDs are stable between page loads (unlike uniqid()).
+$anchor      = trim( (string) ( $attributes['anchor'] ?? '' ) );
+$carousel_id = '' !== $anchor ? $anchor : wp_unique_id( 'gopublish-carousel-' );
 $slides_id   = $carousel_id . '-slides';
 
 // The inner blocks: Carousel Slides (the scroll area with the slides),
@@ -61,34 +63,38 @@ if ( $is_legacy ) {
 			$real_slides     = $count;
 		}
 	}
+	// The other parts: headings, paragraphs, Rows and Groups, Navigation
+	// and Pagination. Navigation and Pagination get the slides' ID and number
+	// wherever they are, also inside a Row or Group (see
+	// gopublish_carousel_parts_context()).
+	$slides_parts = array_keys( $parts );
+	gopublish_carousel_push_parts_context(
+		array(
+			'gopublish-carousel/slidesId'   => $slides_id,
+			'gopublish-carousel/itemsTotal' => $real_slides,
+		)
+	);
 	foreach ( $block->inner_blocks as $index => $inner_block ) {
 		if ( ! isset( $parts[ $index ] ) ) {
-			$inner_block->context['gopublish-carousel/slidesId']   = $slides_id;
-			$inner_block->context['gopublish-carousel/itemsTotal'] = $real_slides;
-
 			$parts[ $index ] = gopublish_carousel_render_inner_block( $inner_block, $block );
 		}
 	}
+	gopublish_carousel_pop_parts_context();
 	ksort( $parts );
 
-	// A heading directly in the carousel (not in a slide) names it for
-	// screen readers when it has no Carousel label: the first one, given an
-	// ID if it has none (an HTML anchor is kept).
+	// A heading in the carousel (not in a slide; directly inside, or in a
+	// Row or Group) names it for screen readers when it has no Carousel
+	// label: the first one with text, given an ID if it has none (an HTML
+	// anchor is kept).
 	if ( '' === trim( (string) ( $attributes['ariaLabel'] ?? '' ) ) ) {
-		foreach ( $block->inner_blocks as $index => $inner_block ) {
-			if ( 'core/heading' !== $inner_block->name || '' === trim( wp_strip_all_tags( $parts[ $index ] ) ) ) {
+		foreach ( $parts as $index => $part ) {
+			if ( in_array( $index, $slides_parts, true ) ) {
 				continue;
 			}
-			$processor = new WP_HTML_Tag_Processor( $parts[ $index ] );
-			if ( $processor->next_tag() ) {
-				$heading_id = $processor->get_attribute( 'id' );
-				if ( ! is_string( $heading_id ) || '' === $heading_id ) {
-					$heading_id = $carousel_id . '-heading';
-					$processor->set_attribute( 'id', $heading_id );
-					$parts[ $index ] = $processor->get_updated_html();
-				}
+			list( $parts[ $index ], $heading_id ) = gopublish_carousel_label_heading( $part, $carousel_id . '-heading' );
+			if ( '' !== $heading_id ) {
+				break;
 			}
-			break;
 		}
 	}
 	$inner_html = implode( '', $parts );
@@ -110,6 +116,12 @@ $classes = 'columns-' . $base['columns'] . ( $base['cutoff'] ? ' cutoff' : ' no-
 // Base layout values for style.scss, which computes the slide width from them.
 $style = '';
 foreach ( gopublish_carousel_layout_properties( $base ) as $property => $value ) {
+	$style .= $property . ': ' . $value . '; ';
+}
+
+// The carousel's text and background colours, for the arrows' default
+// colours (see gopublish_carousel_colors()).
+foreach ( gopublish_carousel_colors( $attributes ) as $property => $value ) {
 	$style .= $property . ': ' . $value . '; ';
 }
 
@@ -205,14 +217,7 @@ $context = array(
 // Carousel Pagination: a dot per page (see getPages() in pages.js), bound to
 // context.dots.N in its markup. Rendered with a guess from the base layout
 // (every slide to scroll a page); view.js measures the real layout on load.
-$has_pagination = false;
-foreach ( $block->inner_blocks as $inner_block ) {
-	if ( 'gopublish/carousel-pagination' === $inner_block->name ) {
-		$has_pagination = true;
-		break;
-	}
-}
-if ( $has_pagination ) {
+if ( gopublish_carousel_has_part( $block->inner_blocks, 'gopublish/carousel-pagination' ) ) {
 	$fully_visible = $base['peek'] ? 1 : (int) ceil( $base['visible'] );
 	$positions     = max( 1, $real_slides - $fully_visible + 1 );
 	$page_count    = 1 + (int) ceil( ( $positions - 1 ) / $base['scroll'] );

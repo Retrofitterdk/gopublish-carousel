@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Go:Publish Carousel 0.7.0\n"
+"Project-Id-Version: Go:Publish Carousel 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -24,18 +24,18 @@ msgstr ""
 msgid "Retrofitter"
 msgstr ""
 
-#: gopublish-carousel.php:996
+#: gopublish-carousel.php:1147
 #: build/carousel-navigation/index.js:1
 msgid "Previous slide"
 msgstr "Forrige dias"
 
-#: gopublish-carousel.php:1002
+#: gopublish-carousel.php:1153
 #: build/carousel-navigation/index.js:1
 msgid "Next slide"
 msgstr "Næste dias"
 
 #. translators: Spoken by screen readers to describe the carousel block.
-#: build/carousel/render.php:162
+#: build/carousel/render.php:174
 msgid "carousel"
 msgstr "karrusel"
 
@@ -45,7 +45,7 @@ msgid "slide"
 msgstr "dias"
 
 #. translators: Announced after moving the carousel when one slide is fully visible. 1: Slide number, 2: Total number of slides.
-#: build/carousel/render.php:200
+#: build/carousel/render.php:212
 #, php-format
 msgid "Slide %1$d of %2$d"
 msgstr "Dias %1$d af %2$d"
@@ -109,7 +109,7 @@ msgid "A carousel for blocks using the Interactivity API."
 msgstr "En karrusel til blokke, bygget med Interactivity API."
 
 #. translators: Announced after moving the carousel when several slides are fully visible. 1: First visible slide, 2: Last visible slide, 3: Total number of slides.
-#: build/carousel/render.php:202
+#: build/carousel/render.php:214
 #, php-format
 msgid "Slides %1$d to %2$d of %3$d"
 msgstr "Dias %1$d til %2$d af %3$d"
@@ -198,7 +198,7 @@ msgid "Choose slide"
 msgstr "Vælg dias"
 
 #. translators: Label of a pagination dot. %d: Number of the first slide it scrolls to.
-#: build/carousel/render.php:220
+#: build/carousel/render.php:225
 #: build/carousel-pagination/index.js:2
 #, php-format,js-format
 msgid "Go to slide %d"
@@ -349,3 +349,7 @@ msgstr "indlæg"
 msgctxt "block description"
 msgid "The slides of a carousel, in a scrollable row: slides, and Query Loops with a slide per post."
 msgstr "Karrusellens dias i en række, der kan rulles: dias og Forespørgsels-loops med ét dias pr. indlæg."
+
+#: build/carousel/index.js:3
+msgid "Heading and navigation"
+msgstr "Overskrift og navigation"

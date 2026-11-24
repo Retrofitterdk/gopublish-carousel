@@ -2,12 +2,12 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "gopublish/carousel-navigation",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "title": "Carousel Navigation",
   "category": "widgets",
   "icon": "leftright",
   "description": "Previous and next buttons for a carousel.",
-  "parent": [
+  "ancestor": [
     "gopublish/carousel"
   ],
   "attributes": {

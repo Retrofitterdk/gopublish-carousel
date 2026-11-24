@@ -8,6 +8,7 @@ import {
 } from '@wordpress/block-editor';
 import {
 	createBlock,
+	cloneBlock,
 	createBlocksFromInnerBlocksTemplate,
 } from '@wordpress/blocks';
 import {
@@ -25,6 +26,7 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
+import { getCSSValueFromRawStyle } from '@wordpress/style-engine';
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
@@ -33,6 +35,7 @@ import {
 	getLayouts,
 	getViewportOverrides,
 } from './layouts';
+import { findPart } from './parts';
 import { getPostsQueryTemplate } from './posts-query';
 
 // The Carousel's parts: Carousel Slides (the scroll area), Carousel
@@ -43,10 +46,17 @@ const PARTS = [
 	'gopublish/carousel-pagination',
 ];
 
-// The Carousel's inner blocks: its parts, and headings and paragraphs to
+// The Carousel's inner blocks: its parts, headings and paragraphs to
 // introduce or describe it (a heading also names it for screen readers; see
-// render.php).
-const ALLOWED_BLOCKS = [ ...PARTS, 'core/heading', 'core/paragraph' ];
+// render.php), and Groups (also Row and Stack) to arrange them, e.g. a
+// heading and the navigation on one line. Navigation and Pagination can go
+// inside a Group too (ancestor in their block.json).
+const ALLOWED_BLOCKS = [
+	...PARTS,
+	'core/heading',
+	'core/paragraph',
+	'core/group',
+];
 
 // Alignments the inner blocks can choose (Navigation and Pagination width:
 // content, wide or full; see style.scss). The Carousel has no layout support,
@@ -96,6 +106,35 @@ function getGapValue( gap ) {
 	}
 	// A unitless 0 is invalid in calc() additions (the slide width formula).
 	return value === '0' ? '0px' : value;
+}
+
+/**
+ * The carousel's text and background colours (Color settings) as custom
+ * properties, for the arrows' default colours. Mirrors
+ * gopublish_carousel_colors() in PHP.
+ *
+ * @param {Object} attributes                 Block attributes.
+ * @param {string} attributes.textColor       Palette text colour.
+ * @param {string} attributes.backgroundColor Palette background colour.
+ * @param {Object} attributes.style           Styles, with custom colours.
+ * @return {Object} --carousel-color and --carousel-background, when set.
+ */
+function getCarouselColors( { textColor, backgroundColor, style } ) {
+	const value = ( slug, custom ) => {
+		const raw = slug ? `var:preset|color|${ slug }` : custom;
+		return typeof raw === 'string' && raw
+			? getCSSValueFromRawStyle( raw )
+			: undefined;
+	};
+	return Object.fromEntries(
+		Object.entries( {
+			'--carousel-color': value( textColor, style?.color?.text ),
+			'--carousel-background': value(
+				backgroundColor,
+				style?.color?.background
+			),
+		} ).filter( ( [ , cssValue ] ) => cssValue )
+	);
 }
 
 export default function Edit( { attributes, setAttributes, clientId } ) {
@@ -198,24 +237,24 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		},
 		[ clientId ]
 	);
-	// Whether the carousel has its Navigation and Pagination (one of each:
-	// see the filter in index.js).
-	const hasNavigation = useSelect(
-		( select ) => {
-			const { getBlockOrder, getBlockName } = select( blockEditorStore );
-			return getBlockOrder( clientId ).some(
-				( id ) => getBlockName( id ) === 'gopublish/carousel-navigation'
-			);
-		},
+	// The carousel's Navigation and Pagination, directly inside or in a Row
+	// or Group (one of each: see the filter in index.js).
+	const navigationBlock = useSelect(
+		( select ) =>
+			findPart(
+				select( blockEditorStore ).getBlock( clientId )?.innerBlocks ??
+					[],
+				'gopublish/carousel-navigation'
+			),
 		[ clientId ]
 	);
 	const hasPagination = useSelect(
-		( select ) => {
-			const { getBlockOrder, getBlockName } = select( blockEditorStore );
-			return getBlockOrder( clientId ).some(
-				( id ) => getBlockName( id ) === 'gopublish/carousel-pagination'
-			);
-		},
+		( select ) =>
+			!! findPart(
+				select( blockEditorStore ).getBlock( clientId )?.innerBlocks ??
+					[],
+				'gopublish/carousel-pagination'
+			),
 		[ clientId ]
 	);
 	const slideCount = useSelect(
@@ -253,7 +292,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 		},
 		[ clientId ]
 	);
-	const { insertBlock } = useDispatch( blockEditorStore );
+	const { insertBlock, replaceBlock } = useDispatch( blockEditorStore );
 
 	// Like on the front end (render.php): the base layout and Block spacing
 	// inline, and the per-viewport layouts and gaps in a style element with
@@ -287,8 +326,9 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 
 	// "Add to carousel": a slide or posts (a Query Loop) at the end of
 	// Carousel Slides (it gets selected and scrolled into view; without
-	// Carousel Slides, one is added with it), Navigation before the slides, Pagination after them
-	// (each only if the carousel doesn't have one yet), a heading at the top
+	// Carousel Slides, one is added with it), Navigation before the slides,
+	// Pagination after them (each only if the carousel doesn't have one yet),
+	// a heading and the navigation on one line (below), a heading at the top
 	// and a paragraph above the parts.
 	const addToSlides = ( block ) =>
 		slidesClientId
@@ -324,6 +364,35 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			clientId
 		);
 
+	// "Heading and navigation": a Row with a heading and the navigation,
+	// spread out on one line. The carousel's own navigation moves into it
+	// (a copy replaces it, with its settings; width alignment doesn't apply
+	// in a Row); without one, a new one is added, with the Row at the top.
+	const addHeadingAndNavigation = () => {
+		const row = createBlock(
+			'core/group',
+			{
+				layout: {
+					type: 'flex',
+					flexWrap: 'nowrap',
+					justifyContent: 'space-between',
+					verticalAlignment: 'center',
+				},
+			},
+			[
+				createBlock( 'core/heading', { level: 2 } ),
+				navigationBlock
+					? cloneBlock( navigationBlock, { align: undefined } )
+					: createBlock( 'gopublish/carousel-navigation' ),
+			]
+		);
+		if ( navigationBlock ) {
+			replaceBlock( navigationBlock.clientId, row );
+		} else {
+			insertBlock( row, 0, clientId );
+		}
+	};
+
 	// Same classes and widths as the front end (render.php), so the front-end
 	// styles apply in the editor too. Nothing here is saved.
 	const blockProps = useBlockProps( {
@@ -336,6 +405,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 			.join( ' ' ),
 		style: {
 			...getLayoutProperties( layouts.base ),
+			...getCarouselColors( attributes ),
 			'--carousel-gap': gap,
 		},
 	} );
@@ -374,7 +444,7 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 						{
 							title: __( 'Navigation', 'gopublish-carousel' ),
 							icon: 'leftright',
-							isDisabled: hasNavigation,
+							isDisabled: !! navigationBlock,
 							onClick: () =>
 								addPart(
 									'gopublish/carousel-navigation',
@@ -390,6 +460,14 @@ export default function Edit( { attributes, setAttributes, clientId } ) {
 									'gopublish/carousel-pagination',
 									false
 								),
+						},
+						{
+							title: __(
+								'Heading and navigation',
+								'gopublish-carousel'
+							),
+							icon: 'table-row-after',
+							onClick: addHeadingAndNavigation,
 						},
 						{
 							title: __( 'Heading', 'gopublish-carousel' ),

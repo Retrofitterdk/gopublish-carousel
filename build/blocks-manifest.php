@@ -5,7 +5,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel',
-		'version' => '0.7.0',
+		'version' => '0.8.0',
 		'title' => 'Carousel',
 		'category' => 'widgets',
 		'icon' => 'slides',
@@ -18,7 +18,50 @@ return array(
 				'wide',
 				'full'
 			),
+			'anchor' => true,
 			'interactivity' => true,
+			'color' => array(
+				'gradients' => true,
+				'heading' => true,
+				'link' => true,
+				'__experimentalDefaultControls' => array(
+					'background' => true,
+					'text' => true
+				)
+			),
+			'background' => array(
+				'backgroundImage' => true,
+				'backgroundSize' => true,
+				'__experimentalDefaultControls' => array(
+					'backgroundImage' => true
+				)
+			),
+			'__experimentalBorder' => array(
+				'color' => true,
+				'radius' => true,
+				'style' => true,
+				'width' => true,
+				'__experimentalDefaultControls' => array(
+					'color' => true,
+					'radius' => true,
+					'style' => true,
+					'width' => true
+				)
+			),
+			'shadow' => true,
+			'typography' => array(
+				'fontSize' => true,
+				'lineHeight' => true,
+				'__experimentalFontFamily' => true,
+				'__experimentalFontWeight' => true,
+				'__experimentalFontStyle' => true,
+				'__experimentalTextTransform' => true,
+				'__experimentalTextDecoration' => true,
+				'__experimentalLetterSpacing' => true,
+				'__experimentalDefaultControls' => array(
+					'fontSize' => true
+				)
+			),
 			'spacing' => array(
 				'margin' => array(
 					'top',
@@ -32,7 +75,8 @@ return array(
 				)
 			),
 			'dimensions' => array(
-				'minHeight' => true
+				'minHeight' => true,
+				'minWidth' => true
 			)
 		),
 		'attributes' => array(
@@ -74,12 +118,12 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel-navigation',
-		'version' => '0.7.0',
+		'version' => '0.8.0',
 		'title' => 'Carousel Navigation',
 		'category' => 'widgets',
 		'icon' => 'leftright',
 		'description' => 'Previous and next buttons for a carousel.',
-		'parent' => array(
+		'ancestor' => array(
 			'gopublish/carousel'
 		),
 		'attributes' => array(
@@ -174,12 +218,12 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel-pagination',
-		'version' => '0.7.0',
+		'version' => '0.8.0',
 		'title' => 'Carousel Pagination',
 		'category' => 'widgets',
 		'icon' => 'ellipsis',
 		'description' => 'Dots for jumping to a position in a carousel.',
-		'parent' => array(
+		'ancestor' => array(
 			'gopublish/carousel'
 		),
 		'attributes' => array(
@@ -243,7 +287,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel-slide',
-		'version' => '0.7.0',
+		'version' => '0.8.0',
 		'title' => 'Carousel Slide',
 		'category' => 'widgets',
 		'icon' => 'media-default',
@@ -281,7 +325,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gopublish/carousel-slides',
-		'version' => '0.7.0',
+		'version' => '0.8.0',
 		'title' => 'Carousel Slides',
 		'category' => 'widgets',
 		'icon' => 'images-alt2',

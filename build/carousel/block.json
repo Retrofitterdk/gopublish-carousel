@@ -2,7 +2,7 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "gopublish/carousel",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "title": "Carousel",
   "category": "widgets",
   "icon": "slides",
@@ -13,7 +13,50 @@
       "wide",
       "full"
     ],
+    "anchor": true,
     "interactivity": true,
+    "color": {
+      "gradients": true,
+      "heading": true,
+      "link": true,
+      "__experimentalDefaultControls": {
+        "background": true,
+        "text": true
+      }
+    },
+    "background": {
+      "backgroundImage": true,
+      "backgroundSize": true,
+      "__experimentalDefaultControls": {
+        "backgroundImage": true
+      }
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true,
+      "__experimentalDefaultControls": {
+        "color": true,
+        "radius": true,
+        "style": true,
+        "width": true
+      }
+    },
+    "shadow": true,
+    "typography": {
+      "fontSize": true,
+      "lineHeight": true,
+      "__experimentalFontFamily": true,
+      "__experimentalFontWeight": true,
+      "__experimentalFontStyle": true,
+      "__experimentalTextTransform": true,
+      "__experimentalTextDecoration": true,
+      "__experimentalLetterSpacing": true,
+      "__experimentalDefaultControls": {
+        "fontSize": true
+      }
+    },
     "spacing": {
       "margin": [
         "top",
@@ -27,7 +70,8 @@
       }
     },
     "dimensions": {
-      "minHeight": true
+      "minHeight": true,
+      "minWidth": true
     }
   },
   "attributes": {

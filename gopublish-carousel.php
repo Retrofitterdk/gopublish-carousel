@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Go:Publish Carousel
  * Description:       A carousel block for any blocks, built on native scrolling and the Interactivity API.
- * Version:           0.7.0
+ * Version:           0.8.0
  * Requires at least: 6.8
  * Requires PHP:      7.2
  * Author:            Retrofitter
@@ -701,6 +701,126 @@ function gopublish_carousel_render_slides( $slide_blocks, WP_Block $parent_block
 }
 
 /**
+ * The block context a carousel gives its Navigation and Pagination (the
+ * slides' ID and the number of slides), as a stack: the carousel being
+ * rendered is on top, so a carousel inside another one gives its own parts
+ * its own values. See gopublish_carousel_parts_context().
+ *
+ * @return array[] The stack, by reference.
+ */
+function &gopublish_carousel_parts_context_stack() {
+	static $stack = array();
+	return $stack;
+}
+
+/**
+ * Pass the carousel's context to its Navigation and Pagination wherever they
+ * are in it: directly inside, or in a Row or Group (e.g. a heading and the
+ * navigation on one line). The Carousel renders its other parts between
+ * gopublish_carousel_push_parts_context() and
+ * gopublish_carousel_pop_parts_context(); the slides are rendered before, so
+ * blocks in the slides aren't affected.
+ *
+ * @param array $context      Block context.
+ * @param array $parsed_block The block being rendered.
+ * @return array Block context.
+ */
+function gopublish_carousel_parts_context( $context, $parsed_block ) {
+	$stack = &gopublish_carousel_parts_context_stack();
+	if ( $stack && in_array( $parsed_block['blockName'] ?? '', array( 'gopublish/carousel-navigation', 'gopublish/carousel-pagination' ), true ) ) {
+		$context = array_merge( $context, end( $stack ) );
+	}
+	return $context;
+}
+add_filter( 'render_block_context', 'gopublish_carousel_parts_context', 10, 2 );
+
+/**
+ * Start passing a carousel's context to its parts (see
+ * gopublish_carousel_parts_context()).
+ *
+ * @param array $values Block context values, e.g. the slides' ID.
+ */
+function gopublish_carousel_push_parts_context( $values ) {
+	$stack   = &gopublish_carousel_parts_context_stack();
+	$stack[] = $values;
+}
+
+/**
+ * Stop passing the current carousel's context to its parts.
+ */
+function gopublish_carousel_pop_parts_context() {
+	$stack = &gopublish_carousel_parts_context_stack();
+	array_pop( $stack );
+}
+
+/**
+ * Whether a carousel has a block among its parts, also inside a Row or Group,
+ * but not in its slides or in a carousel inside it.
+ *
+ * @param WP_Block[]|WP_Block_List $blocks The carousel's inner blocks.
+ * @param string                   $name   Block name.
+ * @return bool Whether it has one.
+ */
+function gopublish_carousel_has_part( $blocks, $name ) {
+	foreach ( $blocks as $inner_block ) {
+		if ( $name === $inner_block->name ) {
+			return true;
+		}
+		if ( in_array( $inner_block->name, array( 'gopublish/carousel', 'gopublish/carousel-slides' ), true ) ) {
+			continue;
+		}
+		if ( gopublish_carousel_has_part( $inner_block->inner_blocks, $name ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Find the first heading with text in some HTML, and make sure it has an ID,
+ * so the carousel can be named by it (aria-labelledby). An existing ID (an
+ * HTML anchor) is kept.
+ *
+ * @param string $html Rendered HTML of one of the carousel's parts.
+ * @param string $id   ID to give the heading if it has none.
+ * @return array The HTML (with the ID added) and the heading's ID, or the
+ *               unchanged HTML and an empty string without a heading.
+ */
+function gopublish_carousel_label_heading( $html, $id ) {
+	$processor = new WP_HTML_Tag_Processor( $html );
+	while ( $processor->next_tag() ) {
+		$tag = $processor->get_tag();
+		if ( ! in_array( $tag, array( 'H1', 'H2', 'H3', 'H4', 'H5', 'H6' ), true ) ) {
+			continue;
+		}
+		$processor->set_bookmark( 'heading' );
+
+		// The heading's text, up to its closing tag.
+		$text = '';
+		while ( $processor->next_token() ) {
+			if ( '#text' === $processor->get_token_type() ) {
+				$text .= $processor->get_modifiable_text();
+			} elseif ( $tag === $processor->get_tag() && $processor->is_tag_closer() ) {
+				break;
+			}
+		}
+		if ( '' === trim( $text ) ) {
+			continue;
+		}
+
+		$processor->seek( 'heading' );
+		$heading_id = $processor->get_attribute( 'id' );
+		if ( ! is_string( $heading_id ) || '' === $heading_id ) {
+			$heading_id = $id;
+			$processor->set_attribute( 'id', $heading_id );
+		}
+		$processor->release_bookmark( 'heading' );
+		return array( $processor->get_updated_html(), $heading_id );
+	}
+	return array( $html, '' );
+}
+
+/**
  * The number of slides in a carousel's rendered inner blocks: read from the
  * first scroll area (gopublish_carousel_render_slides()), which is the
  * carousel's own; nested carousels come later in the HTML.
@@ -755,6 +875,37 @@ function gopublish_carousel_color_attribute( $attributes, $name ) {
 		return gopublish_carousel_css_value( 'var:preset|color|' . $slug );
 	}
 	return gopublish_carousel_css_value( $attributes[ 'custom' . ucfirst( $name ) ] ?? '' );
+}
+
+/**
+ * The Carousel's text and background colours (its Color settings: a palette
+ * colour or a custom one) as custom properties for its parts: the arrows'
+ * default colours follow them (style.scss), so they show on a dark
+ * background. Without them, the arrows keep their default look. A gradient
+ * background isn't a single colour, so it isn't passed on.
+ *
+ * Mirrors getCarouselColors() in src/carousel/edit.js: keep them in sync.
+ *
+ * @param array $attributes Block attributes.
+ * @return array<string, string> Custom properties: --carousel-color and
+ *                               --carousel-background, when set.
+ */
+function gopublish_carousel_colors( $attributes ) {
+	$colors = array(
+		'--carousel-color'      => array( $attributes['textColor'] ?? null, $attributes['style']['color']['text'] ?? null ),
+		'--carousel-background' => array( $attributes['backgroundColor'] ?? null, $attributes['style']['color']['background'] ?? null ),
+	);
+
+	$properties = array();
+	foreach ( $colors as $property => list( $slug, $custom ) ) {
+		$value = is_string( $slug ) && '' !== $slug
+			? gopublish_carousel_css_value( 'var:preset|color|' . $slug )
+			: gopublish_carousel_css_value( $custom );
+		if ( '' !== $value ) {
+			$properties[ $property ] = $value;
+		}
+	}
+	return $properties;
 }
 
 /**
